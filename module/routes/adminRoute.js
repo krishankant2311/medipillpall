@@ -5,7 +5,7 @@ import {
   adminLogin,
   logoutAdmin,
   changePassword,
-//   verifyOtp,
+  verifyOtp,
   adminForgotPassword,
   changeForgotPassword,
 } from "../controllers/adminController.js";
@@ -25,7 +25,7 @@ router.get("/test", (req, res) => {
 // 🔐 Password management
 router.post("/change-password", verifyAccessToken,upload.none(), changePassword);
 router.post("/forgot-password",upload.none(), adminForgotPassword);
-// router.post("/verify-otp", upload.none(),verifyOtp);
+router.post("/verify-otp", upload.none(),verifyOtp);
 router.post("/change-forgot-password",verifyAccessToken,upload.none(), changeForgotPassword);
 
 export default router;
