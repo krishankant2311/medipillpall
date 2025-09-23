@@ -17,7 +17,7 @@ const sendEmail = async (sub, to, html) => {
   try {
     const mailOptions = {
       from: {
-        name: "Crawfish",
+        name: "Medipillpall",
         address: process.env.MAIL_HOST,
       },
       subject: sub,

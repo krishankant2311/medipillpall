@@ -4,7 +4,7 @@ import { generateAccessToken, } from "../../helpers/jwt.js";
 import sendEmail from "../../helpers/mailSender.js";
 // import { isEmailvalid, isPasswordValid } from "../../helpers/validation.js";
 import { genrateOTP } from "../../helpers/generateOtp.js"
-
+import validator from "validator";
 // import forgototpTemplate from "../../emailTemplates/forgototpTemplate.js";
 import CryptoJS from "crypto-js";
 
@@ -448,7 +448,7 @@ export const adminForgotPassword = async (req, res) => {
           </p>
           <hr style="margin: 20px 0;" />
           <p style="font-size: 12px; color: #999; text-align: center;">
-            &copy; ${new Date().getFullYear()} Crawfish. All rights reserved.
+            &copy; ${new Date().getFullYear()} Medipillpall. All rights reserved.
           </p>
         </div>
       </div>
