@@ -4,6 +4,8 @@ import { addPatient,
   logoutPatient,
   deletePatient,
   adminLogin,
+  getCurrentLanguage,
+  changePatientLanguage,
   sendOTPbyNumber,
   resendOTPbyNumber, } from "../controllers/patientController.js";  
 import { verifyAccessToken } from "../../helpers/jwt.js"; 
@@ -32,6 +34,12 @@ router.get("/test", (req, res) => {
 // 🟢 Resend OTP by Number (30 sec wait)
 router.post("/resend-otp", resendOTPbyNumber);
 router.post("/login-admin",upload.none(), adminLogin);
+
+// GET current language
+router.get("/language", verifyAccessToken, getCurrentLanguage);
+
+// POST change language
+router.post("/language", verifyAccessToken, changePatientLanguage);
 
 
 export default router;

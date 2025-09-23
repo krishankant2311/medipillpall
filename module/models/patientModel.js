@@ -18,6 +18,11 @@ const patientSchema = new mongoose.Schema(
         type:String,
         default:""
     },
+    language:{
+        type:String,
+        enum:["English","Hindi"],
+        default:"English"
+    },
     otp: {
       otpValue: {
         type: String,

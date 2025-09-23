@@ -389,7 +389,7 @@ export const adminForgotPassword = async (req, res) => {
       });
     }
 
-    if (!isEmailvalid(email)) {
+    if (!isValidEmail(email)) {
       return res.send({
         statusCode: 400,
         success: false,

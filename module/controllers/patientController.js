@@ -657,3 +657,122 @@ export const adminLogin = async (req, res) => {
 
   }
 };
+
+const VALID_LANGUAGES = ["English", "Hindi"];
+
+export const getCurrentLanguage = async (req, res) => {
+  try {
+    const token = req.token;
+    const patient = await Patient.findOne({ _id: token._id });
+
+    if (!patient) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "Unauthorized access",
+        result: {},
+      });
+    }
+
+    if (patient.status === "Delete") {
+      return res.status(403).json({
+        statusCode: 403,
+        success: false,
+        message: "Patient account has been deleted",
+        result: {},
+      });
+    }
+
+    return res.status(200).json({
+      statusCode: 200,
+      success: true,
+      message: "Language fetched successfully",
+      result: {
+        name: patient.fullName,
+        email: patient.email,
+        language: patient.language,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      statusCode: 500,
+      success: false,
+      message: error.message + " Error in get current language API",
+      result: {},
+    });
+  }
+};
+
+export const changePatientLanguage = async (req, res) => {
+  try {
+    const token = req.token;
+    const { language } = req.body;
+
+    if (!language) {
+      return res.status(400).json({
+        statusCode: 400,
+        success: false,
+        message: "Language required",
+        result: {},
+      });
+    }
+
+    if (!VALID_LANGUAGES.includes(language)) {
+      return res.status(400).json({
+        statusCode: 400,
+        success: false,
+        message: "Invalid language. Only English and Hindi are allowed",
+        result: {},
+      });
+    }
+
+    const patient = await Patient.findOne({ _id: token._id });
+
+    if (!patient) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "Unauthorized access",
+        result: {},
+      });
+    }
+
+    if (patient.status === "Delete") {
+      return res.status(403).json({
+        statusCode: 403,
+        success: false,
+        message: "Patient account has been deleted",
+        result: {},
+      });
+    }
+
+    if (patient.language === language) {
+      return res.status(400).json({
+        statusCode: 400,
+        success: false,
+        message: `Language already set to ${language}`,
+        result: {},
+      });
+    }
+
+    patient.language = language;
+    await patient.save();
+
+    return res.status(200).json({
+      statusCode: 200,
+      success: true,
+      message: "Language changed successfully",
+      result: {
+        language: patient.language,
+      },
+    });
+  } catch (error) {
+    console.error("Error!!", error);
+    return res.status(500).json({
+      statusCode: 500,
+      success: false,
+      message: error.message || "Internal server error",
+      result: {},
+    });
+  }
+};
