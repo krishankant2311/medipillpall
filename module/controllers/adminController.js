@@ -456,7 +456,7 @@ export const adminForgotPassword = async (req, res) => {
 
     // Send email
     if (admin.email) {
-      // await sendEmail(subject, admin.email, body);
+      await sendEmail(subject, admin.email, body);
     }
 
     await admin.save();
