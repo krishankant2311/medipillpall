@@ -375,14 +375,118 @@ export const verifyOtp = async (req, res) => {
   }
 };
 
+// export const adminForgotPassword = async (req, res) => {
+//   try {
+//     let { email } = req.body;
+//     email = email?.toLowerCase()?.trim();
+
+//     if (!email) {
+//       return res.send({
+//         statusCode: 400,
+//         success: false,
+//         message: "Email is required",
+//         result: {},
+//       });
+//     }
+
+//     if (!isValidEmail(email)) {
+//       return res.send({
+//         statusCode: 400,
+//         success: false,
+//         message: "Invalid email format",
+//         result: {},
+//       });
+//     }
+
+//     const admin = await Admin.findOne({ email });
+//     if (!admin) {
+//       return res.send({
+//         statusCode: 404,
+//         success: false,
+//         message: "Admin not found",
+//         result: {},
+//       });
+//     }
+
+//     if (admin.status === "Delete" || admin.status === "Block") {
+//       return res.send({
+//         statusCode: 403,
+//         success: false,
+//         message:
+//           admin.status === "Delete"
+//             ? "Admin account has been deleted"
+//             : "Admin account has been blocked",
+//         result: {},
+//       });
+//     }
+
+//     // Generate OTP
+//     const { otpValue, otpExpiry } = genrateOTP();
+//     admin.otp = { otpValue, otpExpiry };
+
+//     // Prepare inline HTML
+//     const name = admin.adminName || "Admin";
+//     const subject = "OTP for Forgot Password";
+
+//     const body = `
+//       <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f6f6f6;">
+//         <div style="max-width: 600px; margin: auto; background: #fff; border-radius: 8px; padding: 20px; border: 1px solid #ddd;">
+//           <h2 style="color: #333;">Hello ${name},</h2>
+//           <p style="font-size: 16px; color: #555;">
+//             You requested to reset your password. Use the following OTP to proceed:
+//           </p>
+//           <div style="text-align: center; margin: 20px 0;">
+//             <span style="display: inline-block; font-size: 24px; font-weight: bold; letter-spacing: 4px; color: #2c3e50; background: #f1f1f1; padding: 10px 20px; border-radius: 6px;">
+//               ${otpValue}
+//             </span>
+//           </div>
+//           <p style="font-size: 14px; color: #777;">
+//             This OTP is valid for the next <strong>10 minutes</strong>. Please do not share it with anyone.
+//           </p>
+//           <p style="font-size: 14px; color: #777;">
+//             If you did not request a password reset, please ignore this email.
+//           </p>
+//           <hr style="margin: 20px 0;" />
+//           <p style="font-size: 12px; color: #999; text-align: center;">
+//             &copy; ${new Date().getFullYear()} Medipillpall. All rights reserved.
+//           </p>
+//         </div>
+//       </div>
+//     `;
+// console.log("Sending OTP to:", admin.email);
+
+//     // Send email
+//     if (admin.email) {
+//       await sendEmail(subject, admin.email, body);
+//     }
+
+//     await admin.save();
+
+//     return res.send({
+//       statusCode: 200,
+//       success: true,
+//       message: "OTP sent successfully to registered email",
+//       result: { otpValue }, // ⚠️ production में हटा देना better रहेगा
+//     });
+//   } catch (error) {
+//     console.error("Forgot Password Error:", error);
+//     return res.send({
+//       statusCode: 500,
+//       success: false,
+//       message: "Error in forgot password API: " + error.message,
+//       result: {},
+//     });
+//   }
+// };
+
+
 export const adminForgotPassword = async (req, res) => {
   try {
     let { email } = req.body;
     email = email?.toLowerCase()?.trim();
 
     if (!email) {
-      return res.send({
-        statusCode: 400,
+      return res.status(400).json({
         success: false,
         message: "Email is required",
         result: {},
@@ -390,8 +494,7 @@ export const adminForgotPassword = async (req, res) => {
     }
 
     if (!isValidEmail(email)) {
-      return res.send({
-        statusCode: 400,
+      return res.status(400).json({
         success: false,
         message: "Invalid email format",
         result: {},
@@ -400,8 +503,7 @@ export const adminForgotPassword = async (req, res) => {
 
     const admin = await Admin.findOne({ email });
     if (!admin) {
-      return res.send({
-        statusCode: 404,
+      return res.status(404).json({
         success: false,
         message: "Admin not found",
         result: {},
@@ -409,8 +511,7 @@ export const adminForgotPassword = async (req, res) => {
     }
 
     if (admin.status === "Delete" || admin.status === "Block") {
-      return res.send({
-        statusCode: 403,
+      return res.status(403).json({
         success: false,
         message:
           admin.status === "Delete"
@@ -424,53 +525,40 @@ export const adminForgotPassword = async (req, res) => {
     const { otpValue, otpExpiry } = genrateOTP();
     admin.otp = { otpValue, otpExpiry };
 
-    // Prepare inline HTML
-    const name = admin.adminName || "Admin";
-    const subject = "OTP for Forgot Password";
+    // Save OTP first
+    await admin.save();
+    console.log("OTP saved for:", admin.email, "OTP:", otpValue);
 
+    // Prepare email
+    const subject = "OTP for Forgot Password";
     const body = `
-      <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f6f6f6;">
-        <div style="max-width: 600px; margin: auto; background: #fff; border-radius: 8px; padding: 20px; border: 1px solid #ddd;">
-          <h2 style="color: #333;">Hello ${name},</h2>
-          <p style="font-size: 16px; color: #555;">
-            You requested to reset your password. Use the following OTP to proceed:
-          </p>
-          <div style="text-align: center; margin: 20px 0;">
-            <span style="display: inline-block; font-size: 24px; font-weight: bold; letter-spacing: 4px; color: #2c3e50; background: #f1f1f1; padding: 10px 20px; border-radius: 6px;">
-              ${otpValue}
-            </span>
-          </div>
-          <p style="font-size: 14px; color: #777;">
-            This OTP is valid for the next <strong>10 minutes</strong>. Please do not share it with anyone.
-          </p>
-          <p style="font-size: 14px; color: #777;">
-            If you did not request a password reset, please ignore this email.
-          </p>
-          <hr style="margin: 20px 0;" />
-          <p style="font-size: 12px; color: #999; text-align: center;">
-            &copy; ${new Date().getFullYear()} Medipillpall. All rights reserved.
-          </p>
-        </div>
-      </div>
+      <p>Hello ${admin.adminName || "Admin"},</p>
+      <p>Your OTP for password reset is: <strong>${otpValue}</strong></p>
+      <p>This OTP is valid for 10 minutes.</p>
+      <p>If you did not request this, please ignore this email.</p>
     `;
 
-    // Send email
-    if (admin.email) {
-      await sendEmail(subject, admin.email, body);
+    // Send email safely
+    try {
+      if (admin.email) {
+        await sendEmail(subject, String(admin.email), body);
+        console.log("Email sent successfully to:", admin.email);
+      }
+    } catch (mailErr) {
+      console.error("Email sending failed:", mailErr.message);
     }
 
-    await admin.save();
-
-    return res.send({
-      statusCode: 200,
+    // Always return success (OTP saved), even if email failed
+    return res.status(200).json({
       success: true,
-      message: "OTP sent successfully to registered email",
-      result: { otpValue }, // ⚠️ production में हटा देना better रहेगा
+      message:
+        "OTP generated successfully" +
+        (admin.email ? " (email may fail if SMTP blocked)" : ""),
+      result: { otpValue }, // ⚠️ production me isko hata dena better hai
     });
   } catch (error) {
     console.error("Forgot Password Error:", error);
-    return res.send({
-      statusCode: 500,
+    return res.status(500).json({
       success: false,
       message: "Error in forgot password API: " + error.message,
       result: {},
