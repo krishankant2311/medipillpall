@@ -479,6 +479,10 @@ export const verifyOtp = async (req, res) => {
 //   }
 // };
 
+// import Admin from "../models/adminModel.js";
+// import { isValidEmail } from "../../helpers/validation.js";
+// import { genrateOTP } from "../../helpers/genrateOTP.js";
+// import sendEmail from "../../helpers/mailSender.js";
 
 export const adminForgotPassword = async (req, res) => {
   try {
@@ -529,32 +533,30 @@ export const adminForgotPassword = async (req, res) => {
     await admin.save();
     console.log("OTP saved for:", admin.email, "OTP:", otpValue);
 
-    // Prepare email
-    const subject = "OTP for Forgot Password";
+    // Prepare simple mail (Resend OTP style)
+    const subject = "Your OTP for Forgot Password";
     const body = `
       <p>Hello ${admin.adminName || "Admin"},</p>
-      <p>Your OTP for password reset is: <strong>${otpValue}</strong></p>
+      <p>Your OTP is: <strong>${otpValue}</strong></p>
       <p>This OTP is valid for 10 minutes.</p>
       <p>If you did not request this, please ignore this email.</p>
     `;
 
-    // Send email safely
+    // Use same sendEmail as Resend OTP
     try {
       if (admin.email) {
         await sendEmail(subject, String(admin.email), body);
         console.log("Email sent successfully to:", admin.email);
       }
-    } catch (mailErr) {
-      console.error("Email sending failed:", mailErr.message);
+    } catch (err) {
+      console.error("Email sending failed:", err.message);
     }
 
-    // Always return success (OTP saved), even if email failed
     return res.status(200).json({
       success: true,
       message:
-        "OTP generated successfully" +
-        (admin.email ? " (email may fail if SMTP blocked)" : ""),
-      result: { otpValue }, // ⚠️ production me isko hata dena better hai
+        "OTP generated and email sent (if SMTP allows) — works like Resend OTP",
+      result: { otpValue }, // ⚠️ production me remove kar dena better
     });
   } catch (error) {
     console.error("Forgot Password Error:", error);
@@ -565,6 +567,7 @@ export const adminForgotPassword = async (req, res) => {
     });
   }
 };
+
 
 export const changeForgotPassword = async (req, res) => {
   try {
