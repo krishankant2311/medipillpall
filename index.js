@@ -14,6 +14,7 @@ import HealthcareProviderRouter from "./module/routes/healthcareProviderRoute.js
 import patientTaskRouter from "./module/routes/patientTaskRoute.js"
 import reminderRouter from "./module/routes/reminderRoute.js"
 import adminRouter from "./module/routes/adminRoute.js"
+import faqrouter from "./module/routes/patientFAQRoute.js"
 dotenv.config();
 connect();
 
@@ -42,6 +43,7 @@ app.use('/api/healthcareProvider',HealthcareProviderRouter)
 app.use('/api/patientTask',patientTaskRouter) 
 app.use('/api/reminder',reminderRouter)   
 app.use('/api/admins',adminRouter)
+app.use('/api/faq',faqrouter)
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(` Server running on port ${PORT}`));
   
