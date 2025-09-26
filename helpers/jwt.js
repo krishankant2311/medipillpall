@@ -44,7 +44,7 @@ export const verifyAccessToken = (req, res, next) => {
     next();
   } catch (error) {
     return res.send({
-      statusCode: 500,
+      statusCode: 401,
       success: false,
       message: error.message + " ERROR in verifyAccessToken",
       result: {},
