@@ -44,7 +44,7 @@ export default Admin;
 
 export const createDefaultAdmin = async () => {
   try {
-    const email = "abhinandan@jewarinternational.com";
+    const email = "krishankant@jewarinternational.com";
     const admin = await Admin.findOne({ email });
     if (admin) {
       console.log("✅ Admin already exists");

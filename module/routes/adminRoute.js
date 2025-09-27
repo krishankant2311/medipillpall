@@ -8,6 +8,7 @@ import {
   verifyOtp,
   adminForgotPassword,
   resendOTPForChangePassword,
+  sendForgotPasswordOTP,
   changeForgotPassword,
 } from "../controllers/adminController.js";
 
@@ -30,5 +31,6 @@ router.post("/forgot-password-ofadmin",upload.none(), adminForgotPassword);
 router.post("/resend-otp",upload.none(), resendOTPForChangePassword);
 router.post("/verify-otp", upload.none(),verifyOtp);
 router.post("/change-forgot-password",upload.none(), changeForgotPassword);
+router.post("/send-forgot-password-otp", upload.none(),sendForgotPasswordOTP);
 
 export default router;

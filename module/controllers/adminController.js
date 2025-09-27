@@ -901,7 +901,7 @@ export const resendOTPForChangePassword = async (req, res) => {
       <div style="font-family:Arial,sans-serif;line-height:1.5;">
         <h2 style="color:#2c3e50;">Change Password OTP</h2>
         <p>Hello ${admin.fullName || "Admin"},</p>
-        <p>Your OTP to change password is:</p>
+        <p>Resend OTP to forgot password is:</p>
         <h3 style="color:#e74c3c;">${otpValue}</h3>
         <p>This OTP will expire in 5 minutes.</p>
         <p>If you didn’t request this, please ignore this email.</p>
@@ -928,6 +928,92 @@ export const resendOTPForChangePassword = async (req, res) => {
       statusCode: 500,
       success: false,
       message: error.message + " ERROR in resendOTPForChangePassword API",
+      result: {},
+    });
+  }
+};
+
+
+export const sendForgotPasswordOTP = async (req, res) => {
+  try {
+    let { email } = req.body;
+    email = email?.toLowerCase();
+
+    if (!email) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Required email",
+        result: {},
+      });
+    }
+
+    const admin = await Admin.findOne({ email });
+    if (!admin) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Admin not found",
+        result: {},
+      });
+    }
+
+    if (admin.status !== "Active") {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Unauthorized access",
+        result: {},
+      });
+    }
+
+    // const currentTime = Date.now();
+    // if (
+    //   admin.otp?.otpExpiry &&
+    //   currentTime < admin.otp.otpExpiry - 5 * 60 * 1000 + 30 * 1000
+    // ) {
+    //   return res.status(429).json({
+    //     success: false,
+    //     message: "Please wait! You can request OTP after 30 seconds",
+    //     result: {},
+    //   });
+    // }
+
+    // Generate new OTP
+    const { otpValue, otpExpiry } = genrateOTP();
+
+    // Inline HTML template for email
+    const body = `
+      <div style="font-family:Arial,sans-serif;line-height:1.5;">
+        <h2 style="color:#2c3e50;">Forgot Password OTP</h2>
+        <p>Hello ${admin.fullName || "Admin"},</p>
+        <p>Your forgot password OTP is:</p>
+        <h3 style="color:#e74c3c;">${otpValue}</h3>
+        <p>This OTP will expire in 5 minutes.</p>
+        <p>If you didn’t request this, please ignore this email.</p>
+        <br/>
+        <p style="color:#7f8c8d;">Regards,<br/>Support Team</p>
+      </div>
+    `;
+
+    await sendEmail("Forgot Password OTP", admin.email, body);
+
+    // Save OTP in DB
+    admin.otp.otpValue = otpValue;
+    admin.otp.otpExpiry = otpExpiry;
+    await admin.save();
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "OTP sent successfully",
+      result: { otpValue }, // remove in production for security
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in sendForgotPasswordOTP API",
       result: {},
     });
   }
