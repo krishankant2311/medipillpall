@@ -26,7 +26,7 @@ router.get("/test", (req, res) => {
 // 🔐 Password management
 router.post("/change-password", verifyAccessToken,upload.none(), changePassword);
 
-router.post("/forgot-password",upload.none(), adminForgotPassword);
+router.post("/forgot-password-ofadmin",upload.none(), adminForgotPassword);
 router.post("/resend-otp",upload.none(), resendOTPForChangePassword);
 router.post("/verify-otp", upload.none(),verifyOtp);
 router.post("/change-forgot-password",upload.none(), changeForgotPassword);
