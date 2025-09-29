@@ -58,7 +58,7 @@ export const editDietInstruction = async (req, res) => {
       });
     }
 
-    const diet = await DietInstruction.findById({dietId, status:"Active"});
+    const diet = await DietInstruction.findOne({dietId, status:"Active"});
     if (!diet) {
       return res.send({
         statusCode: 404,
