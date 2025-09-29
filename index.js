@@ -15,6 +15,7 @@ import patientTaskRouter from "./module/routes/patientTaskRoute.js"
 import reminderRouter from "./module/routes/reminderRoute.js"
 import adminRouter from "./module/routes/adminRoute.js"
 import faqrouter from "./module/routes/patientFAQRoute.js"
+import termsandconditionRouter from "./module/routes/termsAndConditionsRoute.js"
 dotenv.config();
 connect();
 
@@ -44,6 +45,7 @@ app.use('/api/patientTask',patientTaskRouter)
 app.use('/api/reminder',reminderRouter)   
 app.use('/api/admins',adminRouter)
 app.use('/api/faq',faqrouter)
+app.use('/api/termsAndConditions',termsandconditionRouter)
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(` Server running on port ${PORT}`));
   
