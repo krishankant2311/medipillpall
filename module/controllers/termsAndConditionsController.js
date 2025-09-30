@@ -37,7 +37,16 @@ export const addTermsCondition = async (req, res) => {
     const token = req.token; // agar tu admin verification dalna chahta hai to yaha dal de
 
     let { content } = req.body;
+ 
 
+    const admin = await Admin.findOne({_id:token._id, status:"Active"});
+    if(!admin){
+      return res.status(403).send({
+        statusCode: 403,
+        success: false,
+        message: "Access forbidden: Admins only",
+      });
+    }
     // 🛑 Validation
     if (!content || content.trim() === "") {
       return res.status(400).send({
