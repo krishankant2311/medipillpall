@@ -1,4 +1,5 @@
 import TermsCondition from "../models/termsAndConditionsModel.js";
+import Admin from "../models/adminModel.js";
 
 // ✅ Add Terms & Conditions (Admin only)
 // export const addTermsCondition = async (req, res) => {
