@@ -802,10 +802,13 @@ export const changePatientLanguage = async (req, res) => {
 export const getAllPatientsByAdmin = async (req, res) => {
   try {
     const token = req.token;
+    let { page = 1, limit = 10, search = "" } = req.query;
+    page = Number.parseInt(page);
+    limit = Number.parseInt(limit);
+    const skip = (page - 1) * limit;
 
-    // Admin verify
-    const adminUser = await Admin.findById(token._id);
-    if (!adminUser || adminUser.status !== "Active") {
+    const adminUser = await Admin.findOne({ _id: token._id, status: "Active" });
+    if (!adminUser) {
       return res.status(403).send({
         statusCode: 403,
         success: false,
@@ -814,14 +817,44 @@ export const getAllPatientsByAdmin = async (req, res) => {
       });
     }
 
-    const patients = await Patient.find({ status: "Active" })
-      .select("-password"); // sensitive data na bhejna
+    if (adminUser.status === "Delete") {
+      return res.send({
+        statusCode: 403,
+        success: false,
+        message: "Your account has been deleted",
+        result: {},
+      });
+    }
+
+    const searchRegex = new RegExp(search.trim(), "i");
+
+    const searchFilter = search.trim()
+      ? {
+          status: "Active",
+          $or: [
+            { fullName: { $regex: searchRegex } },
+            { mobileNumber: { $regex: searchRegex } },
+          ],
+        }
+      : { status: "Active" };
+
+    const patients = await Patient.find(searchFilter)
+      .select("-password -refreshToken")
+      .skip(skip)
+      .limit(limit);
+
+    const totalPatients = await Patient.countDocuments(searchFilter);
 
     return res.send({
       statusCode: 200,
       success: true,
       message: "All patients fetched successfully (Admin)",
-      result: patients,
+      result: {
+        patients,
+        currentPage: page,
+        totalPage: Math.ceil(totalPatients / limit),
+        totalRecord: totalPatients,
+      },
     });
   } catch (error) {
     return res.send({
@@ -832,3 +865,4 @@ export const getAllPatientsByAdmin = async (req, res) => {
     });
   }
 };
+
