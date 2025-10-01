@@ -8,6 +8,7 @@ import {
   generateRefreshToken,
 } from "../../helpers/jwt.js";
 
+
 // export const addPatient = async (req, res) => {
 //   try {
 //     let { fullName, age, mobileNumber, password, gender } = req.body;
@@ -97,6 +98,7 @@ export const addPatient = async (req, res) => {
 
     fullName = fullName?.trim()?.toLowerCase();
     mobileNumber = mobileNumber?.trim();
+  
 
     if (!fullName) {
       return res.send({
@@ -111,6 +113,14 @@ export const addPatient = async (req, res) => {
         statusCode: 404,
         success: false,
         message: "Required mobileNumber",
+        result: {},
+      });
+    }
+      if (!/^\d+$/.test(mobileNumber)) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "mobileNumber must contain only numbers",
         result: {},
       });
     }
@@ -130,6 +140,16 @@ export const addPatient = async (req, res) => {
         result: {},
       });
     }
+    if(password.length < 8){
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Password must be at least 8 characters long",
+        result: {},
+      });
+    }
+
+    
 
     const patientExist = await Patient.findOne({ mobileNumber });
     if (patientExist) {
@@ -772,6 +792,42 @@ export const changePatientLanguage = async (req, res) => {
       statusCode: 500,
       success: false,
       message: error.message || "Internal server error",
+      result: {},
+    });
+  }
+};
+
+// import User from "../models/userModel.js"; // jisme admin details store h
+
+export const getAllPatientsByAdmin = async (req, res) => {
+  try {
+    const token = req.token;
+
+    // Admin verify
+    const adminUser = await Admin.findById(token._id);
+    if (!adminUser || adminUser.status !== "Active") {
+      return res.status(403).send({
+        statusCode: 403,
+        success: false,
+        message: "Access denied: Admins only",
+        result: {},
+      });
+    }
+
+    const patients = await Patient.find({ status: "Active" })
+      .select("-password"); // sensitive data na bhejna
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "All patients fetched successfully (Admin)",
+      result: patients,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in getAllPatientsByAdmin API",
       result: {},
     });
   }

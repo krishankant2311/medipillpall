@@ -9,7 +9,7 @@ const router = express.Router();
 // ================= ADMIN ROUTES =================
 router.post("/create", verifyAccessToken,upload.none(), createFAQ);
 router.post("/edit/:faqId", verifyAccessToken,upload.none(), editFAQ);
-router.get("/get/:id", verifyAccessToken,upload.none(), getFAQ);
+router.get("/get/:id", verifyAccessToken, getFAQ);
 router.post("/delete/:faqId", verifyAccessToken,upload.none(), deleteFAQ);
 router.get("/all", verifyAccessToken,upload.none(), getAllFAQ);
 router.get("/all/patient", verifyAccessToken, getAllFAQByPatient);

@@ -34,6 +34,14 @@ if (!time) {
     result: {},
   });
 }
+if (!Array.isArray(time) || time.length === 0) {
+  return res.send({
+    statusCode: 400,  
+    success: false,
+    message: "Time should be a non-empty array",
+    result: {},
+  });
+}
 
 if (!startingDate) {
   return res.send({

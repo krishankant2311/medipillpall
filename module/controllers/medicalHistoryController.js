@@ -6,15 +6,56 @@ export const addMedicalHistory = async (req, res) => {
   try {
     const { title, description, allergies, conditions } = req.body;
     const token = req.token; // 👈 yaha se patient milega
+    title = title?.trim();
+    description = description?.trim();
+    allergies = allergies?.trim()?.tostring();
+    conditions = conditions?.trim();
+    
+    // Validations
+  if (!title) {
+  return res.send({
+    statusCode: 400,
+    success: false,
+    message: "Title is required",
+    result: {},
+  });
+}
 
-    if (!title || !description || !allergies || !conditions) {
-      return res.send({
-        statusCode: 400,
-        success: false,
-        message: "All fields (title, description, allergies, conditions) are required",
-        result: {},
-      });
-    }
+if (!description) {
+  return res.send({
+    statusCode: 400,
+    success: false,
+    message: "Description is required",
+    result: {},
+  });
+}
+
+if (!allergies) {
+  return res.send({
+    statusCode: 400,
+    success: false,
+    message: "Allergies are required",
+    result: {},
+  });
+}
+
+if (!conditions) {
+  return res.send({
+    statusCode: 400,
+    success: false,
+    message: "Conditions are required",
+    result: {},
+  });
+}
+if(conditions.length===0){
+  return res.send({
+    statusCode: 400,
+    success: false,
+    message: "Conditions cannot be an empty array",
+    result: {},
+  });
+}
+
 
     const patient = await Patient.findOne({ _id: token._id, status: "Active" });
     if (!patient) {

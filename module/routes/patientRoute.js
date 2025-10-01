@@ -7,6 +7,7 @@ import { addPatient,
   getCurrentLanguage,
   changePatientLanguage,
   sendOTPbyNumber,
+  getAllPatientsByAdmin,
   resendOTPbyNumber, } from "../controllers/patientController.js";  
 import { verifyAccessToken } from "../../helpers/jwt.js"; 
 import express from "express";
@@ -26,17 +27,17 @@ router.post("/logout", verifyAccessToken, logoutPatient);
 // 🟢 Soft Delete Patient (Protected)
 router.delete("/delete", verifyAccessToken, deletePatient);
 
-// 🟢 Send OTP by Number
+router.get("/all-patientByAdmin", verifyAccessToken, getAllPatientsByAdmin);
 router.post("/send-otp", sendOTPbyNumber);
-router.get("/test", (req, res) => {
-  res.send("Admin routes working");
-});
+
 // 🟢 Resend OTP by Number (30 sec wait)
 router.post("/resend-otp", resendOTPbyNumber);
 router.post("/login-admin",upload.none(), adminLogin);
 
 // GET current language
 router.get("/language", verifyAccessToken, getCurrentLanguage);
+
+
 
 // POST change language
 router.post("/language", verifyAccessToken, changePatientLanguage);

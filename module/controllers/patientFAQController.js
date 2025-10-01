@@ -179,7 +179,7 @@ export const getFAQ = async (req, res) => {
       });
     }
 
-    const faq = await FAQ.findOne({ _id: faqId});
+    const faq = await FAQ.findOne({ _id:faqId});
 
     if (!faq || faq.status === "Delete") {
       return res.send({

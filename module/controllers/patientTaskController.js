@@ -23,6 +23,14 @@ export const addTask = async (req, res) => {
         result: {},
       });
     }
+    if (!type) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Task type is required",
+        result: {},
+      });
+    }
 
     const patient = await Patient.findOne({ _id: token._id, status: "Active" });
     if (!patient) {
@@ -236,3 +244,4 @@ export const getAllTasks = async (req, res) => {
     });
   }
 };
+

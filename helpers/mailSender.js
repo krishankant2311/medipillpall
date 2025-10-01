@@ -1,3 +1,49 @@
+// // emailHelper.js
+// import nodemailer from "nodemailer";
+// import dotenv from "dotenv";
+
+// dotenv.config();
+
+// const transport = nodemailer.createTransport({
+//   service: "gmail",
+//   secure: true,
+//   auth: {
+//     user: process.env.MAIL_HOST,
+//     pass: process.env.MAIL_PASSWORD,
+//   },
+// });
+
+// const sendEmail = async (sub, to, html) => {
+//   try {
+//     const mailOptions = {
+//       from: {
+//         name: "Medipillpall",
+//         address: process.env.MAIL_HOST,
+//       },
+//       subject: sub,
+//       to,
+//       html,
+//     };
+
+//     transport.verify((error, succes) => {
+//       if (error) console.log("error!!!! inside the helper", error);
+//       else console.log("server is ready to send email", succes);
+//     });
+
+//     const emailSend = await transport.sendMail(mailOptions);
+//     return emailSend;
+//   } catch (error) {
+//     console.log("Error! can not send Email", error);
+//     return error;
+//   }
+// };
+
+// // ✅ ESM default + named export
+// export default sendEmail;
+// export { sendEmail };
+
+
+
 // emailHelper.js
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
@@ -5,11 +51,12 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const transport = nodemailer.createTransport({
-  service: "gmail",
-  secure: true,
+  host: "smtp.gmail.com",
+  port: 465, // अगर issue हो तो 587 भी try कर सकते हो
+  secure: true, // 465 -> true, 587 -> false
   auth: {
-    user: process.env.MAIL_HOST,
-    pass: process.env.MAIL_PASSWORD,
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASS,
   },
 });
 
@@ -18,26 +65,23 @@ const sendEmail = async (sub, to, html) => {
     const mailOptions = {
       from: {
         name: "Medipillpall",
-        address: process.env.MAIL_HOST,
+        address: process.env.MAIL_USER,
       },
       subject: sub,
       to,
       html,
     };
 
-    transport.verify((error, succes) => {
-      if (error) console.log("error!!!! inside the helper", error);
-      else console.log("server is ready to send email", succes);
-    });
+    // server check
+    await transport.verify();
 
     const emailSend = await transport.sendMail(mailOptions);
     return emailSend;
   } catch (error) {
-    console.log("Error! can not send Email", error);
+    console.log("❌ Error! can not send Email:", error);
     return error;
   }
 };
 
-// ✅ ESM default + named export
 export default sendEmail;
 export { sendEmail };
