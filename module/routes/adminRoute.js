@@ -10,6 +10,8 @@ import {
   resendOTPForChangePassword,
   sendForgotPasswordOTP,
   changeForgotPassword,
+  getUserPiechartData,
+  getDashboardPiechart,
 } from "../controllers/adminController.js";
 
 import { verifyAccessToken } from "../../helpers/jwt.js"; // token verify middleware
@@ -32,5 +34,8 @@ router.post("/resend-otp",upload.none(), resendOTPForChangePassword);
 router.post("/verify-otp", upload.none(),verifyOtp);
 router.post("/change-forgot-password",upload.none(), changeForgotPassword);
 router.post("/send-forgot-password-otp", upload.none(),sendForgotPasswordOTP);
+// 📊 Dashboard data
+router.get("/dashboard-piechart", verifyAccessToken, getDashboardPiechart);
+router.get("/user-piechart", verifyAccessToken, getUserPiechartData);
 
 export default router;
