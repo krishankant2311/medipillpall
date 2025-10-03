@@ -121,14 +121,14 @@ export const addPatient = async (req, res) => {
       });
     }
 
-    if (!/^\d+$/.test(mobileNumber)) {
-      return res.status(400).json({
-        statusCode: 400,
-        success: false,
-        message: "mobileNumber must contain only numbers",
-        result: {},
-      });
-    }
+    // if (!/^\d+$/.test(mobileNumber)) {
+    //   return res.status(400).json({
+    //     statusCode: 400,
+    //     success: false,
+    //     message: "mobileNumber must contain only numbers",
+    //     result: {},
+    //   });
+    // }
 
     if (!age) {
       return res.status(400).json({

@@ -19,13 +19,13 @@ router.post("/add", verifyAccessToken,upload.none(), addVisitor);
 router.get("/list", verifyAccessToken, getAllVisitors);
 
 // Get Visitor by ID
-router.get("/get/:id", verifyAccessToken, getVisitors);
+router.get("/get/:visitorId", verifyAccessToken, getVisitors);
 
 // Update Visitor
-router.post("/update/:id", verifyAccessToken,upload.none(), editVisitor);
+router.post("/update/:visitorId", verifyAccessToken,upload.none(), editVisitor);
 
 // Delete Visitor (soft delete)
-router.post("/delete/:id", verifyAccessToken,upload.none(), deleteVisitor);
+router.post("/delete/:visitorId", verifyAccessToken,upload.none(), deleteVisitor);
 // Get All Visitors (by admin, with pagination)
 router.get("/all-visitorByAdmin", verifyAccessToken, getAllVisitorsByAdmin);
 
