@@ -191,7 +191,7 @@ export const addPatient = async (req, res) => {
       statusCode: 200,
       success: true,
       message: "OTP sent successfully",
-      result: { mobileNumber, otpExpiry },
+      result: { mobileNumber, otpExpiry,otpValue },
     });
 
   } catch (error) {
