@@ -12,6 +12,7 @@ import {
   changeForgotPassword,
   getUserPiechartData,
   getDashboardPiechart,
+  getAdminDashboardPiechart,
 } from "../controllers/adminController.js";
 
 import { verifyAccessToken } from "../../helpers/jwt.js"; // token verify middleware
@@ -37,5 +38,6 @@ router.post("/send-forgot-password-otp", upload.none(),sendForgotPasswordOTP);
 // 📊 Dashboard data
 router.get("/dashboard-piechart", verifyAccessToken, getDashboardPiechart);
 router.get("/user-piechart", verifyAccessToken, getUserPiechartData);
+router.get("/admin-dashboard-piechart", verifyAccessToken, getAdminDashboardPiechart);
 
 export default router;

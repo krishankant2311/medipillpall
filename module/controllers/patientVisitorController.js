@@ -136,15 +136,15 @@ export const editVisitor = async (req, res) => {
 export const getVisitors = async (req, res) => {
   try {
     let token = req.token;
-    let { page = 1, limit = 10, patientId } = req.query;
+    let { visitorId } = req.query;
 
-    page = parseInt(page);
-    limit = parseInt(limit);
+    // page = parseInt(page);
+    // limit = parseInt(limit);
 
     let query = { status: { $ne: "Deleted" } };
 
-    if (patientId) {
-      query.patientId = patientId;
+    if (visitorId) {
+      query.visitorId = visitorId;
     } else {
       const patient = await Patient.findOne({ _id: token._id, status: "Active" });
       if (!patient) {
@@ -161,23 +161,23 @@ export const getVisitors = async (req, res) => {
     const visitors = await Visitor.find(query)
       .populate("patientId")
       .populate("caretakerId")
-      .skip((page - 1) * limit)
-      .limit(limit)
+    //   .skip((page - 1) * limit)
+    //   .limit(limit)
       .sort({ createdAt: -1 });
 
-    const total = await Visitor.countDocuments(query);
+    // const total = await Visitor.countDocuments(query);
 
     return res.send({
       statusCode: 200,
       success: true,
       message: "Visitors fetched successfully",
       result: visitors,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
+    //   pagination: {
+    //     total,
+    //     page,
+    //     limit,
+    //     totalPages: Math.ceil(total / limit),
+    //   },
     });
   } catch (error) {
     return res.send({

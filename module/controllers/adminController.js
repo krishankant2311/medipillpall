@@ -1211,3 +1211,124 @@ export const getUserPiechartData = async (req, res) => {
     });
   }
 };
+
+export const getAdminDashboardPiechart = async (req, res) => {
+  try {
+    const token = req.token;
+    const admin = await Admin.findOne({ _id: token._id, status: "Active" });
+    if (!admin) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Admin not found",
+        result: {},
+      });
+    }
+    const range = req.query.range || "month";
+    let currentFilter = {};
+    let previousFilter = {};
+    const now = new Date();
+    if (range === "week") {
+      const start = new Date();
+      start.setDate(start.getDate() - 7);
+      currentFilter.createdAt = { $gte: start };
+      const prevStart = new Date();
+      prevStart.setDate(prevStart.getDate() - 14);
+      const prevEnd = new Date();
+      prevEnd.setDate(prevEnd.getDate() - 7);
+      previousFilter.createdAt = { $gte: prevStart, $lt: prevEnd };
+    } else if (range === "month") {
+      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+      currentFilter.createdAt = { $gte: start };
+      const prevStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const prevEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+      previousFilter.createdAt = { $gte: prevStart, $lte: prevEnd };
+    } else if (range === "year") {
+      const start = new Date(now.getFullYear(), 0, 1);
+      currentFilter.createdAt = { $gte: start };
+      const prevStart = new Date(now.getFullYear() - 1, 0, 1);
+      const prevEnd = new Date(now.getFullYear() - 1, 11, 31);
+      previousFilter.createdAt = { $gte: prevStart, $lte: prevEnd };
+    } else if (range === "custom") {
+      const startDate = new Date(req.query.startDate);
+      const endDate = new Date(req.query.endDate);
+      endDate.setHours(23, 59, 59, 999);
+      if (!isNaN(startDate) && !isNaN(endDate)) {
+        currentFilter.createdAt = { $gte: startDate, $lte: endDate };
+        // Previous range calculation for custom you can decide as per requirement
+      }
+    }
+    // :white_tick: Current Counts
+    const totalActivePatients = await Patient.countDocuments({
+      status: "Active",
+      ...currentFilter,
+    });
+    const totalActiveGuardians = await Guardian.countDocuments({
+      status: "Active",
+      ...currentFilter,
+    });
+    const totalActiveCaretakers = await Caretaker.countDocuments({
+      status: "Active",
+      ...currentFilter,
+    });
+    // :white_tick: Previous Counts
+    const prevPatients = await Patient.countDocuments({
+      status: "Active",
+      ...previousFilter,
+    });
+    const prevGuardians = await Guardian.countDocuments({
+      status: "Active",
+      ...previousFilter,
+    });
+    const prevCaretakers = await Caretaker.countDocuments({
+      status: "Active",
+      ...previousFilter,
+    });
+    // :white_tick: Helper function
+    const calcPercentage = (current, prev) => {
+      if (prev === 0) return 100; // avoid divide by 0
+      return Math.round(((current - prev) / prev) * 100);
+    };
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Patient, Guardian & Caretaker stats fetched successfully",
+      result: {
+        range,
+        cards: [
+          {
+            title: "Total Patients",
+            amount: totalActivePatients,
+            percentage: calcPercentage(totalActivePatients, prevPatients),
+            isIncrease: totalActivePatients >= prevPatients,
+            para: "Patients Registered",
+            isCurrency: false,
+          },
+          {
+            title: "Total Guardians",
+            amount: totalActiveGuardians,
+            percentage: calcPercentage(totalActiveGuardians, prevGuardians),
+            isIncrease: totalActiveGuardians >= prevGuardians,
+            para: "Parents Who Have Visited",
+            isCurrency: false,
+          },
+          {
+            title: "Total Caretakers",
+            amount: totalActiveCaretakers,
+            percentage: calcPercentage(totalActiveCaretakers, prevCaretakers),
+            isIncrease: totalActiveCaretakers >= prevCaretakers,
+            para: "Caretakers Registered",
+            isCurrency: false,
+          },
+        ],
+      },
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in getDashboardPiechart",
+      result: {},
+    });
+  }
+};
