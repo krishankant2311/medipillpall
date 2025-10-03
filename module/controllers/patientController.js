@@ -92,108 +92,300 @@ import {
 //   }
 // };
 
+
 export const addPatient = async (req, res) => {
   try {
-    let { fullName, age, mobileNumber, password, gender } = req.body;
+    // Step 1: Extract data from request body in one line
+    let { fullName, age, mobileNumber, gender } = req.body;
 
+    // Step 2: Trim and normalize
     fullName = fullName?.trim()?.toLowerCase();
     mobileNumber = mobileNumber?.trim();
-  
 
+    // Step 3: Validate inputs
     if (!fullName) {
-      return res.send({
-        statusCode: 404,
+      return res.status(400).json({
+        statusCode: 400,
         success: false,
         message: "Required fullName",
         result: {},
       });
     }
+
     if (!mobileNumber) {
-      return res.send({
-        statusCode: 404,
+      return res.status(400).json({
+        statusCode: 400,
         success: false,
         message: "Required mobileNumber",
         result: {},
       });
     }
-      if (!/^\d+$/.test(mobileNumber)) {
-      return res.send({
+
+    if (!/^\d+$/.test(mobileNumber)) {
+      return res.status(400).json({
         statusCode: 400,
         success: false,
         message: "mobileNumber must contain only numbers",
         result: {},
       });
     }
+
     if (!age) {
-      return res.send({
-        statusCode: 404,
+      return res.status(400).json({
+        statusCode: 400,
         success: false,
         message: "Required age",
         result: {},
       });
     }
-    if (!password) {
-      return res.send({
-        statusCode: 400,
-        success: false,
-        message: "Required password",
-        result: {},
-      });
-    }
-    if(password.length < 8){
-      return res.send({
-        statusCode: 400,
-        success: false,
-        message: "Password must be at least 8 characters long",
-        result: {},
-      });
-    }
 
-    
-
+    // Step 4: Check if patient already exists
     const patientExist = await Patient.findOne({ mobileNumber });
+
+    // Step 5: If patient exists
     if (patientExist) {
-      return res.send({
-        statusCode: 400,
-        success: false,
-        message: "Patient already exist",
-        result: {},
-      });
+
+      // Step 5a: If status is Pending → resend OTP allowed
+      if (patientExist.status === "Pending") {
+        const { otpValue, otpExpiry } = genrateOTP();
+        patientExist.otp = { otpValue, otpExpiry };
+        await patientExist.save();
+
+        return res.status(200).json({
+          statusCode: 200,
+          success: true,
+          message: "OTP resent successfully",
+          result: { mobileNumber: patientExist.mobileNumber, otpExpiry },
+        });
+      }
+
+      // Step 5b: If status is Active → cannot add again
+      if (patientExist.status === "Active") {
+        return res.status(400).json({
+          statusCode: 400,
+          success: false,
+          message: "Patient already exists",
+          result: {},
+        });
+      }
     }
 
-    const enc_password = bcrypt.hashSync(password, 10);
+    // Step 6: If patient does not exist → generate OTP
+    const { otpValue, otpExpiry } = genrateOTP();
 
-    // Step 1: Patient create karo (abhi save nahi karna)
+    // Step 7: Create new patient instance with Pending status
     const newPatient = new Patient({
       fullName,
       age,
       mobileNumber,
       gender,
-      password: enc_password,
+      status: "Pending",
+      otp: { otpValue, otpExpiry },
     });
 
-    // Step 2: Patient ki id se token generate karo
-    const accessToken = generateAccessToken({ _id: newPatient._id, mobileNumber });
-    const refreshToken = generateRefreshToken({ _id: newPatient._id, mobileNumber });
-
-    // Step 3: Tokens ko assign karo
-    newPatient.accessToken = accessToken;
-    newPatient.refreshToken = refreshToken;
-
-    // Step 4: Save to DB
+    // Step 8: Save new patient to DB
     await newPatient.save();
+
+    // Step 9: Respond with OTP info
+    return res.status(200).json({
+      statusCode: 200,
+      success: true,
+      message: "OTP sent successfully",
+      result: { mobileNumber, otpExpiry },
+    });
+
+  } catch (error) {
+    // Step 10: Catch any errors
+    return res.status(500).json({
+      statusCode: 500,
+      success: false,
+      message: error.message,
+      result: {},
+    });
+  }
+};
+
+// export const addPatient = async (req, res) => {
+//   try {
+//     let { fullName, age, mobileNumber, gender } = req.body;
+
+//     fullName = fullName?.trim()?.toLowerCase();
+//     mobileNumber = mobileNumber?.trim();
+  
+
+//     if (!fullName) {
+//       return res.send({
+//         statusCode: 404,
+//         success: false,
+//         message: "Required fullName",
+//         result: {},
+//       });
+//     }
+//     if (!mobileNumber) {
+//       return res.send({
+//         statusCode: 404,
+//         success: false,
+//         message: "Required mobileNumber",
+//         result: {},
+//       });
+//     }
+//       if (!/^\d+$/.test(mobileNumber)) {
+//       return res.send({
+//         statusCode: 400,
+//         success: false,
+//         message: "mobileNumber must contain only numbers",
+//         result: {},
+//       });
+//     }
+//     if (!age) {
+//       return res.send({
+//         statusCode: 404,
+//         success: false,
+//         message: "Required age",
+//         result: {},
+//       });
+//     }
+//     // if (!password) {
+//     //   return res.send({
+//     //     statusCode: 400,
+//     //     success: false,
+//     //     message: "Required password",
+//     //     result: {},
+//     //   });
+//     // }
+//     // if(password.length < 8){
+//     //   return res.send({
+//     //     statusCode: 400,
+//     //     success: false,
+//     //     message: "Password must be at least 8 characters long",
+//     //     result: {},
+//     //   });
+//     // }
+
+    
+
+//     const patientExist = await Patient.findOne({ mobileNumber });
+//     if (patientExist) {
+//       return res.send({
+//         statusCode: 400,
+//         success: false,
+//         message: "Patient already exist",
+//         result: {},
+//       });
+//     }
+//   const { otpValue, otpExpiry } = genrateOTP();
+
+//   console.log("otpValue",otpValue);
+//     // const enc_password = bcrypt.hashSync(password, 10);
+
+//     // Step 1: Patient create karo (abhi save nahi karna)
+//     const newPatient = new Patient({
+//       fullName,
+//       age,
+//       mobileNumber,
+//       gender,
+//       // password: enc_password,
+//      otp:{otpValue : otpValue,
+//      otpExpiry : otpExpiry}
+//     });
+
+//     // Step 2: Patient ki id se token generate karo
+//     // const accessToken = generateAccessToken({ _id: newPatient._id, mobileNumber });
+//     // const refreshToken = generateRefreshToken({ _id: newPatient._id, mobileNumber });
+
+//     // Step 3: Tokens ko assign karo
+//     // newPatient.accessToken = accessToken;
+//     // newPatient.refreshToken = refreshToken;
+
+//     // Step 4: Save to DB
+//     await newPatient.save();
+
+//     return res.status(200).json({
+//       statusCode: 200,
+//       success: true,
+//       message: "Patient added successfully",
+//       result: newPatient,
+//     });
+//   } catch (error) {
+//     return res.status(500).json({
+//       statusCode: 500,
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+
+export const verifyPatientOTP = async (req, res) => {
+  try {
+    const { mobileNumber, otp } = req.body;
+
+    if (!mobileNumber || !otp) {
+      return res.status(400).json({
+        statusCode: 400,
+        success: false,
+        message: "Mobile number and OTP are required",
+        result: {},
+      });
+    }
+
+    // Step 1: Patient exist check
+    const patient = await Patient.findOne({ mobileNumber });
+    if (!patient) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found",
+        result: {},
+      });
+    }
+
+    // Step 2: OTP expiry check
+    const currentTime = new Date();
+    if (!patient.otp || !patient.otp.otpValue || patient.otp.otpExpiry < currentTime) {
+      return res.status(400).json({
+        statusCode: 400,
+        success: false,
+        message: "OTP is expired or not generated",
+        result: {},
+      });
+    }
+
+    // Step 3: OTP match check
+    if (patient.otp.otpValue !== otp) {
+      return res.status(400).json({
+        statusCode: 400,
+        success: false,
+        message: "Invalid OTP",
+        result: {},
+      });
+    }
+
+    // ✅ Step 4: OTP verified → generate tokens (without changing isVerified)
+    const accessToken = generateAccessToken({ _id: patient._id, mobileNumber });
+    const refreshToken = generateRefreshToken({ _id: patient._id, mobileNumber });
+
+    // OTP clear after successful verification
+    patient.otp = {};
+    patient.status = "Active"; // Status change to Active after OTP verification
+    await patient.save();
 
     return res.status(200).json({
       statusCode: 200,
       success: true,
-      message: "Patient added successfully",
-      result: newPatient,
+      message: "OTP verified successfully",
+      result: {
+        patient,
+        accessToken,
+        refreshToken,
+      },
     });
+
   } catch (error) {
     return res.status(500).json({
       statusCode: 500,
       success: false,
       message: error.message,
+      result: {},
     });
   }
 };

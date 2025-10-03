@@ -7,6 +7,7 @@ import { addPatient,
   getCurrentLanguage,
   changePatientLanguage,
   sendOTPbyNumber,
+  verifyPatientOTP,
   getAllPatientsByAdmin,
   resendOTPbyNumber, } from "../controllers/patientController.js";  
 import { verifyAccessToken } from "../../helpers/jwt.js"; 
@@ -37,7 +38,7 @@ router.post("/login-admin",upload.none(), adminLogin);
 // GET current language
 router.get("/language", verifyAccessToken, getCurrentLanguage);
 
-
+router.post("/verify-otp", upload.none(), verifyPatientOTP);
 
 // POST change language
 router.post("/language", verifyAccessToken, changePatientLanguage);
