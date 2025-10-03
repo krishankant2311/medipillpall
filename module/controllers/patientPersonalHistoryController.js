@@ -7,7 +7,7 @@ import PersonalHistory from "../models/patientPersonalHistoryModel.js";
  */
 export const addPersonalHistory = async (req, res) => {
   try {
-    let accessToken = req.token; // middleware me token decode karke `req.token` me dalte ho
+    let token = req.token; // middleware me token decode karke `req.token` me dalte ho
     const { title, historyType, description } = req.body;
 
     if (!title) {
@@ -19,7 +19,7 @@ export const addPersonalHistory = async (req, res) => {
       });
     }
 
-    const patient = await Patient.findOne({ accessToken });
+    const patient = await Patient.findOne({ _id: token._id, status: "Active" });
     if (!patient) {
       return res.send({
         statusCode: 401,
@@ -98,7 +98,7 @@ export const editPersonalHistory = async (req, res) => {
  */
 export const getPersonalHistory = async (req, res) => {
   try {
-    let accessToken = req.token;
+    let token = req.token;
     let { page = 1, limit = 10, patientId } = req.query;
 
     page = parseInt(page);
@@ -109,7 +109,7 @@ export const getPersonalHistory = async (req, res) => {
     if (patientId) {
       query.patient_id = patientId;
     } else {
-      const patient = await Patient.findOne({ accessToken });
+      const patient = await Patient.findOne({ _id: token._id, status: "Active" });
       if (!patient) {
         return res.send({
           statusCode: 401,
@@ -212,9 +212,9 @@ export const getPersonalHistory = async (req, res) => {
 export const deletePersonalHistory = async (req, res) => {
   try {
     const { historyId } = req.params;
-    let accessToken = req.token;
+    let token = req.token;
 
-    const patient = await Patient.findOne({ accessToken });
+    const patient = await Patient.findOne({ _id: token._id, status: "Active" });
     if (!patient) {
       return res.send({
         statusCode: 401,

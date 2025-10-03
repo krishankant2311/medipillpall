@@ -4,20 +4,21 @@ import {
   editPersonalContact,
   getPersonalContacts,
   deletePersonalContact,
-} from "../controllers/personalContactController.js";
-
+} from "../controllers/patientPersonalContactController.js";
+import upload from "../../config/multer.js";
+import { verifyAccessToken } from "../../helpers/jwt.js";
 const router = express.Router();
 
 // Add new personal contact
-router.post("/add", addPersonalContact);
+router.post("/add",verifyAccessToken,upload.none(), addPersonalContact);
 
 // Edit personal contact
-router.put("/edit/:contactId", editPersonalContact);
+router.post("/edit/:contactId",verifyAccessToken,upload.none(), editPersonalContact);
 
 // Get all personal contacts (with pagination)
-router.get("/list", getPersonalContacts);
+router.get("/list",verifyAccessToken, getPersonalContacts);
 
 // Delete personal contact (soft delete)
-router.delete("/delete/:contactId", deletePersonalContact);
+router.post("/delete/:contactId",verifyAccessToken, upload.none, deletePersonalContact);
 
 export default router;

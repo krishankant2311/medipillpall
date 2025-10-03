@@ -231,7 +231,7 @@ export const deleteActivity = async (req, res) => {
       });
     }
 
-    activity.status = "Completed"; // or "Deleted" if you want soft delete like Meal
+    activity.status = "Delete"; // or "Deleted" if you want soft delete like Meal
     await activity.save();
 
     return res.send({

@@ -23,7 +23,7 @@ const activitySchema = new mongoose.Schema(
       required: true,
     },
     duration: {
-      type: Number,
+      type: String,
       required: true, // Minutes
     },
     details: {
@@ -32,7 +32,7 @@ const activitySchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Completed", "Pending"],
+      enum: ["Active", "Pending","Delete"],
       default: "Pending",
     },
   },

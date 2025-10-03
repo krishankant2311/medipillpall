@@ -4,18 +4,18 @@ import {
   editPersonalHistory,
   getPersonalHistory,
   deletePersonalHistory,
-} from "../controllers/personalHistoryController.js";
+} from "../controllers/patientPersonalHistoryController.js";
 import { verifyAccessToken } from "../../helpers/jwt.js";
-
+import upload from "../../config/multer.js";
 const router = express.Router();
 
-router.post("/add-personal-history", verifyAccessToken, addPersonalHistory);
+router.post("/add-personal-history",upload.none(), verifyAccessToken, addPersonalHistory);
 
-router.put("/edit-history/:historyId", verifyAccessToken, editPersonalHistory);
+router.post("/edit-history/:historyId", verifyAccessToken,upload.none(), editPersonalHistory);
 
 router.get("/get-personal-history", verifyAccessToken, getPersonalHistory);
 
 
-router.delete("/delete-history/:historyId", verifyAccessToken, deletePersonalHistory);
+router.post("/delete-history/:historyId", verifyAccessToken,upload.none(), deletePersonalHistory);
 
 export default router;
