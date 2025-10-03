@@ -155,7 +155,7 @@ export const addPatient = async (req, res) => {
           statusCode: 200,
           success: true,
           message: "OTP resent successfully",
-          result: { mobileNumber: patientExist.mobileNumber, otpExpiry },
+          result: { mobileNumber: patientExist.mobileNumber, otpExpiry, otpValue},
         });
       }
 
@@ -186,7 +186,8 @@ export const addPatient = async (req, res) => {
     // Step 8: Save new patient to DB
     await newPatient.save();
 
-    // Step 9: Respond with OTP info
+    // Step 9: Respond with OTP info  otp value
+
     return res.status(200).json({
       statusCode: 200,
       success: true,
