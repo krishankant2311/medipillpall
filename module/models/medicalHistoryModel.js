@@ -4,12 +4,13 @@ const medicalHistorySchema = new mongoose.Schema(
   {
     patientId: {
       type: mongoose.Schema.Types.ObjectId,
-      default: "",
+      ref: "Patient",
     },
     title: {
       type: String,
       // required: true,
-      trim: true,
+      // trim: true,
+      default: "",
     }, // e.g. Diabetes, Hypertension
     description: {
       type: String,

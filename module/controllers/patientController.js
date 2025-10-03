@@ -537,9 +537,9 @@ export const editPatient = async (req, res) => {
 
 export const logoutPatient = async (req, res) => {
   try {
-    const accessToken = req.token;
+    const token = req.token;
 
-    const patient = await Patient.findOne({ mobileNumber });
+    const patient = await Patient.findOne({ _id: token._id });
     if (!patient) {
       return res.send({
         statusCode: 404,

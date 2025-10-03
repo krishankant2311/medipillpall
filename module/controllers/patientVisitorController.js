@@ -1,6 +1,6 @@
 import Visitor from "../models/patientVisitorsModel.js";
 import Patient from "../models/patientModel.js";
-
+import Admin from "../models/adminModel.js";
 // ✅ Add Visitor
 // ✅ Add Visitor
 export const addVisitor = async (req, res) => {
@@ -253,6 +253,14 @@ export const deleteVisitor = async (req, res) => {
         result: {},
       });
     }
+    if(visitor.status === "Deleted"){
+        return res.send({
+            statusCode: 400,   
+            success: false,
+            message: "Visitor already deleted",
+            result: {},
+            });
+    }
 
     if (visitor.patientId.toString() !== patient._id.toString()) {
       return res.send({
@@ -296,7 +304,7 @@ export const getAllVisitorsByAdmin = async (req, res) => {
     }
 
     // Fetch the user from DB
-    const adminUser = await User.findById(token._id);
+    const adminUser = await Admin.findById(token._id);
     if (!adminUser || adminUser.status !== "Active") {
       return res.status(403).send({
         statusCode: 403,

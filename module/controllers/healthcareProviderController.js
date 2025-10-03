@@ -1,6 +1,6 @@
 import HealthcareProvider from "../models/healthcareProviderModel.js";
 import Patient from "../models/patientModel.js"; // Assuming you have a Patient model
-
+import Admin from "../models/adminModel.js"; // Assuming you have an Admin model
 // Add Healthcare Provider
 export const addHealthcareProvider = async (req, res) => {
   try {
@@ -215,14 +215,47 @@ export const getHealthcareProvider = async (req, res) => {
 export const getAllHealthcareProviders = async (req, res) => {
   try {
     const token = req.token;
+    const { page = 1, limit = 10 } = req.query;
 
-    const providers = await HealthcareProvider.find({ patient_id: token._id, status: "Active" });
+    // ✅ Validate Active Patient OR Active Admin
+    const patient = await Patient.findOne({ _id: token._id, status: "Active" });
+    const admin = await Admin.findOne({ _id: token._id, status: "Active" });
+
+    if (!patient && !admin) {
+      return res.status(403).send({
+        statusCode: 403,
+        success: false,
+        message: "Unauthorized: Only active patient or admin can access",
+        result: {},
+      });
+    }
+
+    // ✅ Pagination setup
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    let query = { status: "Active" };
+
+    // अगर patient है तो सिर्फ उसके ही providers दिखेंगे
+    if (patient) {
+      query.patient_id = patient._id;
+    }
+
+    const total = await HealthcareProvider.countDocuments(query);
+    const providers = await HealthcareProvider.find(query)
+      .skip(skip)
+      .limit(parseInt(limit));
 
     return res.send({
       statusCode: 200,
       success: true,
       message: "Healthcare Providers fetched successfully",
-      result: providers,
+      result: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / limit),
+        data: providers,
+      },
     });
   } catch (error) {
     console.error("Error in getAllHealthcareProviders:", error);
@@ -234,3 +267,4 @@ export const getAllHealthcareProviders = async (req, res) => {
     });
   }
 };
+

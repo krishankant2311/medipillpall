@@ -1,6 +1,6 @@
 import Meal from "../models/patientMealModel.js";
 import Patient from "../models/patientModel.js";
-
+import Admin from "../models/adminModel.js";
 
 export const addMeal = async (req, res) => {
   try {
@@ -231,19 +231,40 @@ export const deleteMeal = async (req, res) => {
 };
 
 // ✅ Get All Meals (no pagination)
-export const getAllMeals = async (req, res) => {
+export const getAllMealsByAdmin = async (req, res) => {
   try {
     let token = req.token;
-    const patient = await Patient.findOne({ _id: token._id, status: "Active" });
+    let { patientId } = req.query;
 
-    if (!patient) {
-      return res.send({
-        statusCode: 401,
+    if (!patientId) {   
+        return res.send({
+        statusCode: 400,
         success: false,
-        message: "Invalid patient token",
+        message: "patientId is required",
         result: {},
       });
     }
+    const admin = await Admin.findOne({ _id: token._id, status: "Active" });
+
+    if (!admin) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid admin token",
+        result: {},
+      });
+    }
+
+    const patient = await Patient.findOne({ _id:patientId, status: "Active" });
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found",
+        result: {},
+      });
+    }
+
 
     const meals = await Meal.find({ 
         patientId: patient._id, 

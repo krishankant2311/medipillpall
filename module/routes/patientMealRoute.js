@@ -3,7 +3,7 @@ import {
   addMeal,
   editMeal,
   getMeals,
-  getAllMeals,
+  getAllMealsByAdmin,
   deleteMeal,
 } from "../controllers/patientMealController.js";
 import { verifyAccessToken } from "../../helpers/jwt.js";
@@ -20,7 +20,7 @@ router.post("/edit/:mealId", verifyAccessToken,upload.none(), editMeal);
 router.get("/list", verifyAccessToken, getMeals);
 
 // ✅ Get all meals (no pagination)
-router.get("/all", verifyAccessToken, getAllMeals);
+router.get("/all", verifyAccessToken, getAllMealsByAdmin);
 
 // ✅ Delete a meal (soft delete)
 router.post("/delete/:mealId", verifyAccessToken,upload.none(), deleteMeal);

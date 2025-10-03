@@ -4,11 +4,11 @@ import Patient from "../models/patientModel.js";
 // Add Medical History
 export const addMedicalHistory = async (req, res) => {
   try {
-    const { title, description, allergies, conditions } = req.body;
-    const token = req.token; // 👈 yaha se patient milega
+    let { title, description, allergies, conditions } = req.body;
+    let token = req.token; // 👈 yaha se patient milega
     title = title?.trim();
     description = description?.trim();
-    allergies = allergies?.trim()?.tostring();
+    allergies = allergies?.trim()
     conditions = conditions?.trim();
     
     // Validations
@@ -97,9 +97,9 @@ if(conditions.length===0){
 // Edit Medical History
 export const editMedicalHistory = async (req, res) => {
   try {
-    const { title, description, allergies, conditions } = req.body;
+    let { title, description, allergies, conditions } = req.body;
     const token = req.token;
-    const { historyId } = req.params;
+    let { historyId } = req.params;
     if (!historyId) {
       return res.send({
         statusCode: 400,

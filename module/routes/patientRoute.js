@@ -26,7 +26,7 @@ router.post("/edit", verifyAccessToken,upload.none(), editPatient);
 router.post("/logout", verifyAccessToken, logoutPatient);
 
 // 🟢 Soft Delete Patient (Protected)
-router.delete("/delete", verifyAccessToken, deletePatient);
+router.post("/delete", verifyAccessToken, deletePatient);
 
 router.get("/all-patientByAdmin", verifyAccessToken, getAllPatientsByAdmin);
 router.post("/send-otp", sendOTPbyNumber);

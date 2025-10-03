@@ -14,7 +14,7 @@ const router = express.Router();
 router.post("/add", verifyAccessToken, upload.none(), addTask);
 
 // Edit Task
-router.put("/edit", verifyAccessToken,upload.none(), editTask);
+router.post("/edit", verifyAccessToken,upload.none(), editTask);
 
 // Delete Task
 router.post("/delete/:taskId", verifyAccessToken,upload.none(), deleteTask);
