@@ -21,6 +21,7 @@ import termsandconditionRouter from "./module/routes/termsAndConditionsRoute.js"
 import visitorRouter from "./module/routes/patientVisitorRoute.js"
 import caretakerRouter from "./module/routes/caretakerRoutes/caretakerRoute.js"
 import guardianRouter from "./module/routes/guardianRoutes/guardianRoute.js"
+import privacyPolicyRouter from "./module/routes/privacyPolicyRoute.js"
 dotenv.config();
 connect();
 
@@ -56,6 +57,7 @@ app.use('/api/activity',activityRouter)
 app.use('/api/visitor',visitorRouter)
 app.use('/api/caretaker',caretakerRouter)
 app.use('/api/guardian',guardianRouter)
+app.use('/api/privacyPolicy',privacyPolicyRouter)
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(` Server running on port ${PORT}`));
   
