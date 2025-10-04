@@ -393,9 +393,9 @@ export const verifyPatientOTP = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
-    let { mobileNumber, password } = req.body;
+    let { mobileNumber } = req.body;
     mobileNumber = mobileNumber?.trim();
-    password = password?.trim();
+    // password = password?.trim();
 
     if (!mobileNumber) {
       return res.send({
@@ -405,14 +405,14 @@ export const login = async (req, res) => {
         result: {},
       });
     }
-     if (!password) {
-      return res.send({
-        statusCode: 400,
-        success: false,
-        message: "password required",
-        result: {},
-      });
-    }
+    //  if (!password) {
+    //   return res.send({
+    //     statusCode: 400,
+    //     success: false,
+    //     message: "password required",
+    //     result: {},
+    //   });
+    // }
     // if (!isStrongPassword(password)) {
     //   return res.send({
     //     statusCode: 404,
@@ -455,34 +455,35 @@ export const login = async (req, res) => {
     //     result: {},
     //   });
     // }
+  const {otpValue,otpExpiry} = genrateOTP();
+    // const dec_password = await bcrypt.compare(password, patient.password);
 
-    const dec_password = await bcrypt.compare(password, patient.password);
+    // if (!dec_password) {
+    //   return res.send({
+    //     statusCode: 400,
+    //     success: false,
+    //     message: "password mismatch",
+    //     result: {},
+    //   });
+    // }
+    // const _id = patient._id;
+    // const token = await generateAccessToken({
+    //   _id: patient._id,
+    //   mobileNumber: patient.mobileNumber,
+    // });
 
-    if (!dec_password) {
-      return res.send({
-        statusCode: 400,
-        success: false,
-        message: "password mismatch",
-        result: {},
-      });
-    }
-    const _id = patient._id;
-    const token = await generateAccessToken({
-      _id: patient._id,
-      mobileNumber: patient.mobileNumber,
-    });
-
-    patient.token = token;
-
+    // patient.token = token;
+    patient.otp={otpValue:otpValue,
+    otpExpiry:otpExpiry}
     await patient.save();
 
     return res.send({
       statusCode: 200,
       success: true,
-      message: "Login successfully",
+      message: "OTP sent successfully",
       result: {
-        _id,
-        token,
+       otpValue,
+        otpExpiry,
       },
     });
   } catch (error) {
@@ -1058,4 +1059,6 @@ export const getAllPatientsByAdmin = async (req, res) => {
     });
   }
 };
+
+
 
