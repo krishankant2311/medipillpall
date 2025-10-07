@@ -328,3 +328,59 @@ export const stopMedication = async (req, res) => {
     });
   }
 };
+
+export const getAllActiveMedications = async (req, res) => {
+  try {
+    let token = req.token;
+    let { page = 1, limit = 10 } = req.query;
+
+    page = parseInt(page);
+    limit = parseInt(limit);
+
+    // Validate patient
+    const patient = await Patient.findOne({ _id: token._id, status: "Active" });
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found or inactive",
+        result: {},
+      });
+    }
+
+    // Count only active medications
+    const totalMedications = await Medication.countDocuments({
+      patient_id: patient._id,
+      status: "Active",
+    });
+
+    // Fetch only active medications with pagination
+    const medications = await Medication.find({
+      patient_id: patient._id,
+      status: "Active",
+    })
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    return res.status(200).json({
+      statusCode: 200,
+      success: true,
+      message: "Active medications fetched successfully",
+      result: {
+        total: totalMedications,
+        page,
+        limit,
+        totalPages: Math.ceil(totalMedications / limit),
+        medications,
+      },
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in get all active medications API",
+      result: {},
+    });
+  }
+};
