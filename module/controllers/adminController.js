@@ -1034,7 +1034,7 @@ export const getDashboardPiechart = async (req, res) => {
       });
     }
 
-    const range = req.query.range || "month";
+    const range = req.query.range || "all";
     let dateFilter = {};
     const now = new Date();
 
@@ -1104,7 +1104,7 @@ export const getUserPiechartData = async (req, res) => {
       });
     }
 
-    const range = req.query.range || "month";
+    const range = req.query.range || "all";
     let dateFilter = {};
     const now = new Date();
 
@@ -1224,7 +1224,7 @@ export const getAdminDashboardPiechart = async (req, res) => {
         result: {},
       });
     }
-    const range = req.query.range || "month";
+    const range = req.query.range || "all";
     let currentFilter = {};
     let previousFilter = {};
     const now = new Date();
