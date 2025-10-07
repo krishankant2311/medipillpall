@@ -34,11 +34,11 @@ if (!time) {
     result: {},
   });
 }
-if (!Array.isArray(time) || time.length === 0) {
+if (!time.length === 0) {
   return res.send({
     statusCode: 400,  
     success: false,
-    message: "Time should be a non-empty array",
+    message: "Time cannot be an empty ",
     result: {},
   });
 }
