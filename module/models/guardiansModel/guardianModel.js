@@ -4,25 +4,20 @@ const guardianSchema = new mongoose.Schema(
   {
     fullName: {
       type: String,
-      trim: true,
       default: "",
     },
     mobileNumber: {
       type: String,
-      trim: true,
-      unique: true,
       default: "",
     },
     email: {
       type: String,
-      trim: true,
-      lowercase: true,
       unique: true,
       default: "",
     },
     otp: {
-      value: { type: String, default: "" },
-      expiresAt: { type: Date, default: "" },
+      otpValue: { type: String, default: "" },
+      otpExpiry: { type: Date, default: "" },
     },
     status: {
       type: String,
