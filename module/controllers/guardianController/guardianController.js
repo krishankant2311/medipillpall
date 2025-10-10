@@ -4,6 +4,7 @@ import Admin from "../../models/adminModel.js";
 import { generateAccessToken, generateRefreshToken } from "../../../helpers/jwt.js";
 import { genrateOTP } from "../../../helpers/generateOtp.js";
 import Patient from "../../models/patientModel.js";
+import CareNote from "../../models/guardiansModel/careModel.js";
 export const addGuardian = async (req, res) => {
   try {
     let { fullName, mobileNumber, email, password } = req.body;
@@ -733,6 +734,57 @@ export const getPatient = async (req, res) => {
       statusCode: 500,
       success: false,
       message: error.message + " ERROR in getPatient API",
+      result: {},
+    });
+  }
+};
+
+export const getAllCareNotesByGuardian = async (req, res) => {
+  try {
+    const token = req.token;
+    let { page = 1, limit = 10, search = "" } = req.query;
+    page = Number.parseInt(page);
+    limit = Number.parseInt(limit);
+    const skip = (page - 1) * limit;
+    const guardianUser = await Guardian.findById(token._id);
+    if (!guardianUser || guardianUser.status !== "Active") {
+      return res.send({
+        statusCode: 403,
+        success: false,
+        message: "Access denied: Guardians only",
+        result: {},
+      });
+    }
+    const searchRegex = new RegExp(search.trim(), "i");
+    const searchFilter = search.trim()
+      ? {
+        status: "Active",
+        $or: [{ title: { $regex: searchRegex } }, { description: { $regex: searchRegex } }],
+      } : { status: "Active" };
+
+    const careNotes = await CareNote.find(searchFilter)
+      .skip(skip)
+      .limit(limit)
+      .populate('patientId', 'fullName age diseaseCondition') // Populate patient details
+      .populate('guardianId', 'fullName email'); // Populate guardian details
+    const totalCareNotes = await CareNote.countDocuments(searchFilter);
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "All careNotes fetched successfully (Guardian)",
+      result: {
+        careNotes,
+        currentPage: page,
+        totalPage: Math.ceil(totalCareNotes / limit),
+        totalRecord: totalCareNotes,
+      },
+    });
+  }
+  catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in getAllCareNotesByGuardian API",
       result: {},
     });
   }
