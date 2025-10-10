@@ -2,6 +2,10 @@ import mongoose from "mongoose";
 
 const patientSchema = new mongoose.Schema(
   {
+    guardianId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Guardian",
+    },
     fullName: {
       type: String,
       required: true,
@@ -14,14 +18,14 @@ const patientSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-    password:{
-        type:String,
-        default:""
+    password: {
+      type: String,
+      default: ""
     },
-    language:{
-        type:String,
-        enum:["English","Hindi"],
-        default:"English"
+    language: {
+      type: String,
+      enum: ["English", "Hindi"],
+      default: "English"
     },
     otp: {
       otpValue: {
@@ -44,14 +48,22 @@ const patientSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Active","Pending", "Delete"],
+      enum: ["Active", "Pending", "Delete"],
       default: "Pending",
     },
-    gender:{
-        type:String,
-        enum:["Male","Female","Transgender"],
-        default:"Male",
-    }
+    gender: {
+      type: String,
+      enum: ["Male", "Female", "Transgender"],
+      default: "Male",
+    },
+    filePath: {
+      type: String,
+      default: ""
+    },
+    diseaseCondition: {
+      type: String,
+      default: ""
+    },
   },
   { timestamps: true }
 );
