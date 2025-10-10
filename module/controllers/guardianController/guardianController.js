@@ -3,6 +3,7 @@ import Guardian from "../../models/guardiansModel/guardianModel.js";
 import Admin from "../../models/adminModel.js";
 import { generateAccessToken, generateRefreshToken } from "../../../helpers/jwt.js";
 import { genrateOTP } from "../../../helpers/generateOtp.js";
+import Patient from "../../models/patientModel.js";
 export const addGuardian = async (req, res) => {
   try {
     let { fullName, mobileNumber, email, password } = req.body;
@@ -266,15 +267,15 @@ export const getAllGuardiansByAdmin = async (req, res) => {
     const searchRegex = new RegExp(search.trim(), "i");
     const searchFilter = search.trim()
       ? {
-          status: "Active",
-          $or: [{ fullName: { $regex: searchRegex } }, { email: { $regex: searchRegex } }],
-        }
+        status: "Active",
+        $or: [{ fullName: { $regex: searchRegex } }, { email: { $regex: searchRegex } }],
+      }
       : { status: "Active" };
 
     const guardians = await Guardian.find(searchFilter)
       .skip(skip)
       .limit(limit)
-      // .select("-password");
+    // .select("-password");
 
     const totalGuardians = await Guardian.countDocuments(searchFilter);
 
@@ -384,36 +385,36 @@ export const verifyGuardianOTP = async (req, res) => {
       });
     }
 
-   // Step 2a: Check if OTP object exists
-if (!guardian.otp) {
-  return res.status(400).json({
-    statusCode: 400,
-    success: false,
-    message: "OTP has not been generated yet",
-    result: {},
-  });
-}
+    // Step 2a: Check if OTP object exists
+    if (!guardian.otp) {
+      return res.status(400).json({
+        statusCode: 400,
+        success: false,
+        message: "OTP has not been generated yet",
+        result: {},
+      });
+    }
 
-// Step 2b: Check if OTP value exists
-if (!guardian.otp.otpValue) {
-  return res.status(400).json({
-    statusCode: 400,
-    success: false,
-    message: "OTP value is missing",
-    result: {},
-  });
-}
+    // Step 2b: Check if OTP value exists
+    if (!guardian.otp.otpValue) {
+      return res.status(400).json({
+        statusCode: 400,
+        success: false,
+        message: "OTP value is missing",
+        result: {},
+      });
+    }
 
-// Step 2c: Check if OTP is expired
-const currentTime = new Date();
-if (guardian.otp.otpExpiry < currentTime) {
-  return res.status(400).json({
-    statusCode: 400,
-    success: false,
-    message: "OTP has expired. Please request a new one",
-    result: {},
-  });
-}
+    // Step 2c: Check if OTP is expired
+    const currentTime = new Date();
+    if (guardian.otp.otpExpiry < currentTime) {
+      return res.status(400).json({
+        statusCode: 400,
+        success: false,
+        message: "OTP has expired. Please request a new one",
+        result: {},
+      });
+    }
 
 
     // Step 3: OTP match check
@@ -451,6 +452,287 @@ if (guardian.otp.otpExpiry < currentTime) {
       statusCode: 500,
       success: false,
       message: error.message,
+      result: {},
+    });
+  }
+};
+
+export const guardianProfile = async (req, res) => {
+  try {
+    const token = req.token;
+    const guardian = await Guardian.findById(token._id).select("-password -otp -__v");
+    if (!guardian) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Guardian not found",
+        result: {},
+      });
+    }
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Guardian profile fetched successfully",
+      result: guardian,
+    });
+  }
+  catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " Error in guardian profile API",
+      result: {},
+    });
+  }
+};
+
+export const editGuardianProfile = async (req, res) => {
+  try {
+    const token = req.token;
+    let { fullName, email } = req.body;
+    fullName = fullName?.trim()?.toLowerCase();
+    email = email?.trim()?.toLowerCase();
+    if (!fullName) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Required fullName",
+        result: {},
+      });
+    }
+    if (!email) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Required email",
+        result: {},
+      });
+    }
+    const guardian = await Guardian.findById(token._id);
+    if (!guardian) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Guardian not found",
+        result: {},
+      });
+    }
+    guardian.fullName = fullName;
+    guardian.email = email;
+    await guardian.save();
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Guardian profile updated successfully",
+      result: guardian,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " Error in edit guardian profile API",
+      result: {},
+    });
+  }
+};
+
+/**
+ * Add Patient
+ */
+export const addPatient = async (req, res) => {
+  try {
+    let token = req.token; // token se guardian identify hoga
+    const { fullName, age, diseaseCondition, mobileNumber } = req.body;
+
+    // --- Validation ---
+    if (!fullName) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Full name is required",
+        result: {},
+      });
+    }
+
+    if (!age) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Age is required",
+        result: {},
+      });
+    }
+
+    if (!mobileNumber) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Mobile number is required",
+        result: {},
+      });
+    }
+
+    // Validate Guardian
+    const guardian = await Guardian.findOne({ _id: token._id, status: "Active" });
+    if (!guardian) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Guardian not found or inactive",
+        result: {},
+      });
+    }
+
+    // Check if Patient already exists with same mobile under same guardian
+    const existingPatient = await Patient.findOne({
+      guardianId: guardian._id,
+      mobileNumber: mobileNumber.trim(),
+      status: "Active",
+    });
+
+    if (existingPatient) {
+      return res.send({
+        statusCode: 409,
+        success: false,
+        message: "Patient with this mobile number already exists",
+        result: existingPatient,
+      });
+    }
+
+    // Handle file upload
+    let filePath = "";
+    if (req.file) {
+      filePath = `/uploads/patients/${req.file.filename}`;
+    }
+
+    // Create Patient
+    const newPatient = new Patient({
+      guardianId: guardian._id,
+      fullName: fullName.trim(),
+      age,
+      mobileNumber: mobileNumber.trim(),
+      diseaseCondition: diseaseCondition?.trim() || "",
+      filePath,
+      status: "Active",
+    });
+
+    const accessToken = generateAccessToken({
+      _id: newPatient._id,
+      mobileNumber,
+    });
+    const refreshToken = generateRefreshToken({
+      _id: newPatient._id,
+      mobileNumber,
+    });
+
+    newPatient.accessToken = accessToken;
+    newPatient.refreshToken = refreshToken;
+
+    await newPatient.save();
+    guardian.patients = guardian.patients || [];
+    guardian.patients.push(newPatient._id);
+    await guardian.save();
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Patient added successfully",
+      result: newPatient,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in addPatient API",
+      result: {},
+    });
+  }
+};
+
+/**
+ * Get All Patients for Guardian
+ */
+export const getPatients = async (req, res) => {
+  try {
+    let token = req.token;
+
+    const guardian = await Guardian.findOne({ _id: token._id, status: "Active" });
+    if (!guardian) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Guardian not found or inactive",
+        result: {},
+      });
+    }
+
+    const patients = await Patient.find({ guardianId: guardian._id, status: "Active" }).sort({ createdAt: -1 });
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: patients.length ? "Patients fetched successfully" : "No patients found",
+      result: patients,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in getPatients API",
+      result: {},
+    });
+  }
+};
+
+/**
+ * Get Single Patient Detail
+ */
+export const getPatient = async (req, res) => {
+  try {
+    let token = req.token;
+    const { id } = req.params;
+
+    if (!id) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Patient ID is required",
+        result: {},
+      });
+    }
+
+    const guardian = await Guardian.findOne({ _id: token._id, status: "Active" });
+    if (!guardian) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Guardian not found or inactive",
+        result: {},
+      });
+    }
+
+    const patient = await Patient.findOne({ _id: id, guardianId: guardian._id, status: "Active" });
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found or inactive",
+        result: {},
+      });
+    }
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Patient fetched successfully",
+      result: patient,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in getPatient API",
       result: {},
     });
   }

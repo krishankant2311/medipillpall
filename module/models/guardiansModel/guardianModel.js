@@ -2,6 +2,12 @@ import mongoose from "mongoose";
 
 const guardianSchema = new mongoose.Schema(
   {
+    // guardianModel.js
+    patients: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Patient"
+    }],
+
     fullName: {
       type: String,
       default: "",

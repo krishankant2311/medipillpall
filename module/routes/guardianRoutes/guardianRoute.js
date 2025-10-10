@@ -1,5 +1,5 @@
 import express from "express";
-import { addGuardian, getAllGuardiansByAdmin,signupGuardian , guardianLogin, verifyGuardianOTP } from "../../controllers/guardianController/guardianController.js";
+import { addGuardian, getAllGuardiansByAdmin,signupGuardian ,addPatient, guardianLogin, verifyGuardianOTP, guardianProfile,editGuardianProfile } from "../../controllers/guardianController/guardianController.js";
 import { verifyAccessToken } from "../../../helpers/jwt.js";
 import upload from "../../../config/multer.js";
 const router = express.Router();
@@ -14,5 +14,10 @@ router.post("/guardian-login",upload.none(), guardianLogin);
 
 // Route 3: Verify Guardian OTP
 router.post("/verify-guardian-otp",upload.none(), verifyGuardianOTP);
+
+router.get("/guardian-profile", verifyAccessToken, guardianProfile);
+router.put("/edit-guardian-profile", verifyAccessToken, upload.single('profileImage'), editGuardianProfile);
+
+router.post("/add-patient-byguardian", verifyAccessToken, upload.single('profileImage'), addPatient);
 
 export default router;
