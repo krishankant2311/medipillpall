@@ -653,7 +653,7 @@ export const addPatient = async (req, res) => {
 /**
  * Get All Patients for Guardian
  */
-export const getPatients = async (req, res) => {
+export const getallPatientsbyGuardian = async (req, res) => {
   try {
     let token = req.token;
 
