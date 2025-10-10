@@ -23,4 +23,5 @@ router.get("/getall-patients-byguardian", verifyAccessToken, getallPatientsbyGua
 router.get("/get-patient/:id", verifyAccessToken, getPatient);
 router.post("/add-patient-byguardian", verifyAccessToken, upload.single('profileImage'), addPatient);
 
+
 export default router;
