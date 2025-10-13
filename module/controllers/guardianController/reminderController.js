@@ -398,3 +398,60 @@ export const editReminder = async (req, res) => {
     });
   }
 };
+
+
+export const getAllReminders = async (req, res) => {
+  try {
+    const token = req.token; // Admin identification
+
+    // --- Token validation ---
+    if (!token || !token._id) {
+      return res.status(401).send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid token",
+        result: {},
+      });
+    }
+
+    // --- Verify Admin ---
+    const admin = await Admin.findOne({ _id: token._id, status: "Active" });
+    if (!admin) {
+      return res.status(404).send({
+        statusCode: 404,
+        success: false,
+        message: "Admin not found or inactive",
+        result: {},
+      });
+    }
+
+    // --- Fetch All Reminders ---
+    const reminders = await GuardianReminder.find()
+      .populate("guardianId", "fullName email mobileNumber") // optional: show guardian details
+      .sort({ createdAt: -1 }); // latest first
+
+    if (!reminders || reminders.length === 0) {
+      return res.status(404).send({
+        statusCode: 404,
+        success: false,
+        message: "No reminders found",
+        result: [],
+      });
+    }
+
+    // --- Return reminders list ---
+    return res.status(200).send({
+      statusCode: 200,
+      success: true,
+      message: "All reminders fetched successfully",
+      result: reminders,
+    });
+  } catch (error) {
+    return res.status(500).send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in getAllReminders API",
+      result: {},
+    });
+  }
+};

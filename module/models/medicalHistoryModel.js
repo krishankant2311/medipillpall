@@ -23,16 +23,16 @@ const medicalHistorySchema = new mongoose.Schema(
     conditions: {
       // Pacemaker / Stent / None
       pacemaker: {
-        type: Boolean,
-        default: false,
+        type: String,
+        default: "",
       },
       stent: {
-        type: Boolean,
-        default: false,
+        type: String,
+        default: "",
       },
       none: {
-        type: Boolean,
-        default: false,
+        type: String,
+        default: "",
       },
     },
   },
