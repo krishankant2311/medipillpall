@@ -10,51 +10,51 @@ export const addMedicalHistory = async (req, res) => {
     description = description?.trim();
     allergies = allergies?.trim()
     conditions = conditions?.trim();
-    
+
     // Validations
-  if (!title) {
-  return res.send({
-    statusCode: 400,
-    success: false,
-    message: "Title is required",
-    result: {},
-  });
-}
+    if (!title) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Title is required",
+        result: {},
+      });
+    }
 
-if (!description) {
-  return res.send({
-    statusCode: 400,
-    success: false,
-    message: "Description is required",
-    result: {},
-  });
-}
+    if (!description) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Description is required",
+        result: {},
+      });
+    }
 
-if (!allergies) {
-  return res.send({
-    statusCode: 400,
-    success: false,
-    message: "Allergies are required",
-    result: {},
-  });
-}
+    if (!allergies) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Allergies are required",
+        result: {},
+      });
+    }
 
-if (!conditions) {
-  return res.send({
-    statusCode: 400,
-    success: false,
-    message: "Conditions are required",
-    result: {},
-  });
-}
-if(conditions.length===0){
-  return res.send({
-    statusCode: 400,
-    success: false,
-    message: "Conditions cannot be an empty array",
-    result: {},
-  });
-}
+    if (!conditions) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Conditions are required",
+        result: {},
+      });
+    }
+    if (conditions.length === 0) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Conditions cannot be an empty array",
+        result: {},
+      });
+    }
 
 
     const patient = await Patient.findOne({ _id: token._id, status: "Active" });
@@ -214,6 +214,58 @@ export const getMedicalHistoryByPatient = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in getMedicalHistoryByPatient:", error);
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message,
+      result: {},
+    });
+  }
+};
+
+export const getMedicalHistory = async (req, res) => {
+  try {
+    const token = req.token;
+    const { patientId } = req.query;
+    let { page = 1, limit = 10 } = req.query;
+    page = parseInt(page);
+    limit = parseInt(limit);
+    // validate token patient
+    const patientFromToken = await
+      Patient.findOne({ _id: token._id, status: "Active" });
+    if (!patientFromToken) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Unauthorized or inactive patient",
+        result: {},
+      });
+    }
+    let query = {};
+    if (patientId) {
+      query.patientId = patientId;
+    } else {
+      query.patientId = patientFromToken._id;
+    }
+    const totalRecords = await MedicalHistory.countDocuments(query);
+    const histories = await MedicalHistory.find(query)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Medical history fetched successfully",
+      pagination: {
+        totalRecords,
+        currentPage: page,
+        totalPages: Math.ceil(totalRecords / limit),
+        pageSize: histories.length,
+      },
+      result: histories,
+    });
+  } catch (error) {
+    console.error("Error in getMedicalHistory:", error);
     return res.send({
       statusCode: 500,
       success: false,

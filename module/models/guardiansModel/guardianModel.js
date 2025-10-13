@@ -2,44 +2,43 @@ import mongoose from "mongoose";
 
 const guardianSchema = new mongoose.Schema(
   {
-    // guardianModel.js
     patients: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: "Patient"
     }],
 
-    fullName: {
-      type: String,
-      default: "",
+    fullName: { 
+      type: String, 
+      default: "" 
     },
-    mobileNumber: {
-      type: String,
-      default: "",
+
+    mobileNumber: { 
+      type: String,    // Allows multiple null/undefined
+      default: "" 
     },
-    email: {
-      type: String,
-      unique: true,
-      default: "",
+
+    email: { 
+      type: String,      // Allows multiple null/undefined
+      default: "" 
     },
+
     otp: {
       otpValue: { type: String, default: "" },
-      otpExpiry: { type: Date, default: "" },
+      otpExpiry: { type: Date, default: null },
     },
+
     status: {
       type: String,
       enum: ["Active", "Delete", "Pending", "Blocked"],
       default: "Pending",
     },
-    accessToken: {
-      type: String,
-      default: "",
-    },
-    refreshToken: {
-      type: String,
-      default: "",
-    },
+
+    accessToken: { type: String, default: "" },
+    refreshToken: { type: String, default: "" },
   },
   { timestamps: true }
 );
-const Guardian = mongoose.model("Guardian", guardianSchema);
+
+// ✅ Prevent OverwriteModelError
+const Guardian = mongoose.models.Guardian || mongoose.model("Guardian", guardianSchema);
 export default Guardian;
