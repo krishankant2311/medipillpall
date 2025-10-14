@@ -99,43 +99,125 @@ export const editDietInstruction = async (req, res) => {
   }
 };
 
+// export const getDietInstructions = async (req, res) => {
+//   try {
+//     let token = req.token;
+//     let { page = 1, limit = 10, patientId } = req.query;
+
+//     page = parseInt(page);
+//     limit = parseInt(limit);
+
+//     let query = {};
+//     if (patientId) {
+//       query.patient_id = patientId;
+//     } else {
+//       const patient = await Patient.findOne({ _id:token._id, status:"Active" });
+//       if (!patient) {
+//         return res.send({
+//           statusCode: 401,
+//           success: false,
+//           message: "Invalid patient token",
+//           result: {},
+//         });
+//       }
+//       query.patient_id = patient._id;
+//     }
+
+//     query.status = "Active";
+
+//     const diets = await DietInstruction.find({query, status: "Active" })
+//       .skip((page - 1) * limit)
+//       .limit(limit)
+//       .sort({ createdAt: -1 });
+
+//       console.log("Diets:", diets);
+
+//     const total = await DietInstruction.countDocuments({query, status: "Active" });
+
+//     return res.send({
+//       statusCode: 200,
+//       success: true,
+//       message: "Diet Instructions fetched successfully",
+//       result: diets,
+//       pagination: {
+//         total,
+//         page,
+//         limit,
+//         totalPages: Math.ceil(total / limit),
+//       },
+//     });
+//   } catch (error) {
+//     return res.send({
+//       statusCode: 500,
+//       success: false,
+//       message: error.message,
+//       result: {},
+//     });
+//   }
+// };
+
+
+// import Patient from "../../models/patientModel.js";
+// import DietInstruction from "../../models/dietInstructionModel.js";
+
 export const getDietInstructions = async (req, res) => {
   try {
-    let token = req.token;
+    const token = req.token;
     let { page = 1, limit = 10, patientId } = req.query;
 
+    // --- Validation ---
+    if (!token || !token._id) {
+      return res.status(401).send({
+        statusCode: 401,
+        success: false,
+        message: "Unauthorized access: Missing or invalid token",
+        result: {},
+      });
+    }
+
+    // --- Pagination parsing ---
     page = parseInt(page);
     limit = parseInt(limit);
+    if (isNaN(page) || page <= 0) page = 1;
+    if (isNaN(limit) || limit <= 0) limit = 10;
 
-    let query = {};
+    // --- Build query ---
+    let query = { status: "Active" };
+
     if (patientId) {
       query.patient_id = patientId;
     } else {
-      const patient = await Patient.findOne({ _id:token._id, status:"Active" });
+      const patient = await Patient.findOne({ _id: token._id, status: "Active" });
       if (!patient) {
-        return res.send({
-          statusCode: 401,
+        return res.status(404).send({
+          statusCode: 404,
           success: false,
-          message: "Invalid patient token",
+          message: "Patient not found or inactive",
           result: {},
         });
       }
       query.patient_id = patient._id;
     }
 
-    query.status = "Active";
-
-    const diets = await DietInstruction.find({query, status: "Active" })
+    // --- Fetch diet instructions ---
+    const diets = await DietInstruction.find(query)
       .skip((page - 1) * limit)
       .limit(limit)
       .sort({ createdAt: -1 });
 
-    const total = await DietInstruction.countDocuments({query, status: "Active" });
+    const total = await DietInstruction.countDocuments(query);
 
-    return res.send({
+    console.log("✅ Query:", query);
+    console.log("✅ Diet Instructions Fetched:", diets.length);
+
+    // --- Response ---
+    return res.status(200).send({
       statusCode: 200,
       success: true,
-      message: "Diet Instructions fetched successfully",
+      message:
+        diets.length > 0
+          ? "Diet instructions fetched successfully"
+          : "No diet instructions found",
       result: diets,
       pagination: {
         total,
@@ -145,10 +227,11 @@ export const getDietInstructions = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.send({
+    console.error("❌ Error in getDietInstructions:", error);
+    return res.status(500).send({
       statusCode: 500,
       success: false,
-      message: error.message,
+      message: error.message || "Internal Server Error",
       result: {},
     });
   }
