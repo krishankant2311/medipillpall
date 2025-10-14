@@ -6,11 +6,11 @@ import MedicalReport from "../models/medicalReportModel.js";
  */
 export const uploadMedicalReport = async (req, res) => {
   try {
-    let accessToken = req.token;
+    let token = req.token;
     const { description } = req.body;
 
     // check patient
-    const patient = await Patient.findOne({ accessToken });
+    const patient = await Patient.findOne({ _id:token._id, status:"Active" });
     if (!patient) {
       return res.send({
         statusCode: 401,
