@@ -247,6 +247,60 @@ export const signupGuardian = async (req, res) => {
   }
 };
 
+// export const getAllGuardiansByAdmin = async (req, res) => {
+//   try {
+//     const token = req.token;
+//     let { page = 1, limit = 10, search = "" } = req.query;
+//     page = Number.parseInt(page);
+//     limit = Number.parseInt(limit);
+//     const skip = (page - 1) * limit;
+
+//     const adminUser = await Admin.findById(token._id);
+//     if (!adminUser || adminUser.status !== "Active") {
+//       return res.status(403).send({
+//         statusCode: 403,
+//         success: false,
+//         message: "Access denied: Admins only",
+//         result: {},
+//       });
+//     }
+
+//     const searchRegex = new RegExp(search.trim(), "i");
+//     const searchFilter = search.trim()
+//       ? {
+//         status: "Active",
+//         $or: [{ fullName: { $regex: searchRegex } }, { email: { $regex: searchRegex } }],
+//       }
+//       : { status: "Active" };
+
+//     const guardians = await Guardian.find(searchFilter)
+//       .skip(skip)
+//       .limit(limit)
+//     // .select("-password");
+
+//     const totalGuardians = await Guardian.countDocuments(searchFilter);
+
+//     return res.send({
+//       statusCode: 200,
+//       success: true,
+//       message: "All guardians fetched successfully (Admin)",
+//       result: {
+//         guardians,
+//         currentPage: page,
+//         totalPage: Math.ceil(totalGuardians / limit),
+//         totalRecord: totalGuardians,
+//       },
+//     });
+//   } catch (error) {
+//     return res.send({
+//       statusCode: 500,
+//       success: false,
+//       message: error.message + " ERROR in getAllGuardiansByAdmin API",
+//       result: {},
+//     });
+//   }
+// };
+
 export const getAllGuardiansByAdmin = async (req, res) => {
   try {
     const token = req.token;
@@ -255,6 +309,7 @@ export const getAllGuardiansByAdmin = async (req, res) => {
     limit = Number.parseInt(limit);
     const skip = (page - 1) * limit;
 
+    // --- Step 1: Validate Admin ---
     const adminUser = await Admin.findById(token._id);
     if (!adminUser || adminUser.status !== "Active") {
       return res.status(403).send({
@@ -265,27 +320,46 @@ export const getAllGuardiansByAdmin = async (req, res) => {
       });
     }
 
+    // --- Step 2: Search & Filter ---
     const searchRegex = new RegExp(search.trim(), "i");
     const searchFilter = search.trim()
       ? {
-        status: "Active",
-        $or: [{ fullName: { $regex: searchRegex } }, { email: { $regex: searchRegex } }],
-      }
+          status: "Active",
+          $or: [
+            { fullName: { $regex: searchRegex } },
+            { email: { $regex: searchRegex } },
+            { mobileNumber: { $regex: searchRegex } },
+          ],
+        }
       : { status: "Active" };
 
+    // --- Step 3: Fetch guardians + populate their patients ---
     const guardians = await Guardian.find(searchFilter)
       .skip(skip)
       .limit(limit)
-    // .select("-password");
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "patients",
+        match: { status: "Active" }, // only active patients
+        select: "fullName age diseaseCondition gender contactNumber createdAt",
+      });
 
+    // --- Step 4: Count total guardians ---
     const totalGuardians = await Guardian.countDocuments(searchFilter);
 
+    // --- Step 5: Add total patient count per guardian ---
+    const guardiansWithCount = guardians.map((guardian) => ({
+      ...guardian.toObject(),
+      totalPatients: guardian.patients?.length || 0,
+    }));
+
+    // --- Step 6: Response ---
     return res.send({
       statusCode: 200,
       success: true,
       message: "All guardians fetched successfully (Admin)",
       result: {
-        guardians,
+        guardians: guardiansWithCount,
         currentPage: page,
         totalPage: Math.ceil(totalGuardians / limit),
         totalRecord: totalGuardians,
