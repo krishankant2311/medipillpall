@@ -71,14 +71,14 @@ export const uploadMedicalReport = async (req, res) => {
 
 export const getMedicalReports = async (req, res) => {
   try {
-    let accessToken = req.token;
+    let token = req.token;
     let { page = 1, limit = 10 } = req.query;
 
     page = parseInt(page);
     limit = parseInt(limit);
 
     // check patient
-    const patient = await Patient.findOne({ accessToken });
+    const patient = await Patient.findOne({ _id:token._id, status:"Active" });
     if (!patient) {
       return res.send({
         statusCode: 401,
