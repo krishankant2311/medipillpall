@@ -654,11 +654,48 @@ export const addPatient = async (req, res) => {
 /**
  * Get All Patients for Guardian
  */
+// export const getallPatientsbyGuardian = async (req, res) => {
+//   try {
+//     let token = req.token;
+
+//     const guardian = await Guardian.findOne({ _id: token._id, status: "Active" });
+//     if (!guardian) {
+//       return res.send({
+//         statusCode: 404,
+//         success: false,
+//         message: "Guardian not found or inactive",
+//         result: {},
+//       });
+//     }
+
+//     const patients = await Patient.find({ guardianId: guardian._id, status: "Active" }).sort({ createdAt: -1 }).populate('patientId', 'fullName age diseaseCondition'); // Populate patient details
+
+//     return res.send({
+//       statusCode: 200,
+//       success: true,
+//       message: patients.length ? "Patients fetched successfully" : "No patients found",
+//       result: patients,
+//     });
+//   } catch (error) {
+//     return res.send({
+//       statusCode: 500,
+//       success: false,
+//       message: error.message + " ERROR in getPatients API",
+//       result: {},
+//     });
+//   }
+// };
+
 export const getallPatientsbyGuardian = async (req, res) => {
   try {
-    let token = req.token;
+    const token = req.token;
 
-    const guardian = await Guardian.findOne({ _id: token._id, status: "Active" });
+    // --- Step 1: Validate guardian ---
+    const guardian = await Guardian.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+
     if (!guardian) {
       return res.send({
         statusCode: 404,
@@ -668,19 +705,36 @@ export const getallPatientsbyGuardian = async (req, res) => {
       });
     }
 
-    const patients = await Patient.find({ guardianId: guardian._id, status: "Active" }).sort({ createdAt: -1 });
+    // --- Step 2: Fetch active patients of this guardian ---
+    const patients = await Patient.find({
+      guardianId: guardian._id,
+      status: "Active",
+    })
+      .sort({ createdAt: -1 })
+      .populate("guardianId", "fullName email mobileNumber") // if you want guardian info
+      .select("fullName age diseaseCondition gender contactNumber createdAt"); // customize patient fields
 
+    // --- Step 3: Count total patients ---
+    const totalPatients = patients.length;
+
+    // --- Step 4: Send response ---
     return res.send({
       statusCode: 200,
       success: true,
-      message: patients.length ? "Patients fetched successfully" : "No patients found",
-      result: patients,
+      message:
+        patients.length > 0
+          ? "Patients fetched successfully"
+          : "No patients found",
+      result: {
+        totalPatients,
+        patients,
+      },
     });
   } catch (error) {
     return res.send({
       statusCode: 500,
       success: false,
-      message: error.message + " ERROR in getPatients API",
+      message: error.message + " ERROR in getAllPatientsByGuardian API",
       result: {},
     });
   }
