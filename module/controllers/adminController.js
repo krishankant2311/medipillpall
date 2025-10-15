@@ -1091,6 +1091,127 @@ export const getDashboardPiechart = async (req, res) => {
   }
 };
 
+// export const getUserPiechartData = async (req, res) => {
+//   try {
+//     const token = req.token;
+//     const admin = await Admin.findOne({ _id: token._id, status: "Active" });
+//     if (!admin) {
+//       return res.send({
+//         statusCode: 404,
+//         success: false,
+//         message: "Admin not found",
+//         result: {},
+//       });
+//     }
+
+//     const range = req.query.range || "all";
+//     let dateFilter = {};
+//     const now = new Date();
+
+//     if (range === "week") {
+//       const start = new Date();
+//       start.setDate(start.getDate() - 7);
+//       dateFilter.createdAt = { $gte: start };
+//     } else if (range === "month") {
+//       const start = new Date(now.getFullYear(), now.getMonth(), 1);
+//       dateFilter.createdAt = { $gte: start };
+//     } else if (range === "year") {
+//       const start = new Date(now.getFullYear(), 0, 1);
+//       dateFilter.createdAt = { $gte: start };
+//     } else if (range === "custom") {
+//       const startDate = new Date(req.query.startDate);
+//       const endDate = new Date(req.query.endDate);
+//       endDate.setHours(23, 59, 59, 999);
+//       if (!isNaN(startDate) && !isNaN(endDate)) {
+//         dateFilter.createdAt = { $gte: startDate, $lte: endDate };
+//       }
+//     }
+
+//     const totalActivePatients = await Patient.countDocuments({
+//       status: "Active",
+//       ...dateFilter,
+//     });
+//     const totalPendingPatients = await Patient.countDocuments({
+//       status: "Pending",
+//       ...dateFilter,
+//     });
+//     const totalBlockedPatients = await Patient.countDocuments({
+//       status: "Blocked",
+//       ...dateFilter,
+//     });
+
+//     const totalActiveGuardians = await Guardian.countDocuments({
+//       status: "Active",
+//       ...dateFilter,
+//     });
+//     const totalPendingGuardians = await Guardian.countDocuments({
+//       status: "Pending",
+//       ...dateFilter,
+//     });
+//     const totalBlockedGuardians = await Guardian.countDocuments({
+//       status: "Blocked",
+//       ...dateFilter,
+//     });
+
+//     const totalActiveCaretakers = await Caretaker.countDocuments({
+//       status: "Active",
+//       ...dateFilter,
+//     });
+//     const totalPendingCaretakers = await Caretaker.countDocuments({
+//       status: "Pending",
+//       ...dateFilter,
+//     });
+//     const totalBlockedCaretakers = await Caretaker.countDocuments({
+//       status: "Blocked",
+//       ...dateFilter,
+//     });
+
+//     const totalPatients = totalActivePatients + totalPendingPatients + totalBlockedPatients;
+//     const totalGuardians = totalActiveGuardians + totalPendingGuardians + totalBlockedGuardians;
+//     const totalCaretakers = totalActiveCaretakers + totalPendingCaretakers + totalBlockedCaretakers;
+
+//     return res.send({
+//       statusCode: 200,
+//       success: true,
+//       message: "Patient, Guardian & Caretaker stats fetched successfully",
+//       result: {
+//         range,
+//         totalActivePatients,
+//         totalPendingPatients,
+//         totalBlockedPatients,
+//         totalActiveGuardians,
+//         totalPendingGuardians,
+//         totalBlockedGuardians,
+//         totalActiveCaretakers,
+//         totalPendingCaretakers,
+//         totalBlockedCaretakers,
+//         patientPercentage: {
+//           active: totalPatients ? ((totalActivePatients / totalPatients) * 100).toFixed(2) : "0.00",
+//           pending: totalPatients ? ((totalPendingPatients / totalPatients) * 100).toFixed(2) : "0.00",
+//           blocked: totalPatients ? ((totalBlockedPatients / totalPatients) * 100).toFixed(2) : "0.00",
+//         },
+//         guardianPercentage: {
+//           active: totalGuardians ? ((totalActiveGuardians / totalGuardians) * 100).toFixed(2) : "0.00",
+//           pending: totalGuardians ? ((totalPendingGuardians / totalGuardians) * 100).toFixed(2) : "0.00",
+//           blocked: totalGuardians ? ((totalBlockedGuardians / totalGuardians) * 100).toFixed(2) : "0.00",
+//         },
+//         caretakerPercentage: {
+//           active: totalCaretakers ? ((totalActiveCaretakers / totalCaretakers) * 100).toFixed(2) : "0.00",
+//           pending: totalCaretakers ? ((totalPendingCaretakers / totalCaretakers) * 100).toFixed(2) : "0.00",
+//           blocked: totalCaretakers ? ((totalBlockedCaretakers / totalCaretakers) * 100).toFixed(2) : "0.00",
+//         },
+//       },
+//     });
+//   } catch (error) {
+//     return res.send({
+//       statusCode: 500,
+//       success: false,
+//       message: error.message + " ERROR in getUserPiechartData",
+//       result: {},
+//     });
+//   }
+// };
+
 export const getUserPiechartData = async (req, res) => {
   try {
     const token = req.token;
@@ -1103,104 +1224,84 @@ export const getUserPiechartData = async (req, res) => {
         result: {},
       });
     }
-
     const range = req.query.range || "all";
-    let dateFilter = {};
     const now = new Date();
-
-    if (range === "week") {
-      const start = new Date();
-      start.setDate(start.getDate() - 7);
-      dateFilter.createdAt = { $gte: start };
-    } else if (range === "month") {
-      const start = new Date(now.getFullYear(), now.getMonth(), 1);
-      dateFilter.createdAt = { $gte: start };
-    } else if (range === "year") {
-      const start = new Date(now.getFullYear(), 0, 1);
-      dateFilter.createdAt = { $gte: start };
-    } else if (range === "custom") {
-      const startDate = new Date(req.query.startDate);
-      const endDate = new Date(req.query.endDate);
-      endDate.setHours(23, 59, 59, 999);
-      if (!isNaN(startDate) && !isNaN(endDate)) {
-        dateFilter.createdAt = { $gte: startDate, $lte: endDate };
+    const getRangeDates = (range) => {
+      let start, end, prevStart, prevEnd;
+      const today = new Date();
+      if (range === "week") {
+        end = today;
+        start = new Date(); start.setDate(today.getDate() - 6);
+        prevEnd = new Date(); prevEnd.setDate(start.getDate() - 1);
+        prevStart = new Date(); prevStart.setDate(prevEnd.getDate() - 6);
+      } else if (range === "month") {
+        start = new Date(today.getFullYear(), today.getMonth(), 1);
+        end = today;
+        const prevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        prevStart = prevMonth;
+        prevEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+      } else if (range === "year") {
+        start = new Date(today.getFullYear(), 0, 1);
+        end = today;
+        prevStart = new Date(today.getFullYear() - 1, 0, 1);
+        prevEnd = new Date(today.getFullYear() - 1, 11, 31);
+      } else if (range === "custom") {
+        start = new Date(req.query.startDate);
+        end = new Date(req.query.endDate);
+        end.setHours(23, 59, 59, 999);
+        const diff = end - start;
+        prevEnd = new Date(start.getTime() - 1);
+        prevStart = new Date(prevEnd.getTime() - diff);
+      } else { // all time
+        start = new Date(0);
+        end = today;
+        prevStart = null;
+        prevEnd = null;
       }
-    }
-
-    const totalActivePatients = await Patient.countDocuments({
-      status: "Active",
-      ...dateFilter,
-    });
-    const totalPendingPatients = await Patient.countDocuments({
-      status: "Pending",
-      ...dateFilter,
-    });
-    const totalBlockedPatients = await Patient.countDocuments({
-      status: "Blocked",
-      ...dateFilter,
-    });
-
-    const totalActiveGuardians = await Guardian.countDocuments({
-      status: "Active",
-      ...dateFilter,
-    });
-    const totalPendingGuardians = await Guardian.countDocuments({
-      status: "Pending",
-      ...dateFilter,
-    });
-    const totalBlockedGuardians = await Guardian.countDocuments({
-      status: "Blocked",
-      ...dateFilter,
-    });
-
-    const totalActiveCaretakers = await Caretaker.countDocuments({
-      status: "Active",
-      ...dateFilter,
-    });
-    const totalPendingCaretakers = await Caretaker.countDocuments({
-      status: "Pending",
-      ...dateFilter,
-    });
-    const totalBlockedCaretakers = await Caretaker.countDocuments({
-      status: "Blocked",
-      ...dateFilter,
-    });
-
-    const totalPatients = totalActivePatients + totalPendingPatients + totalBlockedPatients;
-    const totalGuardians = totalActiveGuardians + totalPendingGuardians + totalBlockedGuardians;
-    const totalCaretakers = totalActiveCaretakers + totalPendingCaretakers + totalBlockedCaretakers;
-
+      return { start, end, prevStart, prevEnd };
+    };
+    const { start, end, prevStart, prevEnd } = getRangeDates(range);
+    const dateFilter = { createdAt: { $gte: start, $lte: end }, status: "Active" };
+    const prevDateFilter = prevStart && prevEnd ? { createdAt: { $gte: prevStart, $lte: prevEnd }, status: "Active" } : null;
+    // Fetch only active documents
+    const [patients, guardians, caretakers, prevPatients, prevGuardians, prevCaretakers] = await Promise.all([
+      Patient.find(dateFilter),
+      Guardian.find(dateFilter),
+      Caretaker.find(dateFilter),
+      prevDateFilter ? Patient.find(prevDateFilter) : [],
+      prevDateFilter ? Guardian.find(prevDateFilter) : [],
+      prevDateFilter ? Caretaker.find(prevDateFilter) : [],
+    ]);
+    const calcPercentage = (current, previous) =>
+      previous ? (((current - previous) / previous) * 100).toFixed(2) : "0.00";
+    const cards = [
+      {
+        title: "Total Patients",
+        amount: patients.length,
+        percentage: calcPercentage(patients.length, prevPatients.length),
+        isIncrease: patients.length >= prevPatients.length,
+        para: "Patients Registered Till Date",
+      },
+      {
+        title: "Total Guardians",
+        amount: guardians.length,
+        percentage: calcPercentage(guardians.length, prevGuardians.length),
+        isIncrease: guardians.length >= prevGuardians.length,
+        para: "Parents Who Have Visited So Far",
+      },
+      {
+        title: "Total Caretakers",
+        amount: caretakers.length,
+        percentage: calcPercentage(caretakers.length, prevCaretakers.length),
+        isIncrease: caretakers.length >= prevCaretakers.length,
+        para: "Active Caretakers So Far",
+      },
+    ];
     return res.send({
       statusCode: 200,
       success: true,
-      message: "Patient, Guardian & Caretaker stats fetched successfully",
-      result: {
-        range,
-        totalActivePatients,
-        totalPendingPatients,
-        totalBlockedPatients,
-        totalActiveGuardians,
-        totalPendingGuardians,
-        totalBlockedGuardians,
-        totalActiveCaretakers,
-        totalPendingCaretakers,
-        totalBlockedCaretakers,
-        patientPercentage: {
-          active: totalPatients ? ((totalActivePatients / totalPatients) * 100).toFixed(2) : "0.00",
-          pending: totalPatients ? ((totalPendingPatients / totalPatients) * 100).toFixed(2) : "0.00",
-          blocked: totalPatients ? ((totalBlockedPatients / totalPatients) * 100).toFixed(2) : "0.00",
-        },
-        guardianPercentage: {
-          active: totalGuardians ? ((totalActiveGuardians / totalGuardians) * 100).toFixed(2) : "0.00",
-          pending: totalGuardians ? ((totalPendingGuardians / totalGuardians) * 100).toFixed(2) : "0.00",
-          blocked: totalGuardians ? ((totalBlockedGuardians / totalGuardians) * 100).toFixed(2) : "0.00",
-        },
-        caretakerPercentage: {
-          active: totalCaretakers ? ((totalActiveCaretakers / totalCaretakers) * 100).toFixed(2) : "0.00",
-          pending: totalCaretakers ? ((totalPendingCaretakers / totalCaretakers) * 100).toFixed(2) : "0.00",
-          blocked: totalCaretakers ? ((totalBlockedCaretakers / totalCaretakers) * 100).toFixed(2) : "0.00",
-        },
-      },
+      message: "Dashboard card data fetched successfully",
+      result: { range, cards },
     });
   } catch (error) {
     return res.send({
