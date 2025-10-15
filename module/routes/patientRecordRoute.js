@@ -12,6 +12,10 @@ import {
   getPatientBodyTemp,
   getPatientBodyWeight,
   getPatientHeartRate,
+  editPatientBloodPressure,
+  editPatientBodyTemp,
+  editPatientHeartRate,
+  editPatientBodyWeight,
 } from "../../module/controllers/patientRecordController.js";
 
 const router = express.Router();
@@ -38,5 +42,9 @@ router.get("/get-patient-BW", verifyAccessToken, getPatientBodyWeight);
 
 router.get("/get-patient-heartRate", verifyAccessToken, getPatientHeartRate);
 
+router.post("/edit-blood-pressure", verifyAccessToken,upload.none(), editPatientBloodPressure);
+router.post("/edit-body-temp", verifyAccessToken,upload.none(), editPatientBodyTemp);
+router.post("/edit-heart-rate", verifyAccessToken,upload.none(), editPatientHeartRate);
+router.post("/edit-body-weight", verifyAccessToken,upload.none(), editPatientBodyWeight);
 
 export default router;

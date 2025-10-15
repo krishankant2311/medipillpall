@@ -495,3 +495,332 @@ export const getPatientHeartRate = async (req, res) => {
     });
   }
 };
+
+// -------------------- EDIT BLOOD PRESSURE --------------------
+export const editPatientBloodPressures = async (req, res) => {
+  try {
+    // Step 1: Validate token
+    const token = req.token;
+    if (!token || !token._id) {
+      return res.status(401).json({
+        statusCode: 401,
+        success: false,
+        message: "Invalid token",
+        result: {},
+      });
+    }
+
+    // Step 2: Extract body
+    const { day, amBP, pmBP, comments } = req.body;
+
+    // Step 3: Validate input
+    if (!day && !amBP && !pmBP && !comments) {
+      return res.status(400).json({
+        statusCode: 400,
+        success: false,
+        message: "At least one field is required to update (day, amBP, pmBP, comments)",
+        result: {},
+      });
+    }
+
+    // Step 4: Find today’s record
+    const { start, end } = getDateRange(new Date());
+    const record = await PatientRecord.findOne({
+      patient_id: token._id,
+      createdAt: { $gte: start, $lte: end },
+    });
+
+    if (!record) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "No patient record found for today",
+        result: {},
+      });
+    }
+
+    // Step 5: Update existing bloodPressure
+    record.bloodPressure = {
+      ...record.bloodPressure?.toObject?.() || record.bloodPressure || {},
+      ...(day && { day }),
+      ...(amBP && { amBP }),
+      ...(pmBP && { pmBP }),
+      ...(comments && { comments }),
+    };
+    await record.save();
+
+    // Step 6: Return response
+    return res.status(200).json({
+      statusCode: 200,
+      success: true,
+      message: "Blood Pressure updated successfully",
+      result: record.bloodPressure,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      statusCode: 500,
+      success: false,
+      message: error.message,
+      result: {},
+    });
+  }
+};
+
+export const editPatientBloodPressure = async (req, res) => {
+  try {
+    const token = req.token;
+    const { day, amBP, pmBP, comments } = req.body;
+
+    // --- Validate token ---
+    if (!token || !token._id) {
+      return res.status(401).json({
+        statusCode: 401,
+        success: false,
+        message: "Invalid token",
+        result: {},
+      });
+    }
+
+    // --- Validate at least one field ---
+    if (!day && !amBP && !pmBP && !comments) {
+      return res.status(400).json({
+        statusCode: 400,
+        success: false,
+        message:
+          "At least one field is required to update (day, amBP, pmBP, comments)",
+        result: {},
+      });
+    }
+
+    // --- Build update object dynamically ---
+    const updateFields = {};
+    if (day) updateFields.day = day;
+    if (amBP) updateFields.amBP = amBP;
+    if (pmBP) updateFields.pmBP = pmBP;
+    if (comments) updateFields.comments = comments;
+
+    // --- Update record ---
+    const record = await PatientRecord.findOneAndUpdate(
+      { patient_id: token._id },
+      { $set: updateFields },
+      { new: true }
+    );
+
+    if (!record) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "Record not found for this patient",
+        result: {},
+      });
+    }
+
+    return res.status(200).json({
+      statusCode: 200,
+      success: true,
+      message: "Blood pressure updated successfully",
+      result: record,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      statusCode: 500,
+      success: false,
+      message: error.message,
+      result: {},
+    });
+  }
+};
+
+
+// -------------------- EDIT BODY TEMPERATURE --------------------
+export const editPatientBodyTemp = async (req, res) => {
+  try {
+    const token = req.token;
+    if (!token || !token._id) {
+      return res.status(401).json({
+        statusCode: 401,
+        success: false,
+        message: "Invalid token",
+        result: {},
+      });
+    }
+
+    const { day, time, amTemp, pmTemp, notes } = req.body;
+
+    if (!day && !time && !amTemp && !pmTemp && !notes) {
+      return res.status(400).json({
+        statusCode: 400,
+        success: false,
+        message: "At least one field is required to update (day, time, amTemp, pmTemp, notes)",
+        result: {},
+      });
+    }
+
+    const { start, end } = getDateRange(new Date());
+    const record = await PatientRecord.findOne({
+      patient_id: token._id,
+      createdAt: { $gte: start, $lte: end },
+    });
+
+    if (!record) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "No patient record found for today",
+        result: {},
+      });
+    }
+
+    record.bodyTemp = {
+      ...record.bodyTemp?.toObject?.() || record.bodyTemp || {},
+      ...(day && { day }),
+      ...(time && { time }),
+      ...(amTemp && { amTemp }),
+      ...(pmTemp && { pmTemp }),
+      ...(notes && { notes }),
+    };
+    await record.save();
+
+    return res.status(200).json({
+      statusCode: 200,
+      success: true,
+      message: "Body Temperature updated successfully",
+      result: record.bodyTemp,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      statusCode: 500,
+      success: false,
+      message: error.message,
+      result: {},
+    });
+  }
+};
+
+// -------------------- EDIT HEART RATE --------------------
+export const editPatientHeartRate = async (req, res) => {
+  try {
+    const token = req.token;
+    if (!token || !token._id) {
+      return res.status(401).json({
+        statusCode: 401,
+        success: false,
+        message: "Invalid token",
+        result: {},
+      });
+    }
+
+    const { day, time, amRate, pmRate, notes } = req.body;
+
+    if (!day && !time && !amRate && !pmRate && !notes) {
+      return res.status(400).json({
+        statusCode: 400,
+        success: false,
+        message: "At least one field is required to update (day, time, amRate, pmRate, notes)",
+        result: {},
+      });
+    }
+
+    const { start, end } = getDateRange(new Date());
+    const record = await PatientRecord.findOne({
+      patient_id: token._id,
+      createdAt: { $gte: start, $lte: end },
+    });
+
+    if (!record) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "No patient record found for today",
+        result: {},
+      });
+    }
+
+    record.heartRate = {
+      ...record.heartRate?.toObject?.() || record.heartRate || {},
+      ...(day && { day }),
+      ...(time && { time }),
+      ...(amRate && { amRate }),
+      ...(pmRate && { pmRate }),
+      ...(notes && { notes }),
+    };
+    await record.save();
+
+    return res.status(200).json({
+      statusCode: 200,
+      success: true,
+      message: "Heart Rate updated successfully",
+      result: record.heartRate,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      statusCode: 500,
+      success: false,
+      message: error.message,
+      result: {},
+    });
+  }
+};
+
+// -------------------- EDIT BODY WEIGHT --------------------
+export const editPatientBodyWeight = async (req, res) => {
+  try {
+    const token = req.token;
+    if (!token || !token._id) {
+      return res.status(401).json({
+        statusCode: 401,
+        success: false,
+        message: "Invalid token",
+        result: {},
+      });
+    }
+
+    const { day, weight } = req.body;
+
+    if (!day && !weight) {
+      return res.status(400).json({
+        statusCode: 400,
+        success: false,
+        message: "At least one field is required to update (day or weight)",
+        result: {},
+      });
+    }
+
+    const { start, end } = getDateRange(new Date());
+    const record = await PatientRecord.findOne({
+      patient_id: token._id,
+      createdAt: { $gte: start, $lte: end },
+    });
+
+    if (!record) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "No patient record found for today",
+        result: {},
+      });
+    }
+
+    record.bodyWeight = {
+      ...record.bodyWeight?.toObject?.() || record.bodyWeight || {},
+      ...(day && { day }),
+      ...(weight && { weight }),
+    };
+    await record.save();
+
+    return res.status(200).json({
+      statusCode: 200,
+      success: true,
+      message: "Body Weight updated successfully",
+      result: record.bodyWeight,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      statusCode: 500,
+      success: false,
+      message: error.message,
+      result: {},
+    });
+  }
+};
+
