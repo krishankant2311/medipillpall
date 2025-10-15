@@ -285,3 +285,213 @@ export const addPatientHeartRate = async (req, res) => {
     });
   }
 };
+
+// -------------------- GET BLOOD PRESSURE --------------------
+export const getPatientBloodPressure = async (req, res) => {
+  try {
+    const token = req.token;
+
+    if (!token || !token._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token",
+      });
+    }
+
+    const { start, end } = getDateRange(new Date());
+
+    const record = await PatientRecord.findOne({
+      patient_id: token._id,
+      // createdAt: { $gte: start, $lte: end },
+    }).select("bloodPressure createdAt").sort({ createdAt: -1 });
+
+    if (!record || !record.bloodPressure) {
+      return res.json({
+        success: true,
+        message: "No blood pressure record found for today",
+        result: {},
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Blood Pressure fetched successfully",
+      result: record.bloodPressure,
+    });
+  } catch (err) {
+    console.error("Error in getPatientBloodPressure:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
+// -------------------- GET BLOOD SUGAR --------------------
+export const getPatientBloodSugar = async (req, res) => {
+  try {
+    const token = req.token;
+
+    if (!token || !token._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token",
+      });
+    }
+
+    const { start, end } = getDateRange(new Date());
+
+    const record = await PatientRecord.findOne({
+      patient_id: token._id,
+      // createdAt: { $gte: start, $lte: end },
+    }).sort({ createdAt: -1 }).select("bloodSugar createdAt");
+
+    if (!record || !record.bloodSugar) {
+      return res.json({
+        success: true,
+        message: "No blood sugar record found for today",
+        result: {},
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Blood Sugar fetched successfully",
+      result: record.bloodSugar,
+    });
+  } catch (err) {
+    console.error("Error in getPatientBloodSugar:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
+// -------------------- GET BODY TEMPERATURE --------------------
+export const getPatientBodyTemp = async (req, res) => {
+  try {
+    const token = req.token;
+
+    if (!token || !token._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token",
+      });
+    }
+
+    const { start, end } = getDateRange(new Date());
+
+    const record = await PatientRecord.findOne({
+      patient_id: token._id,
+      // createdAt: { $gte: start, $lte: end },
+    }).select("bodyTemp createdAt");
+
+    if (!record || !record.bodyTemp) {
+      return res.json({
+        success: true,
+        message: "No body temperature record found for today",
+        result: {},
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Body Temperature fetched successfully",
+      result: record.bodyTemp,
+    });
+  } catch (err) {
+    console.error("Error in getPatientBodyTemp:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
+// -------------------- GET BODY WEIGHT --------------------
+export const getPatientBodyWeight = async (req, res) => {
+  try {
+    const token = req.token;
+
+    if (!token || !token._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token",
+      });
+    }
+
+    const { start, end } = getDateRange(new Date());
+
+    const record = await PatientRecord.findOne({
+      patient_id: token._id,
+      // createdAt: { $gte: start, $lte: end },
+    }).select("bodyWeight createdAt");
+
+    if (!record || !record.bodyWeight) {
+      return res.json({
+        success: true,
+        message: "No body weight record found for today",
+        result: {},
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Body Weight fetched successfully",
+      result: record.bodyWeight,
+    });
+  } catch (err) {
+    console.error("Error in getPatientBodyWeight:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
+// -------------------- GET HEART RATE --------------------
+export const getPatientHeartRate = async (req, res) => {
+  try {
+    const token = req.token;
+
+    if (!token || !token._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token",
+      });
+    }
+
+    const { start, end } = getDateRange(new Date());
+
+    const record = await PatientRecord.findOne({
+      patient_id: token._id,
+      // createdAt: { $gte: start, $lte: end },
+    }).select("heartRate createdAt");
+
+    if (!record || !record.heartRate) {
+      return res.json({
+        success: true,
+        message: "No heart rate record found for today",
+        result: {},
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Heart Rate fetched successfully",
+      result: record.heartRate,
+    });
+  } catch (err) {
+    console.error("Error in getPatientHeartRate:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
