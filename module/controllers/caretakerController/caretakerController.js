@@ -82,6 +82,7 @@ export const addCaretaker = async (req, res) => {
     const enc_password = bcrypt.hashSync(password, 10);
 
     const newCaretaker = new Caretaker({
+      guardianId: null,
       fullName,
       mobileNumber,
       email,
@@ -119,6 +120,74 @@ export const addCaretaker = async (req, res) => {
 };
 
 
+// export const getAllCaretakersByAdmin = async (req, res) => {
+//   try {
+//     const token = req.token;
+//     let { page = 1, limit = 10, search = "" } = req.query;
+//     page = Number.parseInt(page);
+//     limit = Number.parseInt(limit);
+//     const skip = (page - 1) * limit;
+
+//     const adminUser = await Admin.findOne({ _id: token._id, status: "Active" });
+//     if (!adminUser) {
+//       return res.status(403).send({
+//         statusCode: 403,
+//         success: false,
+//         message: "Access denied: Admins only",
+//         result: {},
+//       });
+//     }
+
+//     if (adminUser.status === "Delete") {
+//       return res.send({
+//         statusCode: 403,
+//         success: false,
+//         message: "Your account has been deleted",
+//         result: {},
+//       });
+//     }
+
+//     const searchRegex = new RegExp(search.trim(), "i");
+
+//     const searchFilter = search.trim()
+//       ? {
+//           status: { $ne: "Delete" },
+//           $or: [
+//             { fullName: { $regex: searchRegex } },
+//             { mobileNumber: { $regex: searchRegex } },
+//             { email: { $regex: searchRegex } },
+//           ],
+//         }
+//       : { status: { $ne: "Delete" } };
+
+//     const caretakers = await Caretaker.find(searchFilter)
+//       .select("-password -refreshToken")
+//       .skip(skip)
+//       .limit(limit);
+
+//     const totalCaretakers = await Caretaker.countDocuments(searchFilter);
+
+//     return res.send({
+//       statusCode: 200,
+//       success: true,
+//       message: "All caretakers fetched successfully (Admin)",
+//       result: {
+//         caretakers,
+//         currentPage: page,
+//         totalPage: Math.ceil(totalCaretakers / limit),
+//         totalRecord: totalCaretakers,
+//       },
+//     });
+//   } catch (error) {
+//     return res.send({
+//       statusCode: 500,
+//       success: false,
+//       message: error.message + " ERROR in getAllCaretakersByAdmin API",
+//       result: {},
+//     });
+//   }
+// };
+
 export const getAllCaretakersByAdmin = async (req, res) => {
   try {
     const token = req.token;
@@ -126,7 +195,7 @@ export const getAllCaretakersByAdmin = async (req, res) => {
     page = Number.parseInt(page);
     limit = Number.parseInt(limit);
     const skip = (page - 1) * limit;
-
+    // :white_tick: Check admin authorization
     const adminUser = await Admin.findOne({ _id: token._id, status: "Active" });
     if (!adminUser) {
       return res.status(403).send({
@@ -136,7 +205,6 @@ export const getAllCaretakersByAdmin = async (req, res) => {
         result: {},
       });
     }
-
     if (adminUser.status === "Delete") {
       return res.send({
         statusCode: 403,
@@ -145,9 +213,8 @@ export const getAllCaretakersByAdmin = async (req, res) => {
         result: {},
       });
     }
-
+    // :white_tick: Build search filter
     const searchRegex = new RegExp(search.trim(), "i");
-
     const searchFilter = search.trim()
       ? {
           status: { $ne: "Delete" },
@@ -158,14 +225,21 @@ export const getAllCaretakersByAdmin = async (req, res) => {
           ],
         }
       : { status: { $ne: "Delete" } };
-
+    // :white_tick: Fetch caretakers with populated references
     const caretakers = await Caretaker.find(searchFilter)
-      .select("-password -refreshToken")
+      .select("-password -refreshToken -otp -refreshToken -accessToken ")
+      .populate({
+        path: "patients",
+        select: "fullName gender mobileNumber status createdAt age", // include needed fields only
+      })
+      .populate({
+        path: "guardianId",
+        select: "fullName gender mobileNumber email status createdAt", // include needed fields only
+      })
       .skip(skip)
-      .limit(limit);
-
+      .limit(limit)
+      .sort({ createdAt: -1 });
     const totalCaretakers = await Caretaker.countDocuments(searchFilter);
-
     return res.send({
       statusCode: 200,
       success: true,

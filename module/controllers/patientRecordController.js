@@ -428,7 +428,7 @@ export const getPatientBodyWeight = async (req, res) => {
 
     const record = await PatientRecord.findOne({
       patient_id: token._id,
-      // createdAt: { $gte: start, $lte: end },
+      createdAt: { $gte: start, $lte: end },
     }).select("bodyWeight createdAt");
 
     if (!record || !record.bodyWeight) {

@@ -2,6 +2,14 @@ import mongoose from "mongoose";
 
 const caretakerSchema = new mongoose.Schema(
   {
+    guardianId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Guardian",
+    },
+    patients: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Patient",
+    }],
     fullName: {
       type: String,
       trim: true,
