@@ -1030,9 +1030,13 @@ export const getAllPatientsByAdmin = async (req, res) => {
       : { status: status || "Active" };
     // :white_tick: Fetch patients + populate Guardian info
     const patients = await Patient.find(searchFilter)
-      .select("-password -refreshToken")
+      .select("-password -refreshToken -otp -accessToken") // exclude sensitive fields-
       .populate({
         path: "guardianId", // reference to Guardian collection
+        select: "fullName gender email mobileNumber status createdAt ",
+      })
+      .populate({
+        path: "caretakerId", // reference to CareTaker collection
         select: "fullName gender email mobileNumber status createdAt ",
       })
       .skip(skip)

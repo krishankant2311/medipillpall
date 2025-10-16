@@ -75,7 +75,7 @@ export const addCareNote = async (req, res) => {
     // Create CareNote object
     const newCareNote = new CareNote({
       patientId,
-      guardianId,
+      guardianId:token._id,
       caretakerId: caretakerId  || null,
       title: title?.trim() || "",
       noteType: noteType || "other",
@@ -103,23 +103,83 @@ export const addCareNote = async (req, res) => {
 };
 
 // 2️⃣ Get All CareNotes
+// export const getAllCareNotes = async (req, res) => {
+//   try {
+//     const careNotes = await CareNote.find();
+//     const total = await CareNote.countDocuments();
+
+//     return res.send({
+//       statusCode: 200,
+//       success: true,
+//       message: "CareNotes fetched successfully",
+//       total,
+//       result: careNotes,
+//     });
+//   } catch (error) {
+//     return res.send({
+//       statusCode: 500,
+//       success: false,
+//       message: error.message + " ERROR in getAll CareNotes API",
+//       result: {},
+//     });
+//   }
+// };
+
+
 export const getAllCareNotes = async (req, res) => {
   try {
-    const careNotes = await CareNote.find();
-    const total = await CareNote.countDocuments();
+    const token = req.token; // guardian identification from middleware
 
-    return res.send({
+    // --- Validate Guardian ---
+    if (!token || !token._id) {
+      return res.status(401).json({
+        statusCode: 401,
+        success: false,
+        message: "Invalid or missing token",
+        result: {},
+      });
+    }
+
+    const guardian = await Guardian.findById(token._id).select("fullName");
+    if (!guardian) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "Guardian not found",
+        result: {},
+      });
+    }
+
+    // --- Fetch Care Notes & Populate ---
+    const careNotes = await CareNote.find({ guardianId: token._id })
+      .populate({
+        path: "patientId",
+        model: Patient,
+        select: "fullName age gender mobileNumber",
+      })
+      .populate({
+        path: "caretakerId",
+        model: Caretaker,
+        select: "fullName mobileNumber relation",
+      })
+      .sort({ createdAt: -1 });
+
+    const total = await CareNote.countDocuments({ guardianId: token._id });
+
+    // --- Response ---
+    return res.status(200).json({
       statusCode: 200,
       success: true,
-      message: "CareNotes fetched successfully",
+      message: "Care Notes fetched successfully",
+      guardianName: guardian.fullName,
       total,
       result: careNotes,
     });
   } catch (error) {
-    return res.send({
+    return res.status(500).json({
       statusCode: 500,
       success: false,
-      message: error.message + " ERROR in getAll CareNotes API",
+      message: error.message + " — ERROR in getAllCareNotes API",
       result: {},
     });
   }
