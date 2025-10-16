@@ -618,7 +618,7 @@ export const editGuardianProfile = async (req, res) => {
 export const addPatient = async (req, res) => {
   try {
     let token = req.token; // token se guardian identify hoga
-    const { fullName, age, diseaseCondition, mobileNumber } = req.body;
+    const { fullName, age, diseaseCondition, mobileNumber,gender,relation } = req.body;
 
     // --- Validation ---
     if (!fullName) {
@@ -647,6 +647,23 @@ export const addPatient = async (req, res) => {
         result: {},
       });
     }
+    if(!gender){
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Gender is required",  
+        result: {},
+      });
+    }
+    if(!relation){
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Relation is required",
+        result: {},
+      });
+    }
+
 
     // Validate Guardian
     const guardian = await Guardian.findOne({ _id: token._id, status: "Active" });
@@ -689,6 +706,8 @@ export const addPatient = async (req, res) => {
       mobileNumber: mobileNumber.trim(),
       diseaseCondition: diseaseCondition?.trim() || "",
       filePath,
+      gender,
+      relation,
       status: "Active",
     });
 
@@ -724,6 +743,119 @@ export const addPatient = async (req, res) => {
     });
   }
 };
+
+// export const addPatient = async (req, res) => {
+//   try {
+//     let token = req.token; // token se guardian identify hoga
+//     const { fullName, age, diseaseCondition, mobileNumber } = req.body;
+
+//     // --- Validation ---
+//     if (!fullName) {
+//       return res.send({
+//         statusCode: 400,
+//         success: false,
+//         message: "Full name is required",
+//         result: {},
+//       });
+//     }
+
+//     if (!age) {
+//       return res.send({
+//         statusCode: 400,
+//         success: false,
+//         message: "Age is required",
+//         result: {},
+//       });
+//     }
+
+//     if (!mobileNumber) {
+//       return res.send({
+//         statusCode: 400,
+//         success: false,
+//         message: "Mobile number is required",
+//         result: {},
+//       });
+//     }
+
+//     // Validate Guardian
+//     const guardian = await Guardian.findOne({ _id: token._id, status: "Active" });
+//     if (!guardian) {
+//       return res.send({
+//         statusCode: 404,
+//         success: false,
+//         message: "Guardian not found or inactive",
+//         result: {},
+//       });
+//     }
+
+//     // Check if Patient already exists with same mobile under same guardian
+//     const existingPatient = await Patient.findOne({
+//       guardianId: guardian._id,
+//       mobileNumber: mobileNumber.trim(),
+//       status: "Active",
+//     });
+
+//     if (existingPatient) {
+//       return res.send({
+//         statusCode: 409,
+//         success: false,
+//         message: "Patient with this mobile number already exists",
+//         result: existingPatient,
+//       });
+//     }
+
+//     // ---- File Upload Handle (multer se aayi file) ----
+//     let filePath = "";
+//     if (req.file) {
+//       // multer ke through uploaded file ka path set ho jayega
+//       filePath = `/uploads/patients/${req.file.filename}`;
+//     }
+
+//     // Create Patient
+//     const newPatient = new Patient({
+//       guardianId: guardian._id,
+//       fullName: fullName.trim(),
+//       age,
+//       mobileNumber: mobileNumber.trim(),
+//       diseaseCondition: diseaseCondition?.trim() || "",
+//       filePath, // <-- yahan upload ka path save hoga
+//       status: "Active",
+//     });
+
+//     const accessToken = generateAccessToken({
+//       _id: newPatient._id,
+//       mobileNumber,
+//     });
+//     const refreshToken = generateRefreshToken({
+//       _id: newPatient._id,
+//       mobileNumber,
+//     });
+
+//     newPatient.accessToken = accessToken;
+//     newPatient.refreshToken = refreshToken;
+
+//     await newPatient.save();
+
+//     // Guardian me patient add kar do
+//     guardian.patients = guardian.patients || [];
+//     guardian.patients.push(newPatient._id);
+//     await guardian.save();
+
+//     return res.send({
+//       statusCode: 200,
+//       success: true,
+//       message: "Patient added successfully",
+//       result: newPatient,
+//     });
+//   } catch (error) {
+//     return res.send({
+//       statusCode: 500,
+//       success: false,
+//       message: error.message + " ERROR in addPatient API",
+//       result: {},
+//     });
+//   }
+// };
 
 /**
  * Get All Patients for Guardian
