@@ -37,6 +37,21 @@ const caretakerSchema = new mongoose.Schema(
       enum: ["Active", "Delete", "Pending", "Blocked"],
       default: "Pending",
     },
+      password: {
+      type: String,
+      default: ""
+    },
+    profilePhoto: {
+      type: String,
+      default: ""
+    },
+    gender: {
+      type: String,
+      enum: ["Male", "Female", "Transgender", "Other"], 
+      default: "Male",
+    },
+    age: { type: Number, default: null },
+    // 👇 Token fields
     accessToken: {
       type: String,
       default: "",

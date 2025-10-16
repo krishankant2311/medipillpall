@@ -6,6 +6,10 @@ const guardianSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Patient"
     }],
+    caretakers: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Caretaker"
+    }],
 
     fullName: { 
       type: String, 
@@ -26,6 +30,23 @@ const guardianSchema = new mongoose.Schema(
       otpValue: { type: String, default: "" },
       otpExpiry: { type: Date, default: null },
     },
+    gender: {
+      type: String,
+      enum: ["Male", "Female", "Transgender", "Other"],
+      default: "Male",
+    },
+    age: { type: Number, default: null },
+    password: { type: String, default: "" },
+
+    profilePhoto: { 
+      type: String,
+       default: "" 
+      },
+    relation: { 
+      type: String, 
+      default: "" 
+    },
+    
 
     status: {
       type: String,

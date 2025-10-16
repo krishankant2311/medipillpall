@@ -42,6 +42,14 @@ const patientSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    profilePhoto: {
+      type: String,
+      default: ""
+    },
+    relation: {
+      type: String,
+      default: ""
+    },
     refreshToken: {
       type: String,
       default: "",
@@ -53,7 +61,7 @@ const patientSchema = new mongoose.Schema(
     },
     gender: {
       type: String,
-      enum: ["Male", "Female", "Transgender"],
+      enum: ["Male", "Female", "Transgender", "Other"],
       default: "Male",
     },
     filePath: {
