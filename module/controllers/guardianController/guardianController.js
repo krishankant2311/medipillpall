@@ -5,6 +5,12 @@ import { generateAccessToken, generateRefreshToken } from "../../../helpers/jwt.
 import { genrateOTP } from "../../../helpers/generateOtp.js";
 import Patient from "../../models/patientModel.js";
 import CareNote from "../../models/guardiansModel/careModel.js";
+import PatientReport from "../../models/medicalReportModel.js";
+import Med from "../../models/medicationModel.js"
+
+import Caregiver from "../../../module/models/caretakerModel/caretakerModel.js";
+
+
 export const addGuardian = async (req, res) => {
   try {
     let { fullName, mobileNumber, email, password } = req.body;
@@ -1045,6 +1051,246 @@ export const getAllCareNotesByGuardian = async (req, res) => {
       statusCode: 500,
       success: false,
       message: error.message + " ERROR in getAllCareNotesByGuardian API",
+      result: {},
+    });
+  }
+};
+
+export const getPatientReportsByGuardian = async (req, res) => {
+  try {
+    const token = req.token;
+    const { patientId } = req.query;
+
+    // Validate guardian
+    const guardian = await Guardian.findOne({ _id: token._id, status: "Active" });
+    if (!guardian) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Guardian not found or inactive",
+        result: {},
+      });
+    }
+
+    // Validate that the patient belongs to this guardian
+    const patient = await Patient.findOne({ _id: patientId, guardianId: guardian._id });
+    if (!patient) {
+      return res.send({
+        statusCode: 403,
+        success: false,
+        message: "Patient not found or does not belong to this guardian",
+        result: {},
+      });
+    }
+
+    const reports = await PatientReport.find({ patientId: patient._id }).sort({ createdAt: -1 });
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Patient reports fetched successfully",
+      result: reports,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in getPatientReportsByGuardian API",
+      result: {},
+    });
+  }
+};
+
+
+export const getMedsByGuardian = async (req, res) => {
+  try {
+    const token = req.token;
+    const { patientId } = req.query;
+
+    // Validate guardian
+    const guardian = await Guardian.findOne({ _id: token._id, status: "Active" });
+    if (!guardian) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Guardian not found or inactive",
+        result: {},
+      });
+    }
+
+    // Validate patient ownership
+    const patient = await Patient.findOne({ _id: patientId, guardianId: guardian._id });
+    if (!patient) {
+      return res.send({
+        statusCode: 403,
+        success: false,
+        message: "Patient not found or does not belong to this guardian",
+        result: {},
+      });
+    }
+
+    const meds = await Med.find({ patientId: patient._id, status: "Active" }).sort({ createdAt: -1 });
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Meds fetched successfully",
+      result: meds,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in getMedsByGuardian API",
+      result: {},
+    });
+  }
+};
+
+
+export const getAllMedsByGuardian = async (req, res) => {
+  try {
+    const token = req.token;
+
+    // Validate guardian
+    const guardian = await Guardian.findOne({ _id: token._id, status: "Active" });
+    if (!guardian) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Guardian not found or inactive",
+        result: {},
+      });
+    }
+
+    // Find all patients for this guardian
+    const patients = await Patient.find({ guardianId: guardian._id, status: "Active" }).select("_id");
+    const patientIds = patients.map((p) => p._id);
+
+    const meds = await Med.find({ patientId: { $in: patientIds }, status: "Active" }).sort({ createdAt: -1 });
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "All meds fetched successfully",
+      result: meds,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in getAllMedsByGuardian API",
+      result: {},
+    });
+  }
+};
+
+export const getActiveMedicationsByGuardian = async (req, res) => {
+  try {
+    const token = req.token;
+
+    // Validate Guardian
+    const guardian = await Guardian.findOne({ _id: token._id, status: "Active" });
+    if (!guardian) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Guardian not found or inactive",
+        result: {},
+      });
+    }
+
+    // Get all patients of guardian
+    const patients = await Patient.find({ guardianId: guardian._id, status: "Active" }).select("_id");
+    const patientIds = patients.map((p) => p._id);
+
+    // Get all active meds of those patients
+    const activeMeds = await Med.find({
+      patientId: { $in: patientIds },
+      status: "Active",
+    }).sort({ createdAt: -1 });
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Active medications fetched successfully",
+      result: activeMeds,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in getActiveMedicationsByGuardian API",
+      result: {},
+    });
+  }
+};
+
+export const getAllCaregiversByGuardian = async (req, res) => {
+  try {
+    const token = req.token;
+
+    // Validate Guardian
+    const guardian = await Guardian.findOne({ _id: token._id, status: "Active" });
+    if (!guardian) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Guardian not found or inactive",
+        result: {},
+      });
+    }
+
+    const caregivers = await Caregiver.find({
+      status: "Active",
+    }).sort({ createdAt: -1 }).select("-accessToken -refreshToken -otp");  ;
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Caregivers fetched successfully",
+      result: caregivers,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in getAllCaregiversByGuardian API",
+      result: {},
+    });
+  }
+};
+export const getActivePatientsByGuardian = async (req, res) => {
+  try {
+    const token = req.token;
+
+    // Validate Guardian
+    const guardian = await Guardian.findOne({ _id: token._id, status: "Active" });
+    if (!guardian) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Guardian not found or inactive",
+        result: {},
+      });
+    }
+
+    const activePatients = await Patient.find({
+      guardianId: guardian._id,
+      status: "Active",
+    }).sort({ createdAt: -1 }).select("-accessToken -refreshToken -otp");  ;
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Active patients fetched successfully",
+      result: activePatients,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in getActivePatientsByGuardian API",
       result: {},
     });
   }

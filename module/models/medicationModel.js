@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const medicationSchema = new mongoose.Schema(
   {
-    patient_id: {
+    patientId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Patient",
     },

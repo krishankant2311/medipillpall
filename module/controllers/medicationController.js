@@ -63,7 +63,7 @@ if (!reason) {
 
 
     // Patient validate
-    const patient = await Patient.findOne({ _id: token._id, status: "Active" });
+    const patient = await Patient.findOne({ _id:token._id, status: "Active" });
     if (!patient) {
       return res.send({
         statusCode: 404,
@@ -75,7 +75,7 @@ if (!reason) {
 
     // Medication object
     const newMedication = new Medication({
-      patient_id: token._id,
+      patientId: token._id,
       medicationName: medicationName?.trim(),
       dosage: dosage?.trim(),
       times: [time],
