@@ -347,7 +347,7 @@ export const getAllGuardiansByAdmin = async (req, res) => {
       .populate({
         path: "patients",
         match: { status: "Active" }, // only active patients
-        select: "fullName age diseaseCondition gender contactNumber createdAt",
+        select: "fullName age diseaseCondition gender mobileNumber createdAt",
       });
 
     // --- Step 4: Count total guardians ---
