@@ -36,9 +36,9 @@ router.get("/get-patient-reports-byguardian/:id", verifyAccessToken, getPatientR
 router.get("/get-active-patients-byguardian", verifyAccessToken, getActivePatientsByGuardian);
 router.get("/getall-caregivers-byguardian", verifyAccessToken, getAllCaregiversByGuardian);
 
-router.post("/resend-guardian-otp",verifyAccessToken,upload.none(), resendGuardianOTPforSignup);
+router.post("/resend-guardian-otp",upload.none(), resendGuardianOTPforSignup);
 
-router.post("/resend-guardian-otp-login",verifyAccessToken,upload.none(), resendGuardianOTPforLogin);
+router.post("/resend-guardian-otp-login",upload.none(), resendGuardianOTPforLogin);
 
 router.post("/logout-guardian", verifyAccessToken,upload.none(), logoutGuardian);
 export default router;
