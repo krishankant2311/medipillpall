@@ -1295,3 +1295,55 @@ export const getActivePatientsByGuardian = async (req, res) => {
     });
   }
 };
+
+
+export const logoutGuardian = async (req, res) => {
+  try {
+    const token = req.token;
+
+    const guardian = await Guardian.findOne({ _id: token._id });
+    if (!guardian) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Guardian not found",
+        result: {},
+      });
+    }
+
+    if (guardian.status === "Delete") {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Guardian has been deleted",
+        result: {},
+      });
+    }
+
+    if (guardian.accessToken === "") {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Unauthorised access",
+        result: {},
+      });
+    }
+
+    guardian.accessToken = "";
+    await guardian.save();
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Guardian logout successfully",
+      result: {},
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in guardian logout API",
+      result: {},
+    });
+  }
+};

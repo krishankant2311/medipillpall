@@ -3,7 +3,7 @@ import { addGuardian, getAllGuardiansByAdmin,signupGuardian ,getPatientReportsBy
     getPatient,getAllCareNotesByGuardian,addPatient,getallPatientsbyGuardian,
      guardianLogin, verifyGuardianOTP,getAllMedsByGuardian,getMedsByGuardian,
       guardianProfile,getActivePatientsByGuardian,getAllCaregiversByGuardian,
-      editGuardianProfile } from "../../controllers/guardianController/guardianController.js";
+      editGuardianProfile,logoutGuardian } from "../../controllers/guardianController/guardianController.js";
 import { verifyAccessToken } from "../../../helpers/jwt.js";
 import upload from "../../../config/multer.js";
 const router = express.Router();
@@ -35,4 +35,6 @@ router.get("/get-patient-reports-byguardian/:id", verifyAccessToken, getPatientR
 
 router.get("/get-active-patients-byguardian", verifyAccessToken, getActivePatientsByGuardian);
 router.get("/getall-caregivers-byguardian", verifyAccessToken, getAllCaregiversByGuardian);
+
+router.post("/logout-guardian", verifyAccessToken,upload.none(), logoutGuardian);
 export default router;
