@@ -1347,3 +1347,90 @@ export const logoutGuardian = async (req, res) => {
     });
   }
 };
+
+
+export const resendGuardianOTP = async (req, res) => {
+  try {
+    const { mobileNumber } = req.body;
+
+    // Step 1: Validate mobile number
+    if (!mobileNumber) {
+      return res.status(400).json({
+        statusCode: 400,
+        success: false,
+        message: "Mobile number is required",
+        result: {},
+      });
+    }
+
+    // Step 2: Find guardian
+    const guardian = await Guardian.findOne({ mobileNumber });
+    if (!guardian) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "Guardian not found",
+        result: {},
+      });
+    }
+
+    // Step 3: Check status
+    // if (guardian.status === "Active") {
+    //   return res.status(400).json({
+    //     statusCode: 400,
+    //     success: false,
+    //     message: "Guardian already verified. Please login instead.",
+    //     result: {},
+    //   });
+    // }
+
+    if (guardian.status === "Delete") {
+      return res.status(400).json({
+        statusCode: 400,
+        success: false,
+        message: "Guardian has been deleted",
+        result: {},
+      });
+    }
+
+    // Step 4: Check if OTP cooldown period has passed
+    const now = new Date();
+    if (guardian.otp?.otpExpiry) {
+      const otpSentTime = new Date(guardian.otp.otpExpiry.getTime() - 5 * 60 * 1000); 
+      // assuming OTP expiry is 5 minutes from generation
+      const diffSeconds = (now - otpSentTime) / 1000;
+
+      if (diffSeconds < 30) {
+        return res.status(400).json({
+          statusCode: 400,
+          success: false,
+          message: `Please wait ${Math.ceil(30 - diffSeconds)} seconds before requesting a new OTP`,
+          result: {},
+        });
+      }
+    }
+
+    // Step 5: Generate new OTP
+    const { otpValue, otpExpiry } = genrateOTP();
+
+    // Step 6: Update guardian’s OTP
+    guardian.otp = { otpValue, otpExpiry };
+    await guardian.save();
+
+    // Step 7: Send success response
+    return res.status(200).json({
+      statusCode: 200,
+      success: true,
+      message: "OTP resent successfully",
+      result: { mobileNumber, otpValue, otpExpiry },
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      statusCode: 500,
+      success: false,
+      message: error.message + " Error in resendGuardianOTP API",
+      result: {},
+    });
+  }
+};
