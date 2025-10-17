@@ -1349,7 +1349,7 @@ export const logoutGuardian = async (req, res) => {
 };
 
 
-export const resendGuardianOTP = async (req, res) => {
+export const resendGuardianOTPforSignup = async (req, res) => {
   try {
     const { mobileNumber } = req.body;
 
@@ -1375,14 +1375,14 @@ export const resendGuardianOTP = async (req, res) => {
     }
 
     // Step 3: Check status
-    // if (guardian.status === "Active") {
-    //   return res.status(400).json({
-    //     statusCode: 400,
-    //     success: false,
-    //     message: "Guardian already verified. Please login instead.",
-    //     result: {},
-    //   });
-    // }
+    if (guardian.status === "Active") {
+      return res.status(400).json({
+        statusCode: 400,
+        success: false,
+        message: "Guardian already verified. Please login instead.",
+        result: {},
+      });
+    }
 
     if (guardian.status === "Delete") {
       return res.status(400).json({
