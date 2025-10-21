@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
 import Guardian from "../../models/guardiansModel/guardianModel.js";
 import Admin from "../../models/adminModel.js";
 import { generateAccessToken, generateRefreshToken } from "../../../helpers/jwt.js";
@@ -7,6 +8,7 @@ import Patient from "../../models/patientModel.js";
 import CareNote from "../../models/guardiansModel/careModel.js";
 import PatientReport from "../../models/medicalReportModel.js";
 import Med from "../../models/medicationModel.js"
+import PatientRecord from "../../models/patientRecordModel.js";
 
 import Caregiver from "../../../module/models/caretakerModel/caretakerModel.js";
 
@@ -898,63 +900,267 @@ export const addPatient = async (req, res) => {
 //   }
 // };
 
+
+// export const getallPatientsbyGuardian = async (req, res) => {
+//   try {
+//     const token = req.token;
+
+//     // Step 1: Validate guardian
+//     const guardian = await Guardian.findOne({
+//       _id: new mongoose.Types.ObjectId(token._id),
+//       status: { $regex: /^active$/i }
+//     }).lean();
+
+//     if (!guardian) {
+//       return res.status(404).json({
+//         statusCode: 404,
+//         success: false,
+//         message: "Guardian not found or inactive",
+//         result: {}
+//       });
+//     }
+
+//     // Step 2: Fetch all active patients of this guardian
+//     const patients = await Patient.find({
+//       guardianId: new mongoose.Types.ObjectId(guardian._id),
+//       status: { $regex: /^active$/i }
+//     })
+//       .select("_id fullName age diseaseCondition gender contactNumber createdAt")
+//       .lean();
+
+//     if (!patients.length) {
+//       return res.status(200).json({
+//         statusCode: 200,
+//         success: true,
+//         message: "No patients found",
+//         result: { totalPatients: 0, patients: [] }
+//       });
+//     }
+
+//     // Step 3: Extract patient_ids and convert all to strings for easier map matching
+//     const patientIds = patients.map(p => p._id);
+//     const patientIdStrs = patientIds.map(id => id.toString());
+
+//     // Step 4: Fetch all PatientRecords for all patientIds
+//     const allRecords = await PatientRecord.find({
+//       patient_id: { $in: patientIds }
+//     })
+//       .select("patient_id bloodPressure bloodSugar bodyTemp heartRate bodyWeight comments createdAt updatedAt")
+//       .lean();
+
+//     // Debug: Log fetched patientIds and record patient_ids
+//     // console.log("Patients:", patientIdStrs);
+//     // console.log("Records patient_id:", allRecords.map(r => r.patient_id && r.patient_id.toString()));
+
+//     // Step 5: Group records by patient_id string for robust mapping
+//     const recordsByPatient = {};
+//     patientIdStrs.forEach(strId => {
+//       recordsByPatient[strId] = [];
+//     });
+//     allRecords.forEach(rec => {
+//       if (rec.patient_id) {
+//         const pidStr = rec.patient_id.toString();
+//         if (recordsByPatient[pidStr]) {
+//           recordsByPatient[pidStr].push(rec);
+//         }
+//       }
+//     });
+
+//     // Step 6: Attach records array to its patient
+//     const result = patients.map(patient => ({
+//       ...patient,
+//       records: recordsByPatient[patient._id.toString()] || []
+//     }));
+
+//     return res.status(200).json({
+//       statusCode: 200,
+//       success: true,
+//       message: "All patient records fetched successfully",
+//       result: {
+//         totalPatients: result.length,
+//         patients: result
+//       }
+//     });
+
+//   } catch (error) {
+//     console.error("Error in getallPatientsbyGuardian:", error);
+//     return res.status(500).json({
+//       statusCode: 500,
+//       success: false,
+//       message: error.message + " ERROR in getallPatientsbyGuardian API",
+//       result: {}
+//     });
+//   }
+// };
+
+
+//
+
+
+//
+
+
 export const getallPatientsbyGuardian = async (req, res) => {
   try {
     const token = req.token;
 
-    // --- Step 1: Validate guardian ---
+    // Step 1: Validate guardian
     const guardian = await Guardian.findOne({
-      _id: token._id,
-      status: "Active",
-    });
+      _id: new mongoose.Types.ObjectId(token._id),
+      status: { $regex: /^active$/i }
+    }).lean();
 
     if (!guardian) {
-      return res.send({
+      return res.status(404).json({
         statusCode: 404,
         success: false,
         message: "Guardian not found or inactive",
-        result: {},
+        result: {}
       });
     }
 
-    // --- Step 2: Fetch active patients of this guardian ---
+    // Step 2: Fetch all active patients of this guardian
     const patients = await Patient.find({
-      guardianId: guardian._id,
-      status: "Active",
+      guardianId: new mongoose.Types.ObjectId(guardian._id),
+      status: { $regex: /^active$/i }
     })
-      .sort({ createdAt: -1 })
-      .populate("guardianId", "fullName email mobileNumber") // if you want guardian info
-      .select("fullName age diseaseCondition gender contactNumber createdAt"); // customize patient fields
+      .select("_id fullName age diseaseCondition gender contactNumber createdAt")
+      .lean();
 
-    // --- Step 3: Count total patients ---
-    const totalPatients = patients.length;
+    if (!patients.length) {
+      return res.status(200).json({
+        statusCode: 200,
+        success: true,
+        message: "No patients found",
+        result: { totalPatients: 0, patients: [] }
+      });
+    }
 
-    // --- Step 4: Send response ---
-    return res.send({
+    const patientIds = patients.map(p => p._id);
+    const patientIdStrs = patientIds.map(id => id.toString());
+
+    const allRecords = await PatientRecord.find({
+      patient_id: { $in: patientIds }
+    })
+      .select("patient_id bloodPressure bloodSugar bodyTemp heartRate bodyWeight comments createdAt updatedAt")
+      .lean();
+
+    // Group records by patient_id string
+    const recordsByPatient = {};
+    patientIdStrs.forEach(strId => {
+      recordsByPatient[strId] = [];
+    });
+    allRecords.forEach(rec => {
+      if (rec.patient_id) {
+        const pidStr = rec.patient_id.toString();
+        if (recordsByPatient[pidStr]) {
+          recordsByPatient[pidStr].push(rec);
+        }
+      }
+    });
+
+    // Final Result: Attach records and lastRecordUpdatedAt to each patient
+    const result = patients.map(patient => {
+      const recs = recordsByPatient[patient._id.toString()] || [];
+      // Find last updatedAt value if records exist
+      let lastRecordUpdatedAt = null;
+      if (recs.length) {
+        lastRecordUpdatedAt = recs
+          .map(r => r.updatedAt)
+          .filter(Boolean)
+          .sort((a, b) => new Date(b) - new Date(a))[0] || null;
+      }
+      return {
+        ...patient,
+        records: recs,
+        lastRecordUpdatedAt
+      };
+    });
+
+    return res.status(200).json({
       statusCode: 200,
       success: true,
-      message:
-        patients.length > 0
-          ? "Patients fetched successfully"
-          : "No patients found",
+      message: "All patient records fetched successfully",
       result: {
-        totalPatients,
-        patients,
-      },
+        totalPatients: result.length,
+        patients: result
+      }
     });
+
   } catch (error) {
-    return res.send({
+    console.error("Error in getallPatientsbyGuardian:", error);
+    return res.status(500).json({
       statusCode: 500,
       success: false,
-      message: error.message + " ERROR in getAllPatientsByGuardian API",
-      result: {},
+      message: error.message + " ERROR in getallPatientsbyGuardian API",
+      result: {}
     });
   }
 };
 
-/**
- * Get Single Patient Detail
- */
+
+//
+
+
+
+//
+
+
+// export const getallPatientsbyGuardian = async (req, res) => {
+//   try {
+//     const token = req.token;
+
+//     // --- Step 1: Validate guardian ---
+//     const guardian = await Guardian.findOne({
+//       _id: token._id,
+//       status: "Active",
+//     });
+
+//     if (!guardian) {
+//       return res.send({
+//         statusCode: 404,
+//         success: false,
+//         message: "Guardian not found or inactive",
+//         result: {},
+//       });
+//     }
+
+//     // --- Step 2: Fetch active patients of this guardian ---
+//     const patients = await Patient.find({
+//       guardianId: guardian._id,
+//       status: "Active",
+//     })
+//       .sort({ createdAt: -1 })
+//       .populate("guardianId", "fullName email mobileNumber") // if you want guardian info
+//       .select("fullName age diseaseCondition gender contactNumber createdAt"); // customize patient fields
+
+//     // --- Step 3: Count total patients ---
+//     const totalPatients = patients.length;
+
+//     // --- Step 4: Send response ---
+//     return res.send({
+//       statusCode: 200,
+//       success: true,
+//       message:
+//         patients.length > 0
+//           ? "Patients fetched successfully"
+//           : "No patients found",
+//       result: {
+//         totalPatients,
+//         patients,
+//       },
+//     });
+//   } catch (error) {
+//     return res.send({
+//       statusCode: 500,
+//       success: false,
+//       message: error.message + " ERROR in getAllPatientsByGuardian API",
+//       result: {},
+//     });
+//   }
+// };
+
+
 export const getPatient = async (req, res) => {
   try {
     let token = req.token;
@@ -1511,3 +1717,4 @@ export const resendGuardianOTPforLogin = async (req, res) => {
     });
   }
 };
+
