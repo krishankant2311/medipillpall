@@ -124,7 +124,7 @@ export const addGuardian = async (req, res) => {
 export const signupGuardian = async (req, res) => {
   try {
     // Step 1: Extract data from request body in one line
-    let { fullName, mobileNumber, email } = req.body;
+    let { fullName, mobileNumber,gender, email } = req.body;
 
     // Step 2: Trim and normalize
     fullName = fullName?.trim()?.toLowerCase();
@@ -228,6 +228,7 @@ export const signupGuardian = async (req, res) => {
       fullName,
       mobileNumber,
       email,
+      gender,
       // password: enc_password,
       status: "Pending",
       otp: { otpValue, otpExpiry },
