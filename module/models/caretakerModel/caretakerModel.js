@@ -29,8 +29,8 @@ const caretakerSchema = new mongoose.Schema(
       default: "",
     },
     otp: {
-      value: { type: String, default: null },
-      expiresAt: { type: Date, default: null },
+      otpValue: { type: String, default: null },
+      otpExpiry: { type: Date, default: null },
     },
     status: {
       type: String,
