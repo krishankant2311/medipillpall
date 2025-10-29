@@ -21,7 +21,7 @@ router.post("/guardian-login",upload.none(), guardianLogin);
 router.post("/verify-guardian-otp",upload.none(), verifyGuardianOTP);
 
 router.get("/guardian-profile", verifyAccessToken, guardianProfile);
-router.post("/edit-guardian-profile", verifyAccessToken, upload.single('profileImage'), editGuardianProfile);
+router.post("/edit-guardian-profile", verifyAccessToken, upload.single('profilePhoto'), editGuardianProfile);
 
 router.get("/getall-patients-byguardian", verifyAccessToken, getallPatientsbyGuardian);
 
