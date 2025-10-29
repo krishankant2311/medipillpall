@@ -571,28 +571,84 @@ export const guardianProfile = async (req, res) => {
   }
 };
 
+// export const editGuardianProfile = async (req, res) => {
+//   try {
+//     const token = req.token;
+//     let { fullName, email } = req.body;
+//     fullName = fullName?.trim()?.toLowerCase();
+//     email = email?.trim()?.toLowerCase();
+//     if (!fullName) {
+//       return res.send({
+//         statusCode: 404,
+//         success: false,
+//         message: "Required fullName",
+//         result: {},
+//       });
+//     }
+//     if (!email) {
+//       return res.send({
+//         statusCode: 404,
+//         success: false,
+//         message: "Required email",
+//         result: {},
+//       });
+//     }
+//     const guardian = await Guardian.findById(token._id);
+//     if (!guardian) {
+//       return res.send({
+//         statusCode: 404,
+//         success: false,
+//         message: "Guardian not found",
+//         result: {},
+//       });
+//     }
+//     guardian.fullName = fullName;
+//     guardian.email = email;
+//     await guardian.save();
+//     return res.send({
+//       statusCode: 200,
+//       success: true,
+//       message: "Guardian profile updated successfully",
+//       result: guardian,
+//     });
+//   } catch (error) {
+//     return res.send({
+//       statusCode: 500,
+//       success: false,
+//       message: error.message + " Error in edit guardian profile API",
+//       result: {},
+//     });
+//   }
+// };
+
 export const editGuardianProfile = async (req, res) => {
   try {
     const token = req.token;
     let { fullName, email } = req.body;
-    fullName = fullName?.trim()?.toLowerCase();
+
+    fullName = fullName?.trim();
     email = email?.trim()?.toLowerCase();
+
+    // --- Validations ---
     if (!fullName) {
       return res.send({
-        statusCode: 404,
+        statusCode: 400,
         success: false,
-        message: "Required fullName",
+        message: "Full name is required",
         result: {},
       });
     }
+
     if (!email) {
       return res.send({
-        statusCode: 404,
+        statusCode: 400,
         success: false,
-        message: "Required email",
+        message: "Email is required",
         result: {},
       });
     }
+
+    // --- Step 1: Find Guardian ---
     const guardian = await Guardian.findById(token._id);
     if (!guardian) {
       return res.send({
@@ -602,9 +658,28 @@ export const editGuardianProfile = async (req, res) => {
         result: {},
       });
     }
+
+    // --- Step 2: Handle Profile Photo Upload (if any) ---
+    let profilePhotoUrl = guardian.profilePhoto; // keep old one if not updated
+
+    if (req.file) {
+      // Delete old photo if exists
+      if (guardian.profilePhoto) {
+        const oldPath = path.join("uploads/profilePhotos", path.basename(guardian.profilePhoto));
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
+
+      // Store new one (assuming multer stores in uploads/profilePhotos)
+      profilePhotoUrl = `/uploads/profilePhotos/${req.file.filename}`;
+    }
+
+    // --- Step 3: Update Guardian Info ---
     guardian.fullName = fullName;
     guardian.email = email;
+    guardian.profilePhoto = profilePhotoUrl;
+
     await guardian.save();
+
     return res.send({
       statusCode: 200,
       success: true,
@@ -615,11 +690,12 @@ export const editGuardianProfile = async (req, res) => {
     return res.send({
       statusCode: 500,
       success: false,
-      message: error.message + " Error in edit guardian profile API",
+      message: error.message + " Error in editGuardianProfile API",
       result: {},
     });
   }
 };
+
 
 /**
  * Add Patient
