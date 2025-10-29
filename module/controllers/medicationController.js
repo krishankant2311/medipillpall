@@ -1,5 +1,6 @@
 import Patient from "../../module/models/patientModel.js";
 import Medication from "../models/medicationModel.js"; // apne schema ka path
+import Caretaker from "../models/caretakerModel/caretakerModel.js";
 
 // ✅ Add Medication
 export const addMedication = async (req, res) => {
@@ -384,3 +385,5 @@ export const getAllActiveMedications = async (req, res) => {
     });
   }
 };
+
+

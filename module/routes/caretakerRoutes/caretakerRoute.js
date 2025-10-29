@@ -6,6 +6,14 @@ import { addCaretaker,
   caretakerProfile,
   resendCaretakerOTPforLogin,
   resendCaretakerOTPforSignup,
+  getAllMedicationsByCaretaker,
+  getActiveMedicationsByPatient,
+  getAllPatientsOfCaretaker,
+  getPatientByCaretaker,
+  getAllPatientTasksByCaretaker,
+  getPatientPersonalContactByCaretaker,
+  getSinglePatientTaskByCaretaker,
+  getPatientRecordByCaretaker,
   caretakerLogout, getAllCaretakersByAdmin } from "../../controllers/caretakerController/caretakerController.js";
 import { verifyAccessToken } from "../../../helpers/jwt.js"; // token verify middleware
 import upload from "../../../config/multer.js";
@@ -40,4 +48,27 @@ router.post("/resend-otp-login",upload.none(), resendCaretakerOTPforLogin);
 // 🔹 Resend OTP for Signup
 router.post("/resend-otp-signup",upload.none(), resendCaretakerOTPforSignup);
 
+// ✅ Get All Medications assigned to patients of the Caretaker
+router.get("/medications-byCaretaker", verifyAccessToken, getAllMedicationsByCaretaker);
+
+// ✅ Get Active Medications of a Patient by Caretaker
+router.get("/medications-byPatient/:patient_id", verifyAccessToken, getActiveMedicationsByPatient);
+ 
+// ✅ Get All Patients assigned to the Caretaker
+router.get("/patients-of-caretaker", verifyAccessToken, getAllPatientsOfCaretaker);
+
+// ✅ Get Personal Contact of a Patient by Caretaker
+router.get("/patient-personal-contact/:patient_id", verifyAccessToken, getPatientPersonalContactByCaretaker);
+
+// ✅ Get Details of a Patient by Caretaker
+router.get("/patient-details/:patient_id", verifyAccessToken, getPatientByCaretaker);
+
+// ✅ Get All Tasks of a Patient by Caretaker
+router.get("/patient-tasks/:patient_id", verifyAccessToken, getAllPatientTasksByCaretaker);
+
+// ✅ Get Single Task of a Patient by Caretaker
+router.get("/patient/:patient_id/task/:task_id", verifyAccessToken, getSinglePatientTaskByCaretaker);
+
+// ✅ Get Patient Record by Caretaker
+router.get("/patient-record/:patient_id", verifyAccessToken, getPatientRecordByCaretaker);
 export default router;

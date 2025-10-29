@@ -19,6 +19,6 @@ router.post("/edit/:contactId",verifyAccessToken,upload.none(), editPersonalCont
 router.get("/list",verifyAccessToken, getPersonalContacts);
 
 // Delete personal contact (soft delete)
-router.post("/delete/:contactId",verifyAccessToken, upload.none, deletePersonalContact);
+router.post("/delete/:contactId",verifyAccessToken, upload.none(), deletePersonalContact);
 
 export default router;

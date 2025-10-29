@@ -1719,3 +1719,115 @@ export const resendGuardianOTPforLogin = async (req, res) => {
   }
 };
 
+
+export const assignPatientToCaregiver = async (req, res) => {
+  try {
+    const token = req.token; // Guardian’s token
+    const { patient_id, caregiver_id } = req.body;
+
+    // Step 1: Validate Guardian
+    const guardian = await Guardian.findOne({ _id: token._id, status: "Active" });
+    if (!guardian) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "Guardian not found or inactive",
+        result: {},
+      });
+    }
+
+    // Step 2: Validate input
+    if (!patient_id || !caregiver_id) {
+      return res.status(400).json({
+        statusCode: 400,
+        success: false,
+        message: "patient_id and caregiver_id are required",
+        result: {},
+      });
+    }
+
+    // Step 3: Validate ObjectId format
+    if (
+      !mongoose.Types.ObjectId.isValid(patient_id) ||
+      !mongoose.Types.ObjectId.isValid(caregiver_id)
+    ) {
+      return res.status(400).json({
+        statusCode: 400,
+        success: false,
+        message: "Invalid patient_id or caregiver_id format",
+        result: {},
+      });
+    }
+
+    // Step 4: Find Patient and Caregiver
+    const patient = await Patient.findOne({ _id: patient_id, status: "Active" });
+    const caregiver = await Caregiver.findOne({ _id: caregiver_id, status: "Active" });
+
+    if (!patient) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found or inactive",
+        result: {},
+      });
+    }
+
+    if (!caregiver) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "Caregiver not found or inactive",
+        result: {},
+      });
+    }
+
+    // Step 5: Check if already assigned
+    if (patient.caretakerId?.toString() === caregiver._id.toString()) {
+      return res.status(400).json({
+        statusCode: 400,
+        success: false,
+        message: "Patient is already assigned to this caregiver",
+        result: {},
+      });
+    }
+
+    // Step 6: Assign caregiver & guardian in Patient model
+    patient.guardianId = guardian._id;
+    patient.caretakerId = caregiver._id;
+    await patient.save();
+
+    // Step 7: Add patient reference in Caregiver model
+    if (!caregiver.patients) caregiver.patients = [];
+
+    const alreadyAssigned = caregiver.patients.some(
+      (p) => p.toString() === patient._id.toString()
+    );
+
+    if (!alreadyAssigned) {
+      caregiver.patients.push(patient._id);
+      await caregiver.save();
+    }
+
+    // Step 8: Success response
+    return res.status(200).json({
+      statusCode: 200,
+      success: true,
+      message: "Patient assigned to caregiver successfully",
+      result: {
+        patient_id: patient._id,
+        caregiver_id: caregiver._id,
+        guardian_id: guardian._id,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in assignPatientToCaregiver API",
+      result: {},
+    });
+  }
+};
+
+
+
