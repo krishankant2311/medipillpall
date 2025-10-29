@@ -26,6 +26,8 @@ import personalHistoryRouter from "./module/routes/patientPersonalHistoryRoute.j
 import personalContactRouter from "./module/routes/patientPersonalContactRoute.js"
 import careNotesRouter from "./module/routes/guardianRoutes/careRoute.js"
 import guardianReminderrouter from "./module/routes/guardianRoutes/reminderRoute.js"
+import path from "path";
+import { fileURLToPath } from "url";
 dotenv.config();
 connect();
 
@@ -33,7 +35,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+// ✅ Fix __dirname in ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
+// ✅ Serve uploads folder publicly
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.get("/api", (req, res) => {
   res.send("Server is Working Fine of medipillpall and successfully connected to database");

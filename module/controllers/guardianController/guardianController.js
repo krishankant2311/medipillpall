@@ -621,6 +621,10 @@ export const guardianProfile = async (req, res) => {
 //   }
 // };
 
+import path from "path";
+import fs from "fs";
+// import Guardian from "../../models/Guardian.js";
+
 export const editGuardianProfile = async (req, res) => {
   try {
     const token = req.token;
@@ -665,12 +669,19 @@ export const editGuardianProfile = async (req, res) => {
     if (req.file) {
       // Delete old photo if exists
       if (guardian.profilePhoto) {
-        const oldPath = path.join("uploads/profilePhotos", path.basename(guardian.profilePhoto));
+        const oldPath = path.join(
+          "uploads/profilePhotos",
+          path.basename(guardian.profilePhoto)
+        );
         if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
       }
 
-      // Store new one (assuming multer stores in uploads/profilePhotos)
-      profilePhotoUrl = `/uploads/profilePhotos/${req.file.filename}`;
+      // Build absolute URL for new photo
+      
+      const baseUrl = `${req.protocol}://${req.get("host")}`; // e.g. http://localhost:5000
+      profilePhotoUrl = `${baseUrl}/uploads/${req.file.filename}`;
+
+      // profilePhotoUrl = `${baseUrl}/uploads/profilePhotos/${req.file.filename}`;
     }
 
     // --- Step 3: Update Guardian Info ---
@@ -695,6 +706,82 @@ export const editGuardianProfile = async (req, res) => {
     });
   }
 };
+
+
+// export const editGuardianProfile = async (req, res) => {
+//   try {
+//     const token = req.token;
+//     let { fullName, email } = req.body;
+
+//     fullName = fullName?.trim();
+//     email = email?.trim()?.toLowerCase();
+
+//     // --- Validations ---
+//     if (!fullName) {
+//       return res.send({
+//         statusCode: 400,
+//         success: false,
+//         message: "Full name is required",
+//         result: {},
+//       });
+//     }
+
+//     if (!email) {
+//       return res.send({
+//         statusCode: 400,
+//         success: false,
+//         message: "Email is required",
+//         result: {},
+//       });
+//     }
+
+//     // --- Step 1: Find Guardian ---
+//     const guardian = await Guardian.findById(token._id);
+//     if (!guardian) {
+//       return res.send({
+//         statusCode: 404,
+//         success: false,
+//         message: "Guardian not found",
+//         result: {},
+//       });
+//     }
+
+//     // --- Step 2: Handle Profile Photo Upload (if any) ---
+//     let profilePhotoUrl = guardian.profilePhoto; // keep old one if not updated
+
+//     if (req.file) {
+//       // Delete old photo if exists
+//       if (guardian.profilePhoto) {
+//         const oldPath = path.join("uploads/profilePhotos", path.basename(guardian.profilePhoto));
+//         if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+//       }
+
+//       // Store new one (assuming multer stores in uploads/profilePhotos)
+//       profilePhotoUrl = `/uploads/profilePhotos/${req.file.filename}`;
+//     }
+
+//     // --- Step 3: Update Guardian Info ---
+//     guardian.fullName = fullName;
+//     guardian.email = email;
+//     guardian.profilePhoto = profilePhotoUrl;
+
+//     await guardian.save();
+
+//     return res.send({
+//       statusCode: 200,
+//       success: true,
+//       message: "Guardian profile updated successfully",
+//       result: guardian,
+//     });
+//   } catch (error) {
+//     return res.send({
+//       statusCode: 500,
+//       success: false,
+//       message: error.message + " Error in editGuardianProfile API",
+//       result: {},
+//     });
+//   }
+// };
 
 
 /**
