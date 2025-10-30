@@ -14,6 +14,13 @@ import { addCaretaker,
   getPatientPersonalContactByCaretaker,
   getSinglePatientTaskByCaretaker,
   getPatientRecordByCaretaker,
+  addMedicationByCaretaker,
+  getAllMealsByCaretakerForPatient,
+  getActiveMedicationsByCaretakerForPatient,
+  getMedicationsByCaretakerForPatient,
+  getDiscontinuedMedicationsByCaretakerForPatient,
+  getAllMedicationRemindersByCaretakerForPatient,
+
   caretakerLogout, getAllCaretakersByAdmin } from "../../controllers/caretakerController/caretakerController.js";
 import { verifyAccessToken } from "../../../helpers/jwt.js"; // token verify middleware
 import upload from "../../../config/multer.js";
@@ -71,4 +78,18 @@ router.get("/patient/:patient_id/task/:task_id", verifyAccessToken, getSinglePat
 
 // ✅ Get Patient Record by Caretaker
 router.get("/patient-record/:patient_id", verifyAccessToken, getPatientRecordByCaretaker);
+// ✅ Add Medication by Caretaker
+router.post("/add-medication-by-caretaker/:patientId", verifyAccessToken, upload.none(), addMedicationByCaretaker);
+
+// ✅ Get All Meals by Caretaker for Patient
+router.get("/meals-by-caretaker/:patientId", verifyAccessToken, getAllMealsByCaretakerForPatient);
+// ✅ Get Active Medications by Caretaker for Patient
+router.get("/active-medications-by-caretaker/:patientId", verifyAccessToken, getActiveMedicationsByCaretakerForPatient);
+// ✅ Get All Medications by Caretaker for Patient
+router.get("/medications-by-caretaker/:patientId", verifyAccessToken, getMedicationsByCaretakerForPatient);
+// ✅ Get Discontinued Medications by Caretaker for Patient
+router.get("/discontinued-medications-by-caretaker/:patientId", verifyAccessToken, getDiscontinuedMedicationsByCaretakerForPatient);
+// ✅ Get All Medication Reminders by Caretaker for Patient
+router.get("/medication-reminders-by-caretaker/:patientId", verifyAccessToken, getAllMedicationRemindersByCaretakerForPatient);
+
 export default router;

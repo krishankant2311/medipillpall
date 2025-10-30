@@ -8,6 +8,11 @@ import Medication from "../../models/medicationModel.js";
 import PersonalContact from "../../models/patientPersonalContactModel.js";
 import PatientRecord from "../../models/patientRecordModel.js";
 import PatientTask from "../../models/patientTaskModel.js";
+import Meal from "../../models/patientMealModel.js";
+import mongoose from "mongoose";
+import MedicationReminder from "../../models/reminderModel.js";
+
+
 export const addCaretaker = async (req, res) => {
   try {
     let { fullName, mobileNumber, email, password } = req.body;
@@ -1511,4 +1516,494 @@ export const getPatientRecordByCaretaker = async (req, res) => {
     });
   }
 };
+
+export const addMedicationByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+    const { patientId } = req.params;
+    const { medicationName, dosage, times, startingDate, reason } = req.body;
+
+    // --- Validation ---
+    if (!patientId) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Patient ID is required in params",
+        result: {},
+      });
+    }
+
+    if (!medicationName?.trim()) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Medication name is required",
+        result: {},
+      });
+    }
+
+    if (!dosage?.trim()) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Dosage is required",
+        result: {},
+      });
+    }
+
+    if (!times || !Array.isArray(times) || times.length === 0) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "At least one time entry is required",
+        result: {},
+      });
+    }
+
+    if (!startingDate) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Starting date is required",
+        result: {},
+      });
+    }
+
+    if (!reason?.trim()) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Reason is required",
+        result: {},
+      });
+    }
+
+    // --- Step 1: Verify Caretaker ---
+    const caretaker = await Caretaker.findOne({ _id:token._id, status: "Active" });
+    if (!caretaker) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid or inactive caretaker token",
+        result: {},
+      });
+    }
+
+    // --- Step 2: Verify Patient belongs to this Caretaker ---
+    const patient = await Patient.findOne({
+      _id:patientId,
+      caretakerId: caretaker._id,
+      status: "Active",
+    });
+
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found or not assigned to this caretaker",
+        result: {},
+      });
+    }
+
+    // --- Step 3: Create Medication record ---
+    const newMedication = new Medication({
+      patientId: patient._id,
+      caretakerId: caretaker._id,
+      medicationName: medicationName.trim(),
+      dosage: dosage.trim(),
+      times,
+      startingDate,
+      reason: reason.trim(),
+      status: "Active",
+    });
+
+    await newMedication.save();
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Medication added successfully for the patient",
+      result: newMedication,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in addMedicationByCaretaker API",
+      result: {},
+    });
+  }
+};
+
+export const getAllMealsByCaretakerForPatient = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+    const { patientId } = req.params; // patient ID from params
+    let { page = 1, limit = 10 } = req.query;
+
+    page = parseInt(page);
+    limit = parseInt(limit);
+
+    // --- Step 1: Validate caretaker ---
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+    if (!caretaker) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid or inactive caretaker token",
+        result: {},
+      });
+    }
+
+    // --- Step 2: Validate patient belongs to caretaker ---
+   const patient = await Patient.findOne({
+  _id: patientId,
+  caretakerId: new mongoose.Types.ObjectId(caretaker._id),
+  status: "Active",
+});
+console.log("Caretaker ID:", caretaker._id);
+console.log("Patient ID:", patientId);
+
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found or not assigned to this caretaker",
+        result: {},
+      });
+    }
+
+    // --- Step 3: Fetch meals ---
+    const meals = await Meal.find({
+      patientId: patient._id,
+      status: "Active",
+    })
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    // Optional: get total count for pagination
+    const totalMeals = await Meal.countDocuments({
+      patientId: patient._id,
+      status: "Active",
+    });
+
+    if (meals.length === 0) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "No meals found for this patient",
+        result: { meals: [], totalMeals: 0 },
+      });
+    }
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Meals fetched successfully",
+      result: {
+        meals,
+        totalMeals,
+        currentPage: page,
+        totalPages: Math.ceil(totalMeals / limit),
+      },
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in getAllMealsByCaretakerForPatient API",
+      result: {},
+    });
+  }
+};
+
+export const getActiveMedicationsByCaretakerForPatient = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+    const { patientId } = req.params; // patient ID from params
+    let { page = 1, limit = 10 } = req.query;
+
+    page = parseInt(page);
+    limit = parseInt(limit);
+
+    // --- Step 1: Validate Caretaker ---
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+    if (!caretaker) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid or inactive caretaker token",
+        result: {},
+      });
+    }
+
+    // --- Step 2: Validate Patient belongs to Caretaker ---
+    const patient = await Patient.findOne({
+      _id: patientId,
+      caretakerId: caretaker._id,
+      status: "Active",
+    });
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found or not assigned to this caretaker",
+        result: {},
+      });
+    }
+
+    // --- Step 3: Fetch Active Medications ---
+    const medications = await Medication.find({
+      patientId: patient._id,
+      caretakerId: caretaker._id,
+      status: "Active",
+    })
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    // Count total active meds for pagination
+    const totalMedications = await Medication.countDocuments({
+      patientId: patient._id,
+      caretakerId: caretaker._id,
+      status: "Active",
+    });
+
+    if (medications.length === 0) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "No active medications found for this patient",
+        result: { medications: [], totalMedications: 0 },
+      });
+    }
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Active medications fetched successfully",
+      result: {
+        medications,
+        totalMedications,
+        currentPage: page,
+        totalPages: Math.ceil(totalMedications / limit),
+      },
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message:
+        error.message + " ERROR in getActiveMedicationsByCaretakerForPatient API",
+      result: {},
+    });
+  }
+};
+
+export const getMedicationsByCaretakerForPatient = async (req, res) => {
+  try {
+    const token = req.token;
+    const { patientId } = req.params;
+
+    // Step 1: Validate caretaker
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+    if (!caretaker) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Caretaker not found or inactive",
+        result: {},
+      });
+    }
+
+    // Step 2: Validate patient belongs to caretaker
+    const patient = await Patient.findOne({
+      _id: patientId,
+      caretakerId: caretaker._id,
+    });
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found or not assigned to this caretaker",
+        result: {},
+      });
+    }
+
+    // Step 3: Fetch medications for that patient
+    const medications = await Medication.find({
+      patientId: patient._id,
+    }).sort({ createdAt: -1 });
+
+    if (!medications.length) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "No medications found for this patient",
+        result: [],
+      });
+    }
+
+    // Step 4: Return data
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Medications fetched successfully",
+      result: medications,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " Error in get medications by caretaker API",
+      result: {},
+    });
+  }
+};
+
+
+export const getDiscontinuedMedicationsByCaretakerForPatient = async (req, res) => {
+  try {
+    const token = req.token;
+    const { patientId } = req.params;
+
+    // Step 1: Validate caretaker
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+    if (!caretaker) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Caretaker not found or inactive",
+        result: {},
+      });
+    }
+
+    // Step 2: Validate patient belongs to caretaker
+    const patient = await Patient.findOne({
+      _id: patientId,
+      caretakerId: caretaker._id,
+    });
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found or not assigned to this caretaker",
+        result: {},
+      });
+    }
+
+    // Step 3: Fetch discontinued medications
+    const discontinuedMeds = await Medication.find({
+      patientId: patient._id,
+      status: "Discontinued",
+    }).sort({ updatedAt: -1 });
+
+    if (!discontinuedMeds.length) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "No discontinued medication history found for this patient",
+        result: [],
+      });
+    }
+
+    // Step 4: Return data
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Discontinued medication history fetched successfully",
+      result: discontinuedMeds,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " Error in get discontinued medication history API",
+      result: {},
+    });
+  }
+};
+
+
+export const getAllMedicationRemindersByCaretakerForPatient = async (req, res) => {
+  try {
+    const token = req.token;
+    const { patientId } = req.params;
+
+    // Step 1: Validate caretaker
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+    if (!caretaker) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Caretaker not found or inactive",
+        result: {},
+      });
+    }
+
+    // Step 2: Validate patient belongs to caretaker
+    const patient = await Patient.findOne({
+      _id: patientId,
+      caretakerId: caretaker._id,
+    });
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found or not assigned to this caretaker",
+        result: {},
+      });
+    }
+
+    // Step 3: Fetch medication reminders for the patient
+    const reminders = await MedicationReminder.find({
+      patientId: patient._id,
+    })
+      .populate("medicationId", "medicationName dosage times startingDate reason") // optional populate
+      .sort({ createdAt: -1 });
+
+    if (!reminders.length) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "No medication reminders found for this patient",
+        result: [],
+      });
+    }
+
+    // Step 4: Return result
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Medication reminders fetched successfully",
+      result: reminders,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message:
+        error.message +
+        " Error in get all medication reminders by caretaker for particular patient API",
+      result: {},
+    });
+  }
+};
+
 
