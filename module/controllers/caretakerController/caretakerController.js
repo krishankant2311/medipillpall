@@ -11,6 +11,8 @@ import PatientTask from "../../models/patientTaskModel.js";
 import Meal from "../../models/patientMealModel.js";
 import mongoose from "mongoose";
 import MedicationReminder from "../../models/reminderModel.js";
+import MedicalReport from "../../models/medicalReportModel.js";
+import Prescription from "../../models/prescriptionModel.js";
 
 
 export const addCaretaker = async (req, res) => {
@@ -1026,7 +1028,7 @@ export const getAllPatientsOfCaretaker = async (req, res) => {
         const contact = await PersonalContact.findOne({
           patientId: patient._id,
           status: "Active",
-        }).select("name relation phone address");
+        }).select("name relation phone address status");
 
         return {
           patient_id: patient._id,
@@ -2006,4 +2008,376 @@ export const getAllMedicationRemindersByCaretakerForPatient = async (req, res) =
   }
 };
 
+// -------------------- GET BLOOD PRESSURE BY CARETAKER --------------------
+export const getPatientBloodPressureByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+    const { patientId } = req.params;
 
+    // Validate caretaker
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+    if (!caretaker) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid or inactive caretaker",
+      });
+    }
+
+    // Validate patient
+    const patient = await Patient.findOne({
+      _id: patientId,
+      status: "Active",
+    });
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient not found or inactive",
+      });
+    }
+
+    const record = await PatientRecord.findOne({
+      patient_id: patientId,
+    })
+      .select("bloodPressure createdAt")
+      .sort({ createdAt: -1 });
+
+    if (!record || !record.bloodPressure) {
+      return res.json({
+        success: true,
+        message: "No blood pressure record found",
+        result: {},
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Blood Pressure fetched successfully",
+      result: record.bloodPressure,
+    });
+  } catch (err) {
+    console.error("Error in getPatientBloodPressureByCaretaker:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
+// -------------------- GET BLOOD SUGAR BY CARETAKER --------------------
+export const getPatientBloodSugarByCaretaker = async (req, res) => {
+  try {
+    const token = req.token;
+    const { patientId } = req.params;
+
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+    if (!caretaker)
+      return res.status(401).json({
+        success: false,
+        message: "Invalid or inactive caretaker",
+      });
+
+    const patient = await Patient.findOne({
+      _id: patientId,
+      status: "Active",
+    });
+    if (!patient)
+      return res.status(404).json({
+        success: false,
+        message: "Patient not found or inactive",
+      });
+
+    const record = await PatientRecord.findOne({
+      patient_id: patientId,
+    })
+      .select("bloodSugar createdAt")
+      .sort({ createdAt: -1 });
+
+    if (!record || !record.bloodSugar)
+      return res.json({
+        success: true,
+        message: "No blood sugar record found",
+        result: {},
+      });
+
+    return res.json({
+      success: true,
+      message: "Blood Sugar fetched successfully",
+      result: record.bloodSugar,
+    });
+  } catch (err) {
+    console.error("Error in getPatientBloodSugarByCaretaker:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
+// -------------------- GET BODY TEMPERATURE BY CARETAKER --------------------
+export const getPatientBodyTempByCaretaker = async (req, res) => {
+  try {
+    const token = req.token;
+    const { patientId } = req.params;
+
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+    if (!caretaker)
+      return res.status(401).json({
+        success: false,
+        message: "Invalid or inactive caretaker",
+      });
+
+    const patient = await Patient.findOne({
+      _id: patientId,
+      status: "Active",
+    });
+    if (!patient)
+      return res.status(404).json({
+        success: false,
+        message: "Patient not found or inactive",
+      });
+
+    const record = await PatientRecord.findOne({
+      patient_id: patientId,
+    })
+      .select("bodyTemp createdAt")
+      .sort({ createdAt: -1 });
+
+    if (!record || !record.bodyTemp)
+      return res.json({
+        success: true,
+        message: "No body temperature record found",
+        result: {},
+      });
+
+    return res.json({
+      success: true,
+      message: "Body Temperature fetched successfully",
+      result: record.bodyTemp,
+    });
+  } catch (err) {
+    console.error("Error in getPatientBodyTempByCaretaker:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
+// -------------------- GET BODY WEIGHT BY CARETAKER --------------------
+export const getPatientBodyWeightByCaretaker = async (req, res) => {
+  try {
+    const token = req.token;
+    const { patientId } = req.params;
+
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+    if (!caretaker)
+      return res.status(401).json({
+        success: false,
+        message: "Invalid or inactive caretaker",
+      });
+
+    const patient = await Patient.findOne({
+      _id: patientId,
+      status: "Active",
+    });
+    if (!patient)
+      return res.status(404).json({
+        success: false,
+        message: "Patient not found or inactive",
+      });
+
+    const record = await PatientRecord.findOne({
+      patient_id: patientId,
+    })
+      .select("bodyWeight createdAt")
+      .sort({ createdAt: -1 });
+
+    if (!record || !record.bodyWeight)
+      return res.json({
+        success: true,
+        message: "No body weight record found",
+        result: {},
+      });
+
+    return res.json({
+      success: true,
+      message: "Body Weight fetched successfully",
+      result: record.bodyWeight,
+    });
+  } catch (err) {
+    console.error("Error in getPatientBodyWeightByCaretaker:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
+// -------------------- GET HEART RATE BY CARETAKER --------------------
+export const getPatientHeartRateByCaretaker = async (req, res) => {
+  try {
+    const token = req.token;
+    const { patientId } = req.params;
+
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+    if (!caretaker)
+      return res.status(401).json({
+        success: false,
+        message: "Invalid or inactive caretaker",
+      });
+
+    const patient = await Patient.findOne({
+      _id: patientId,
+      status: "Active",
+    });
+    if (!patient)
+      return res.status(404).json({
+        success: false,
+        message: "Patient not found or inactive",
+      });
+
+    const record = await PatientRecord.findOne({
+      patient_id: patientId,
+    })
+      .select("heartRate createdAt")
+      .sort({ createdAt: -1 });
+
+    if (!record || !record.heartRate)
+      return res.json({
+        success: true,
+        message: "No heart rate record found",
+        result: {},
+      });
+
+    return res.json({
+      success: true,
+      message: "Heart Rate fetched successfully",
+      result: record.heartRate,
+    });
+  } catch (err) {
+    console.error("Error in getPatientHeartRateByCaretaker:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
+export const getPatientMedicalReportByCaretaker = async (req, res) => {
+  try {
+    const token = req.token;
+    const { patientId } = req.params;
+
+    // Validate caretaker
+    const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
+    if (!caretaker) {
+      return res.status(404).json({
+        success: false,
+        message: "Caretaker not found or inactive",
+      });
+    }
+
+    // Validate patient
+    const patient = await Patient.findOne({ _id: patientId, status: "Active" });
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient not found or inactive",
+      });
+    }
+
+    // Fetch reports
+    const reports = await MedicalReport.find({ patientId }).sort({ createdAt: -1 });
+
+    if (!reports.length) {
+      return res.json({
+        success: true,
+        message: "No medical reports found",
+        result: [],
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Medical reports fetched successfully",
+      result: reports,
+    });
+  } catch (err) {
+    console.error("Error in getPatientMedicalReportByCaretaker:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
+// -------------------- GET PRESCRIPTION BY CARETAKER --------------------
+export const getPatientPrescriptionByCaretaker = async (req, res) => {
+  try {
+    const token = req.token;
+    const { patientId } = req.params;
+
+    // Validate caretaker
+    const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
+    if (!caretaker) {
+      return res.status(404).json({
+        success: false,
+        message: "Caretaker not found or inactive",
+      });
+    }
+
+    // Validate patient
+    const patient = await Patient.findOne({ _id: patientId, status: "Active" });
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient not found or inactive",
+      });
+    }
+
+    // Fetch prescriptions
+    const prescriptions = await Prescription.find({ patientId }).sort({ createdAt: -1 });
+
+    if (!prescriptions.length) {
+      return res.json({
+        success: true,
+        message: "No prescriptions found",
+        result: [],
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Prescriptions fetched successfully",
+      result: prescriptions,
+    });
+  } catch (err) {
+    console.error("Error in getPatientPrescriptionByCaretaker:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};

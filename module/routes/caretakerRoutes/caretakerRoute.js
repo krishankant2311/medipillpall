@@ -20,7 +20,13 @@ import { addCaretaker,
   getMedicationsByCaretakerForPatient,
   getDiscontinuedMedicationsByCaretakerForPatient,
   getAllMedicationRemindersByCaretakerForPatient,
-
+  getPatientBloodPressureByCaretaker,
+  getPatientBloodSugarByCaretaker,
+  getPatientBodyTempByCaretaker,
+  getPatientBodyWeightByCaretaker,
+  getPatientHeartRateByCaretaker,
+  getPatientMedicalReportByCaretaker,
+  getPatientPrescriptionByCaretaker,
   caretakerLogout, getAllCaretakersByAdmin } from "../../controllers/caretakerController/caretakerController.js";
 import { verifyAccessToken } from "../../../helpers/jwt.js"; // token verify middleware
 import upload from "../../../config/multer.js";
@@ -91,5 +97,22 @@ router.get("/medications-by-caretaker/:patientId", verifyAccessToken, getMedicat
 router.get("/discontinued-medications-by-caretaker/:patientId", verifyAccessToken, getDiscontinuedMedicationsByCaretakerForPatient);
 // ✅ Get All Medication Reminders by Caretaker for Patient
 router.get("/medication-reminders-by-caretaker/:patientId", verifyAccessToken, getAllMedicationRemindersByCaretakerForPatient);
+
+// -------------------- GET BLOOD PRESSURE BY CARETAKER --------------------  
+router.get("/patient-blood-pressure/:patientId", verifyAccessToken, getPatientBloodPressureByCaretaker);
+// -------------------- GET BLOOD SUGAR BY CARETAKER --------------------
+router.get("/patient-blood-sugar/:patientId", verifyAccessToken, getPatientBloodSugarByCaretaker);
+// -------------------- GET BODY TEMPERATURE BY CARETAKER --------------------
+router.get("/patient-body-temp/:patientId", verifyAccessToken, getPatientBodyTempByCaretaker);
+// -------------------- GET BODY WEIGHT BY CARETAKER --------------------
+router.get("/patient-body-weight/:patientId", verifyAccessToken, getPatientBodyWeightByCaretaker);
+// -------------------- GET HEART RATE BY CARETAKER --------------------
+router.get("/patient-heart-rate/:patientId", verifyAccessToken, getPatientHeartRateByCaretaker);
+
+// -------------------- GET MEDICAL REPORT BY CARETAKER --------------------
+router.get("/patient-medical-report/:patientId", verifyAccessToken, getPatientMedicalReportByCaretaker);
+
+// -------------------- GET PRESCRIPTION BY CARETAKER --------------------
+router.get("/patient-prescription/:patientId", verifyAccessToken, getPatientPrescriptionByCaretaker);
 
 export default router;
