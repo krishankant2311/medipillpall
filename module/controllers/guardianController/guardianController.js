@@ -2336,3 +2336,68 @@ export const getPatientDetailByGuardian = async (req, res) => {
     });
   }
 };
+
+export const getAllCaretakersByGuardianForPatient = async (req, res) => {
+  try {
+    const token = req.token; // guardian token
+    const { patientId } = req.params;
+
+    // ✅ Step 1: Validate Guardian
+    const guardian = await Guardian.findOne({ _id: token._id, status: "Active" });
+    if (!guardian) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid or inactive guardian",
+        result: {},
+      });
+    }
+
+    // ✅ Step 2: Validate Patient
+    if (!patientId) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Patient ID is required",
+        result: {},
+      });
+    }
+
+    const patient = await Patient.findOne({
+      _id: patientId,
+      guardianId: guardian._id,
+      status: "Active",
+    });
+
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found or not linked with this guardian",
+        result: {},
+      });
+    }
+
+    // ✅ Step 3: Get All Caretakers assigned to this patient
+    const caretakers = await Caregiver.find({
+      patients: { $in: [patient._id] },
+      status: "Active",
+    }).select("_id fullName mobileNumber gender language profilePhoto status");
+
+    // ✅ Step 4: Response
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Caretakers fetched successfully for this patient",
+      result: caretakers || [],
+    });
+  } catch (error) {
+    console.error("Error in getAllCaretakersByGuardianForPatient:", error);
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message,
+      result: {},
+    });
+  }
+};
