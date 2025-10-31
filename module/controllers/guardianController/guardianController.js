@@ -628,7 +628,7 @@ import fs from "fs";
 export const editGuardianProfile = async (req, res) => {
   try {
     const token = req.token;
-    let { fullName, email } = req.body;
+    let { fullName, email, certification, mobileNumber, gender, age } = req.body;
 
     fullName = fullName?.trim();
     email = email?.trim()?.toLowerCase();
@@ -688,7 +688,11 @@ export const editGuardianProfile = async (req, res) => {
     guardian.fullName = fullName;
     guardian.email = email;
     guardian.profilePhoto = profilePhotoUrl;
-
+    guardian.certification=certification;
+    guardian.mobileNumber=mobileNumber;
+    guardian.gender=gender;
+    guardian.age=age;
+    
     await guardian.save();
 
     return res.send({

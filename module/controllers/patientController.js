@@ -499,7 +499,7 @@ export const login = async (req, res) => {
 export const editPatient = async (req, res) => {
   try {
     const token = req.token;
-    const { fullName, age, mobileNumber, gender,certification } = req.body;
+    const { fullName, age, mobileNumber, gender } = req.body;
 
     const patient = await Patient.findOne({
       _id: token._id,
@@ -517,7 +517,7 @@ export const editPatient = async (req, res) => {
     patient.mobileNumber = mobileNumber;
     patient.age = age;
     patient.gender = gender;
-    patient.certification=certification;
+    // patient.certification=certification;
     patient.save();
 
     return res.send({

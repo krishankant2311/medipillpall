@@ -32,10 +32,10 @@ const patientSchema = new mongoose.Schema(
       enum: ["English", "Hindi"],
       default: "English"
     },
-    certification:{
-      type:String,
-      default:""
-    },
+    // certification:{
+    //   type:String,
+    //   default:""
+    // },
     otp: {
       otpValue: {
         type: String,
