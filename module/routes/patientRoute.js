@@ -9,6 +9,8 @@ import { addPatient,
   sendOTPbyNumber,
   verifyPatientOTP,
   getAllPatientsByAdmin,
+  resendPatientOTPforLogin,
+  resendPatientOTPforSignup,
   resendOTPbyNumber, } from "../controllers/patientController.js";  
 import { verifyAccessToken } from "../../helpers/jwt.js"; 
 import express from "express";
@@ -43,5 +45,7 @@ router.post("/verify-otp", upload.none(), verifyPatientOTP);
 // POST change language
 router.post("/language", verifyAccessToken, changePatientLanguage);
 
+router.post("/resend-otp-login", upload.none(), resendPatientOTPforLogin);
+router.post("/resend-otp-signup", upload.none(), resendPatientOTPforSignup);
 
 export default router;
