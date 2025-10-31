@@ -455,3 +455,67 @@ export const getAllReminders = async (req, res) => {
     });
   }
 };
+
+export const deleteReminderStatusByGuardian = async (req, res) => {
+  try {
+    const token = req.token;
+    const { reminderId } = req.body;
+
+    // Step 1: Validate guardian token
+    const guardian = await Guardian.findOne({ _id: token._id, status: "Active" });
+    if (!guardian) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid guardian token",
+        result: {},
+      });
+    }
+
+    // Step 2: Validate reminder ID
+    if (!reminderId) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Reminder ID is required",
+        result: {},
+      });
+    }
+
+    // Step 3: Find reminder
+    const reminder = await GuardianReminder.findOne({
+      _id: reminderId,
+      guardian_id: guardian._id,
+    });
+    if (!reminder) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Reminder not found",
+        result: {},
+      });
+    }
+
+    // Step 4: Remove status field from reminder
+    await GuardianReminder.updateOne(
+      { _id: reminder._id },
+      { $unset: { status: "" } }
+    );
+
+    // Step 5: Response
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Status field deleted successfully",
+      result: {},
+    });
+
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message,
+      result: {},
+    });
+  }
+};

@@ -9,9 +9,9 @@ import CareNote from "../../models/guardiansModel/careModel.js";
 import PatientReport from "../../models/medicalReportModel.js";
 import Med from "../../models/medicationModel.js"
 import PatientRecord from "../../models/patientRecordModel.js";
-
+import MedicalReport from "../../models/medicalReportModel.js";
 import Caregiver from "../../../module/models/caretakerModel/caretakerModel.js";
-
+import Medication from "../../models/medicationModel.js";
 
 export const addGuardian = async (req, res) => {
   try {
@@ -692,7 +692,7 @@ export const editGuardianProfile = async (req, res) => {
     guardian.mobileNumber=mobileNumber;
     guardian.gender=gender;
     guardian.age=age;
-    
+
     await guardian.save();
 
     return res.send({
@@ -2135,4 +2135,204 @@ export const assignPatientToCaregiver = async (req, res) => {
 };
 
 
+// export const getPatientDetailByGuardian = async (req, res) => {
+//   try {
+//     const token = req.token; // guardian token
+//     const { patientId } = req.params;
 
+//     // Step 1: Validate guardian
+//     const guardian = await Guardian.findOne({ _id: token._id, status: "Active" });
+//     if (!guardian) {
+//       return res.send({
+//         statusCode: 401,
+//         success: false,
+//         message: "Invalid or inactive guardian",
+//         result: {},
+//       });
+//     }
+
+//     // Step 2: Validate patient
+//     if (!patientId) {
+//       return res.send({
+//         statusCode: 400,
+//         success: false,
+//         message: "Patient ID is required",
+//         result: {},
+//       });
+//     }
+
+//     const patient = await Patient.findOne({
+//       _id: patientId,
+//       guardianId: guardian._id,
+//       status: "Active",
+//     });
+//     if (!patient) {
+//       return res.send({
+//         statusCode: 404,
+//         success: false,
+//         message: "Patient not found or not linked to this guardian",
+//         result: {},
+//       });
+//     }
+
+//     // Step 3: Fetch all related data
+//     const medicalReports = await MedicalReport.find({ patient_id: patient._id }).sort({ createdAt: -1 });
+//     const patientRecords = await PatientRecord.find({ patient_id: patient._id }).sort({ createdAt: -1 });
+//     const medications = await Medication.find({ patient_id: patient._id, status: "Active" }).sort({ createdAt: -1 });
+
+//     // Step 4: Fetch caretaker info
+//     let caretakerDetails = {};
+//     if (patient.caretakerId) {
+//       caretakerDetails = await Caregiver.findOne(
+//         { _id: patient.caretakerId },
+//         { fullName: 1, mobileNumber: 1, gender: 1, language: 1, profilePhoto: 1, status: 1 }
+//       );
+//     }
+
+//     // Step 5: Prepare response
+//     return res.send({
+//       statusCode: 200,
+//       success: true,
+//       message: "Patient details fetched successfully",
+//       result: {
+//         patient: {
+//           _id: patient._id,
+//           fullName: patient.fullName,
+//           age: patient.age,
+//           gender: patient.gender,
+//           language: patient.language,
+//           mobileNumber: patient.mobileNumber,
+//           profilePhoto: patient.profilePhoto,
+//           diseaseCondition: patient.diseaseCondition,
+//           status: patient.status,
+//         },
+//         vitals: patientRecords,
+//         meds: medications,
+//         docs: medicalReports,
+//         caretaker: caretakerDetails,
+//         guardian: {
+//           _id: guardian._id,
+//           fullName: guardian.fullName,
+//           mobileNumber: guardian.mobileNumber,
+//           gender: guardian.gender,
+//           language: guardian.language,
+//           profilePhoto: guardian.profilePhoto,
+//           status: guardian.status,
+//         },
+//       },
+//     });
+
+//   } catch (error) {
+//     return res.send({
+//       statusCode: 500,
+//       success: false,
+//       message: error.message,
+//       result: {},
+//     });
+//   }
+// };
+// import Guardian from "../models/guardianModel.js";
+// import Patient from "../models/patientModel.js";
+// import Medication from "../models/medicationModel.js";
+// import MedicalReport from "../models/medicalReportModel.js";
+// import PatientRecord from "../models/patientRecordModel.js";
+// import Caretaker from "../models/caretakerModel.js"; // assuming caretaker model name is Caretaker
+
+export const getPatientDetailByGuardian = async (req, res) => {
+  try {
+    const token = req.token; // Guardian token
+    const { patientId } = req.params;
+
+    // 🧩 Step 1: Validate Guardian
+    const guardian = await Guardian.findOne({ _id: token._id, status: "Active" }).select(
+      "_id fullName mobileNumber gender language profilePhoto status"
+    );
+    if (!guardian) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid or inactive guardian",
+        result: {},
+      });
+    }
+
+    // 🧩 Step 2: Validate Patient
+    if (!patientId) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Patient ID is required",
+        result: {},
+      });
+    }
+
+    const patient = await Patient.findOne({
+      _id: patientId,
+      guardianId: guardian._id,
+      status: "Active",
+    }).select(
+      "_id fullName age gender language mobileNumber profilePhoto diseaseCondition status caretakerId guardianId"
+    );
+
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found or not linked to this guardian",
+        result: {},
+      });
+    }
+
+    // 🧩 Step 3: Fetch related data (linked via patient_id)
+    const [medicalReports, patientRecords, medications] = await Promise.all([
+      MedicalReport.find({ patient_id: patient._id }).sort({ createdAt: -1 }),
+      PatientRecord.find({ patient_id: patient._id }).sort({ createdAt: -1 }),
+      Medication.find({ patient_id: patient._id, status: "Active" }).sort({ createdAt: -1 }),
+    ]);
+
+    // console.log("Fetched Data:", { medicalReports, patientRecords, medications });
+
+    // 🧩 Step 4: Fetch Caretaker (optional)
+    let caretaker = {};
+    if (patient.caretakerId) {
+      caretaker = await Caregiver.findOne(
+        { _id: patient.caretakerId, status: "Active" },
+        "_id fullName mobileNumber gender language profilePhoto status"
+      );
+    }
+
+    // 🧩 Step 5: Final Response
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Patient details fetched successfully",
+      result: {
+        patient: {
+          _id: patient._id,
+          fullName: patient.fullName,
+          age: patient.age,
+          gender: patient.gender,
+          language: patient.language,
+          mobileNumber: patient.mobileNumber,
+          profilePhoto: patient.profilePhoto,
+          diseaseCondition: patient.diseaseCondition,
+          status: patient.status,
+        },
+        vitals: patientRecords || [],
+        meds: medications || [],
+        docs: medicalReports || [],
+        caretaker: caretaker || {},
+        guardian: guardian,
+      },
+    });
+  } catch (error) {
+    console.error("Error in getPatientDetailByGuardian:", error);
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+      result: {},
+    });
+  }
+};

@@ -3,7 +3,7 @@ import { addGuardian, getAllGuardiansByAdmin,signupGuardian ,getPatientReportsBy
     getPatient,getAllCareNotesByGuardian,addPatient,getallPatientsbyGuardian,
      guardianLogin, verifyGuardianOTP,getAllMedsByGuardian,getMedsByGuardian,
       guardianProfile,getActivePatientsByGuardian,getAllCaregiversByGuardian,
-      assignPatientToCaregiver,
+      assignPatientToCaregiver,getPatientDetailByGuardian,
       editGuardianProfile,logoutGuardian,resendGuardianOTPforLogin,resendGuardianOTPforSignup } from "../../controllers/guardianController/guardianController.js";
 import { verifyAccessToken } from "../../../helpers/jwt.js";
 import upload from "../../../config/multer.js";
@@ -44,4 +44,6 @@ router.post("/resend-guardian-otp-login",upload.none(), resendGuardianOTPforLogi
 router.post("/logout-guardian", verifyAccessToken,upload.none(), logoutGuardian);
 
 router.post("/assign-patient-to-caretaker", verifyAccessToken, upload.none(), assignPatientToCaregiver);
+
+router.get("/get-patient-detail-byguardian/:patientId", verifyAccessToken, getPatientDetailByGuardian);
 export default router;

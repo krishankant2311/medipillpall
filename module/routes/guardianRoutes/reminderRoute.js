@@ -1,5 +1,5 @@
 import express from "express";
-import { saveReminder, getReminders,editReminder, getReminderById,getAllReminders, deleteReminder } from "../../controllers/guardianController/reminderController.js";
+import { saveReminder, getReminders,editReminder,deleteReminderStatusByGuardian, getReminderById,getAllReminders, deleteReminder } from "../../controllers/guardianController/reminderController.js";
 import { verifyAccessToken } from "../../../helpers/jwt.js"; // Guardian authentication middleware
 import upload from "../../../config/multer.js"; // Multer configuration for file uploads (if needed)
 const router = express.Router();
@@ -22,5 +22,7 @@ router.post("/edit-reminder/:id", verifyAccessToken,upload.none(), editReminder)
 // Get all Reminders (Admin access)
 router.get("/get-all-reminders",verifyAccessToken, getAllReminders);
 
+// Soft Delete Reminder by ID (Guardian can only soft delete own reminders)
+router.post("/delete-reminder/:reminderId", verifyAccessToken, deleteReminderStatusByGuardian);
 
 export default router;
