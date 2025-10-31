@@ -1112,16 +1112,19 @@ export const resendPatientOTPforSignup = async (req, res) => {
     // Step 4: Check if OTP cooldown period has passed
     const now = new Date();
     if (patient.otp?.otpExpiry) {
-      const otpSentTime = new Date(patient.otp.otpExpiry.getTime() - 5 * 60 * 1000);
-      const diffSeconds = (now - otpSentTime) / 1000;
+      const otpExpiryDate = new Date(patient.otp.otpExpiry);
+      if (!isNaN(otpExpiryDate.getTime())) {
+        const otpSentTime = new Date(otpExpiryDate.getTime() - 5 * 60 * 1000);
+        const diffSeconds = (now - otpSentTime) / 1000;
 
-      if (diffSeconds < 30) {
-        return res.status(400).json({
-          statusCode: 400,
-          success: false,
-          message: `Please wait ${Math.ceil(30 - diffSeconds)} seconds before requesting a new OTP`,
-          result: {},
-        });
+        if (diffSeconds < 30) {
+          return res.status(400).json({
+            statusCode: 400,
+            success: false,
+            message: `Please wait ${Math.ceil(30 - diffSeconds)} seconds before requesting a new OTP`,
+            result: {},
+          });
+        }
       }
     }
 
@@ -1149,6 +1152,7 @@ export const resendPatientOTPforSignup = async (req, res) => {
     });
   }
 };
+
 export const resendPatientOTPforLogin = async (req, res) => {
   try {
     const { mobileNumber } = req.body;
