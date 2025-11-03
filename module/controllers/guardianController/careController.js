@@ -189,7 +189,7 @@ export const getAllCareNotes = async (req, res) => {
 export const getCareNoteById = async (req, res) => {
   try {
     const { id } = req.params;
-    const careNote = await CareNote.findById(id);
+    const careNote = await CareNote.findById({id, status: "Active" });
 
     if (!careNote) {
       return res.send({
