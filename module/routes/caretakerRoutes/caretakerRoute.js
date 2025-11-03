@@ -27,6 +27,15 @@ import { addCaretaker,
   getPatientHeartRateByCaretaker,
   getPatientMedicalReportByCaretaker,
   getPatientPrescriptionByCaretaker,
+  addPatientBodyTempByCaretaker,
+  addPatientBodyWeightByCaretaker,
+  addPatientHeartRateByCaretaker, 
+  addPatientBloodSugarByCaretaker,
+  addPatientBloodPressureByCaretaker,
+  addPrescriptionByCaretaker,
+  uploadMedicalReportByCaretaker,
+  addReminderByCaretaker,
+  addPatientMealByCaretaker,addPatientDietByCaretaker,
   caretakerLogout, getAllCaretakersByAdmin } from "../../controllers/caretakerController/caretakerController.js";
 import { verifyAccessToken } from "../../../helpers/jwt.js"; // token verify middleware
 import upload from "../../../config/multer.js";
@@ -114,5 +123,20 @@ router.get("/patient-medical-report/:patientId", verifyAccessToken, getPatientMe
 
 // -------------------- GET PRESCRIPTION BY CARETAKER --------------------
 router.get("/patient-prescription/:patientId", verifyAccessToken, getPatientPrescriptionByCaretaker);
-
+// -------------------- ADD BODY TEMPERATURE BY CARETAKER --------------------
+router.post("/add-patient-body-temp/:patientId", verifyAccessToken, upload.none(), addPatientBodyTempByCaretaker);
+// -------------------- ADD BODY WEIGHT BY CARETAKER --------------------
+router.post("/add-patient-body-weight/:patientId", verifyAccessToken, upload.none(), addPatientBodyWeightByCaretaker);
+// -------------------- ADD HEART RATE BY CARETAKER --------------------
+router.post("/add-patient-heart-rate/:patientId", verifyAccessToken, upload.none(), addPatientHeartRateByCaretaker);
+// -------------------- ADD BLOOD SUGAR BY CARETAKER --------------------
+router.post("/add-patient-blood-sugar/:patientId", verifyAccessToken, upload.none(), addPatientBloodSugarByCaretaker);
+// -------------------- ADD BLOOD PRESSURE BY CARETAKER --------------------
+router.post("/add-patient-blood-pressure/:patientId", verifyAccessToken, upload.none(), addPatientBloodPressureByCaretaker);
+// -------------------- ADD PRESCRIPTION BY CARETAKER --------------------
+router.post("/add-prescription/:patientId", verifyAccessToken, upload.single('prescriptionFile'), addPrescriptionByCaretaker);
+// -------------------- UPLOAD MEDICAL REPORT BY CARETAKER --------------------
+router.post("/upload-medical-report/:patientId", verifyAccessToken, upload.array("files", 5), uploadMedicalReportByCaretaker);
+// -------------------- ADD REMINDER BY CARETAKER --------------------
+router.post("/add-reminder/:patientId", verifyAccessToken, upload.none(), addReminderByCaretaker);
 export default router;

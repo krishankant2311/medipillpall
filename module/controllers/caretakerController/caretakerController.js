@@ -2381,3 +2381,909 @@ export const getPatientPrescriptionByCaretaker = async (req, res) => {
     });
   }
 };
+
+export const addPatientBloodPressureByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+    const { patient_id, day, amBP, pmBP, comments } = req.body;
+
+    // --- Caretaker Validation ---
+    const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
+    if (!caretaker) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid or inactive caretaker token",
+        result: {},
+      });
+    }
+
+    // --- Patient Validation ---
+    const patient = await Patient.findOne({
+      _id: patient_id,
+      caretakerId: caretaker._id,
+      status: "Active",
+    });
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found or not assigned to this caretaker",
+        result: {},
+      });
+    }
+
+    if (!patient_id) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "patient_id required",
+        result: {},
+      });
+    }
+
+    if (!day || !amBP || !pmBP) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "day, amBP and pmBP are required",
+        result: {},
+      });
+    }
+
+    const { start, end } = getDateRange(new Date());
+
+    let record = await PatientRecord.findOne({
+      patient_id,
+      createdAt: { $gte: start, $lte: end },
+    });
+
+    if (record) {
+      record.bloodPressure = { day, amBP, pmBP, comments };
+      await record.save();
+    } else {
+      record = await PatientRecord.create({
+        patient_id,
+        bloodPressure: { day, amBP, pmBP, comments },
+      });
+      await record.save();
+    }
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Blood Pressure added/updated successfully",
+      result: record,
+    });
+
+  } catch (err) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: err.message + " ERROR in addPatientBloodPressureByCaretaker API",
+      result: {},
+    });
+  }
+};
+
+export const addPatientBloodSugarByCaretaker = async (req, res) => {
+  try {
+    const token = req.token;
+    const { patient_id, day, before, after, insulinDose, notes } = req.body;
+
+    // --- Caretaker Validation ---
+    const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
+    if (!caretaker) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid or inactive caretaker token",
+        result: {},
+      });
+    }
+
+    // --- Patient Validation ---
+    const patient = await Patient.findOne({
+      _id: patient_id,
+      caretakerId: caretaker._id,
+      status: "Active",
+    });
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found or not assigned to this caretaker",
+        result: {},
+      });
+    }
+
+    if (!patient_id) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "patient_id required",
+        result: {},
+      });
+    }
+
+    if (!day || !before || !after) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "day, before and after sugar values are required",
+        result: {},
+      });
+    }
+
+    const { start, end } = getDateRange(new Date());
+
+    let record = await PatientRecord.findOne({
+      patient_id,
+      createdAt: { $gte: start, $lte: end },
+    });
+
+    if (record) {
+      record.bloodSugar = { day, before, after, insulinDose, notes };
+      await record.save();
+    } else {
+      record = await PatientRecord.create({
+        patient_id,
+        bloodSugar: { day, before, after, insulinDose, notes },
+      });
+      await record.save();
+    }
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Blood Sugar added/updated successfully",
+      result: record,
+    });
+
+  } catch (err) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: err.message + " ERROR in addPatientBloodSugarByCaretaker API",
+      result: {},
+    });
+  }
+};
+export const addPatientBodyWeightByCaretaker = async (req, res) => {
+  try {
+    const token = req.token;
+    const { patient_id, day, weight } = req.body;
+
+    // --- Caretaker Validation ---
+    const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
+    if (!caretaker) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid or inactive caretaker token",
+        result: {},
+      });
+    }
+
+    // --- Patient Validation ---
+    const patient = await Patient.findOne({
+      _id: patient_id,
+      caretakerId: caretaker._id,
+      status: "Active",
+    });
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found or not assigned to this caretaker",
+        result: {},
+      });
+    }
+
+    if (!patient_id) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "patient_id required",
+        result: {},
+      });
+    }
+
+    if (!day || !weight) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "day and weight are required",
+        result: {},
+      });
+    }
+
+    const { start, end } = getDateRange(new Date());
+
+    let record = await PatientRecord.findOne({
+      patient_id,
+      createdAt: { $gte: start, $lte: end },
+    });
+
+    if (record) {
+      record.bodyWeight = { day, weight };
+      await record.save();
+    } else {
+      record = await PatientRecord.create({
+        patient_id,
+        bodyWeight: { day, weight },
+      });
+      await record.save();
+    }
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Body Weight added/updated successfully",
+      result: record,
+    });
+
+  } catch (err) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: err.message + " ERROR in addPatientBodyWeightByCaretaker API",
+      result: {},
+    });
+  }
+};
+export const addPatientHeartRateByCaretaker = async (req, res) => {
+  try {
+    const token = req.token;
+    const { patient_id, day, time, amRate, pmRate, notes } = req.body;
+
+    // --- Caretaker Validation ---
+    const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
+    if (!caretaker) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid or inactive caretaker token",
+        result: {},
+      });
+    }
+
+    // --- Patient Validation ---
+    const patient = await Patient.findOne({
+      _id: patient_id,
+      caretakerId: caretaker._id,
+      status: "Active",
+    });
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found or not assigned to this caretaker",
+        result: {},
+      });
+    }
+
+    if (!patient_id) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "patient_id required",
+        result: {},
+      });
+    }
+
+    if (!day) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "day is required",
+        result: {},
+      });
+    }
+
+    const { start, end } = getDateRange(new Date());
+
+    let record = await PatientRecord.findOne({
+      patient_id,
+      createdAt: { $gte: start, $lte: end },
+    });
+
+    if (record) {
+      record.heartRate = { day, time, amRate, pmRate, notes };
+      await record.save();
+    } else {
+      record = await PatientRecord.create({
+        patient_id,
+        heartRate: { day, time, amRate, pmRate, notes },
+      });
+      await record.save();
+    }
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Heart Rate added/updated successfully",
+      result: record,
+    });
+
+  } catch (err) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: err.message + " ERROR in addPatientHeartRateByCaretaker API",
+      result: {},
+    });
+  }
+};
+export const addPatientBodyTempByCaretaker = async (req, res) => {
+  try {
+    const token = req.token;
+    const { patient_id, day, time, amTemp, pmTemp, notes } = req.body;
+
+    // --- Caretaker Validation ---
+    const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
+    if (!caretaker) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid or inactive caretaker token",
+        result: {},
+      });
+    }
+
+    // --- Patient Validation ---
+    const patient = await Patient.findOne({
+      _id: patient_id,
+      caretakerId: caretaker._id,
+      status: "Active",
+    });
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found or not assigned to this caretaker",
+        result: {},
+      });
+    }
+
+    if (!patient_id) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "patient_id required",
+        result: {},
+      });
+    }
+
+    if (!day) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "day is required",
+        result: {},
+      });
+    }
+
+    const { start, end } = getDateRange(new Date());
+
+    let record = await PatientRecord.findOne({
+      patient_id,
+      createdAt: { $gte: start, $lte: end },
+    });
+
+    if (record) {
+      record.bodyTemp = { day, time, amTemp, pmTemp, notes };
+      await record.save();
+    } else {
+      record = await PatientRecord.create({
+        patient_id,
+        bodyTemp: { day, time, amTemp, pmTemp, notes },
+      });
+      await record.save();
+    }
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Body Temperature added/updated successfully",
+      result: record,
+    });
+
+  } catch (err) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: err.message + " ERROR in addPatientBodyTempByCaretaker API",
+      result: {},
+    });
+  }
+};
+
+export const addPrescriptionByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+    const { patient_id, doctorName, date, medications, instructions } = req.body;
+
+    // --- Caretaker Validation ---
+    const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
+    if (!caretaker) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid or inactive caretaker token",
+        result: {},
+      });
+    }
+
+    // --- Patient Validation ---
+    const patient = await Patient.findOne({
+      _id: patient_id,
+      caretakerId: caretaker._id,
+      status: "Active",
+    });
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found or not assigned to this caretaker",
+        result: {},
+      });
+    }
+
+    // --- Field Validations ---
+    if (!patient_id) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "patient_id is required",
+        result: {},
+      });
+    }
+
+    if (!doctorName?.trim()) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Doctor name is required",
+        result: {},
+      });
+    }
+
+    if (!date) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Date is required",
+        result: {},
+      });
+    }
+
+    if (!medications || !Array.isArray(medications) || medications.length === 0) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "At least one medication is required",
+        result: {},
+      });
+    }
+
+    if (!instructions?.trim()) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Instructions are required",
+        result: {},
+      });
+    }
+
+    // --- Create Prescription ---
+    const newPrescription = new Prescription({
+      patientId: patient._id,
+      caretakerId: caretaker._id,
+      doctorName: doctorName.trim(),
+      date,
+      medications,
+      instructions: instructions.trim(),
+      status: "Active",
+    });
+
+    await newPrescription.save();
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Prescription added successfully for the patient",
+      result: newPrescription,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in addPrescriptionByCaretaker API",
+      result: {},
+    });
+  }
+};
+export const uploadMedicalReportByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+    const { patient_id, description } = req.body;
+
+    // --- Caretaker Validation ---
+    const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
+    if (!caretaker) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid or inactive caretaker token",
+        result: {},
+      });
+    }
+
+    // --- Patient Validation ---
+    const patient = await Patient.findOne({
+      _id: patient_id,
+      caretakerId: caretaker._id,
+      status: "Active",
+    });
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found or not assigned to this caretaker",
+        result: {},
+      });
+    }
+
+    // --- Files Validation ---
+    if (!req.files || req.files.length === 0) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "At least one file is required",
+        result: {},
+      });
+    }
+
+    let savedReports = [];
+
+    // --- File Processing ---
+    for (let file of req.files) {
+      let fileType = "";
+      if (file.mimetype === "application/pdf") fileType = "PDF";
+      else if (file.mimetype === "image/jpeg" || file.mimetype === "image/jpg") fileType = "JPG";
+      else if (file.mimetype === "image/png") fileType = "PNG";
+      else continue; // agar type allowed nahi hai to skip kar
+
+      const report = new MedicalReport({
+        patient_id: patient._id,
+        caretaker_id: caretaker._id,
+        fileUrl: file.path, // multer path / cloud path
+        fileType,
+        description,
+        status: "Active",
+      });
+
+      await report.save();
+      savedReports.push(report);
+    }
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Medical reports uploaded successfully by caretaker",
+      result: savedReports,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in uploadMedicalReportByCaretaker API",
+      result: {},
+    });
+  }
+};
+
+export const addReminderByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+    const { patient_id, title, description, date, time, type } = req.body;
+
+    // --- Caretaker Validation ---
+    const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
+    if (!caretaker) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid or inactive caretaker token",
+        result: {},
+      });
+    }
+
+    // --- Patient Validation ---
+    const patient = await Patient.findOne({
+      _id: patient_id,
+      caretakerId: caretaker._id,
+      status: "Active",
+    });
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found or not assigned to this caretaker",
+        result: {},
+      });
+    }
+
+    // --- Input Validations ---
+    if (!title?.trim()) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Title is required",
+        result: {},
+      });
+    }
+
+    if (!description?.trim()) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Description is required",
+        result: {},
+      });
+    }
+
+    if (!date) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Date is required",
+        result: {},
+      });
+    }
+
+    if (!time) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Time is required",
+        result: {},
+      });
+    }
+
+    if (!type?.trim()) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Reminder type is required",
+        result: {},
+      });
+    }
+
+    // --- Create Reminder ---
+    const newReminder = new Reminder({
+      patient_id: patient._id,
+      caretaker_id: caretaker._id,
+      title: title.trim(),
+      description: description.trim(),
+      date,
+      time,
+      type: type.trim(),
+      status: "Active",
+    });
+
+    await newReminder.save();
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Reminder added successfully for the patient",
+      result: newReminder,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in addReminderByCaretaker API",
+      result: {},
+    });
+  }
+};
+
+export const addPatientDietByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+    const { patientId } = req.params;
+    const { dietType, calories, notes, startDate, endDate } = req.body;
+
+    // --- Validation ---
+    if (!patientId) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Patient ID is required in params",
+        result: {},
+      });
+    }
+
+    if (!dietType?.trim()) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Diet type is required",
+        result: {},
+      });
+    }
+
+    if (!calories) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Calories count is required",
+        result: {},
+      });
+    }
+
+    if (!startDate) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Start date is required",
+        result: {},
+      });
+    }
+
+    // --- Step 1: Validate Caretaker ---
+    const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
+    if (!caretaker) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid or inactive caretaker token",
+        result: {},
+      });
+    }
+
+    // --- Step 2: Validate Patient belongs to Caretaker ---
+    const patient = await Patient.findOne({
+      _id: patientId,
+      caretakerId: caretaker._id,
+      status: "Active",
+    });
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found or not assigned to this caretaker",
+        result: {},
+      });
+    }
+
+    // --- Step 3: Create Diet Record ---
+    const newDiet = new PatientDiet({
+      caretakerId: caretaker._id,
+      patientId: patient._id,
+      dietType: dietType.trim(),
+      calories,
+      notes,
+      startDate,
+      endDate,
+      status: "Active",
+    });
+
+    await newDiet.save();
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Patient diet added successfully",
+      result: newDiet,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " Error in addPatientDietByCaretaker API",
+      result: {},
+    });
+  }
+};
+
+export const addPatientMealByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+    const { patientId } = req.params;
+    const { mealType, foodItems, calories, time } = req.body;
+
+    // --- Validation ---
+    if (!patientId) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Patient ID is required in params",
+        result: {},
+      });
+    }
+
+    if (!mealType?.trim()) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Meal type is required",
+        result: {},
+      });
+    }
+
+    if (!foodItems || !Array.isArray(foodItems) || foodItems.length === 0) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "At least one food item is required",
+        result: {},
+      });
+    }
+
+    if (!time) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Meal time is required",
+        result: {},
+      });
+    }
+
+    // --- Step 1: Validate Caretaker ---
+    const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
+    if (!caretaker) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid or inactive caretaker token",
+        result: {},
+      });
+    }
+
+    // --- Step 2: Validate Patient belongs to Caretaker ---
+    const patient = await Patient.findOne({
+      _id: patientId,
+      caretakerId: caretaker._id,
+      status: "Active",
+    });
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found or not assigned to this caretaker",
+        result: {},
+      });
+    }
+
+    // --- Step 3: Create Meal Record ---
+    const newMeal = new PatientMeal({
+      caretakerId: caretaker._id,
+      patientId: patient._id,
+      mealType: mealType.trim(),
+      foodItems,
+      calories,
+      time,
+      status: "Active",
+    });
+
+    await newMeal.save();
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Patient meal added successfully",
+      result: newMeal,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " Error in addPatientMealByCaretaker API",
+      result: {},
+    });
+  }
+};

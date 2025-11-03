@@ -21,9 +21,9 @@ router.get("/careNotes" ,verifyAccessToken, getAllCareNotes);
 router.get("/careNote/:id" ,verifyAccessToken, getCareNoteById);
 
 // 4️⃣ Update CareNote by ID
-router.post("/careNote/:id", verifyAccessToken,upload.none(), updateCareNote);
+router.post("/update-careNote/:id", verifyAccessToken,upload.none(), updateCareNote);
 
 // 5️⃣ Delete CareNote by ID (soft delete)
-router.post("/careNote/:id" ,verifyAccessToken,upload.none(), deleteCareNote);
+router.post("/delete-careNote/:id" ,verifyAccessToken,upload.none(), deleteCareNote);
 
 export default router;
