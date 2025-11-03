@@ -2287,10 +2287,10 @@ export const getPatientDetailByGuardian = async (req, res) => {
 
     // 🧩 Step 3: Fetch related data (linked via patient_id)
     const [medicalReports, patientRecords, medications, careNotes] = await Promise.all([
-      MedicalReport.find({ patient_id: patient._id }).sort({ createdAt: -1 }),
-      PatientRecord.find({ patient_id: patient._id }).sort({ createdAt: -1 }),
+      MedicalReport.find({ patient_id: patient._id, status: "Active" }).sort({ createdAt: -1 }),
+      PatientRecord.find({ patient_id: patient._id, status: "Active" }).sort({ createdAt: -1 }),
       Medication.find({ patient_id: patient._id, status: "Active" }).sort({ createdAt: -1 }),
-      CareNote.find({ patientId: patient._id }).sort({ createdAt: -1 }),
+      CareNote.find({ patientId: patient._id, status: "Active" }).sort({ createdAt: -1 }),
     ]);
 
     // console.log("Fetched Data:", { medicalReports, patientRecords, medications });
