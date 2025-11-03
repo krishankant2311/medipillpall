@@ -151,7 +151,7 @@ export const getAllCareNotes = async (req, res) => {
     }
 
     // --- Fetch Care Notes & Populate ---
-    const careNotes = await CareNote.find({ guardianId: token._id })
+    const careNotes = await CareNote.find({ guardianId: token._id , status: "Active" })
       .populate({
         path: "patientId",
         model: Patient,
