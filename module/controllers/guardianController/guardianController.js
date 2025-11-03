@@ -12,7 +12,8 @@ import PatientRecord from "../../models/patientRecordModel.js";
 import MedicalReport from "../../models/medicalReportModel.js";
 import Caregiver from "../../../module/models/caretakerModel/caretakerModel.js";
 import Medication from "../../models/medicationModel.js";
-
+import FAQ from "../../models/patientFAQModel.js";
+// import CareNote from "../../models/guardiansModel/careModel.js";
 export const addGuardian = async (req, res) => {
   try {
     let { fullName, mobileNumber, email, password } = req.body;
@@ -2238,6 +2239,7 @@ export const assignPatientToCaregiver = async (req, res) => {
 // import PatientRecord from "../models/patientRecordModel.js";
 // import Caretaker from "../models/caretakerModel.js"; // assuming caretaker model name is Caretaker
 
+
 export const getPatientDetailByGuardian = async (req, res) => {
   try {
     const token = req.token; // Guardian token
@@ -2284,10 +2286,11 @@ export const getPatientDetailByGuardian = async (req, res) => {
     }
 
     // 🧩 Step 3: Fetch related data (linked via patient_id)
-    const [medicalReports, patientRecords, medications] = await Promise.all([
+    const [medicalReports, patientRecords, medications, careNotes] = await Promise.all([
       MedicalReport.find({ patient_id: patient._id }).sort({ createdAt: -1 }),
       PatientRecord.find({ patient_id: patient._id }).sort({ createdAt: -1 }),
       Medication.find({ patient_id: patient._id, status: "Active" }).sort({ createdAt: -1 }),
+      CareNote.find({ patientId: patient._id }).sort({ createdAt: -1 }),
     ]);
 
     // console.log("Fetched Data:", { medicalReports, patientRecords, medications });
@@ -2321,6 +2324,7 @@ export const getPatientDetailByGuardian = async (req, res) => {
         vitals: patientRecords || [],
         meds: medications || [],
         docs: medicalReports || [],
+        careNotes: careNotes || [],
         caretaker: caretaker || {},
         guardian: guardian,
       },
@@ -2336,6 +2340,105 @@ export const getPatientDetailByGuardian = async (req, res) => {
     });
   }
 };
+
+// export const getPatientDetailByGuardian = async (req, res) => {
+//   try {
+//     const token = req.token; // Guardian token
+//     const { patientId } = req.params;
+
+//     // 🧩 Step 1: Validate Guardian
+//     const guardian = await Guardian.findOne({ _id: token._id, status: "Active" }).select(
+//       "_id fullName mobileNumber gender language profilePhoto status"
+//     );
+//     if (!guardian) {
+//       return res.send({
+//         statusCode: 401,
+//         success: false,
+//         message: "Invalid or inactive guardian",
+//         result: {},
+//       });
+//     }
+
+//     // 🧩 Step 2: Validate Patient
+//     if (!patientId) {
+//       return res.send({
+//         statusCode: 400,
+//         success: false,
+//         message: "Patient ID is required",
+//         result: {},
+//       });
+//     }
+
+//     const patient = await Patient.findOne({
+//       _id: patientId,
+//       guardianId: guardian._id,
+//       status: "Active",
+//     }).select(
+//       "_id fullName age gender language mobileNumber profilePhoto diseaseCondition status caretakerId guardianId"
+//     );
+
+//     if (!patient) {
+//       return res.send({
+//         statusCode: 404,
+//         success: false,
+//         message: "Patient not found or not linked to this guardian",
+//         result: {},
+//       });
+//     }
+
+//     // 🧩 Step 3: Fetch related data (linked via patient_id)
+//     const [medicalReports, patientRecords, medications] = await Promise.all([
+//       MedicalReport.find({ patient_id: patient._id }).sort({ createdAt: -1 }),
+//       PatientRecord.find({ patient_id: patient._id }).sort({ createdAt: -1 }),
+//       Medication.find({ patient_id: patient._id, status: "Active" }).sort({ createdAt: -1 }),
+//     ]);
+
+//     // console.log("Fetched Data:", { medicalReports, patientRecords, medications });
+
+//     // 🧩 Step 4: Fetch Caretaker (optional)
+//     let caretaker = {};
+//     if (patient.caretakerId) {
+//       caretaker = await Caregiver.findOne(
+//         { _id: patient.caretakerId, status: "Active" },
+//         "_id fullName mobileNumber gender language profilePhoto status"
+//       );
+//     }
+
+//     // 🧩 Step 5: Final Response
+//     return res.send({
+//       statusCode: 200,
+//       success: true,
+//       message: "Patient details fetched successfully",
+//       result: {
+//         patient: {
+//           _id: patient._id,
+//           fullName: patient.fullName,
+//           age: patient.age,
+//           gender: patient.gender,
+//           language: patient.language,
+//           mobileNumber: patient.mobileNumber,
+//           profilePhoto: patient.profilePhoto,
+//           diseaseCondition: patient.diseaseCondition,
+//           status: patient.status,
+//         },
+//         vitals: patientRecords || [],
+//         meds: medications || [],
+//         docs: medicalReports || [],
+//         caretaker: caretaker || {},
+//         guardian: guardian,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Error in getPatientDetailByGuardian:", error);
+//     return res.send({
+//       statusCode: 500,
+//       success: false,
+//       message: "Internal Server Error",
+//       error: error.message,
+//       result: {},
+//     });
+//   }
+// };
 
 export const getAllCaretakersByGuardianForPatient = async (req, res) => {
   try {
@@ -2379,11 +2482,16 @@ export const getAllCaretakersByGuardianForPatient = async (req, res) => {
     }
 
     // ✅ Step 3: Get All Caretakers assigned to this patient
-    const caretakers = await Caregiver.find({
-      patients: { $in: [patient._id] },
-      status: "Active",
-    }).select("_id fullName mobileNumber gender language profilePhoto status");
-
+    // const caretakers = await Caregiver.find({
+    //   patients: { $in: [patient._id] },
+    //   status: "Active",
+    // }).select("_id fullName mobileNumber gender language profilePhoto status").sort({ createdAt: -1 });
+const caretakers = await Caregiver.findOne({
+  patients: { $in: [patient._id] },
+  status: "Active",
+})
+  .select("_id fullName mobileNumber gender language profilePhoto status")
+  .sort({ createdAt: -1 });
     // ✅ Step 4: Response
     return res.send({
       statusCode: 200,
@@ -2401,3 +2509,51 @@ export const getAllCaretakersByGuardianForPatient = async (req, res) => {
     });
   }
 };
+
+export const getFAQbyGuardian = async (req, res) => {
+  try {
+    const token = req.token; // guardian token
+
+    // ✅ Step 1: Validate guardian
+    const guardian = await Guardian.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+
+    if (!guardian) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid or inactive guardian",
+        result: {},
+      });
+    }
+
+    // ✅ Step 2: Fetch all active FAQs
+    const faqs = await FAQ.find({ status: "Active" }).sort({ createdAt: -1 });
+    if (!faqs.length) {
+      return res.send({
+        statusCode: 200,
+        success: true,
+        message: "No FAQs found",
+        result: [],
+      });
+    }
+    // ✅ Step 3: Send response
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "FAQs fetched successfully",
+      result: faqs,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " Error in getFAQbyGuardian API",
+      result: {},
+    });
+  }
+};
+
+

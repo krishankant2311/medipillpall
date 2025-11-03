@@ -2,7 +2,7 @@ import express from "express";
 import { addGuardian, getAllGuardiansByAdmin,signupGuardian ,getPatientReportsByGuardian,
     getPatient,getAllCareNotesByGuardian,addPatient,getallPatientsbyGuardian,
      guardianLogin, verifyGuardianOTP,getAllMedsByGuardian,getMedsByGuardian,
-      guardianProfile,getActivePatientsByGuardian,getAllCaregiversByGuardian,
+      guardianProfile,getActivePatientsByGuardian,getAllCaregiversByGuardian,getFAQbyGuardian,
       assignPatientToCaregiver,getPatientDetailByGuardian,getAllCaretakersByGuardianForPatient,
       editGuardianProfile,logoutGuardian,resendGuardianOTPforLogin,resendGuardianOTPforSignup } from "../../controllers/guardianController/guardianController.js";
 import { verifyAccessToken } from "../../../helpers/jwt.js";
@@ -48,4 +48,7 @@ router.post("/assign-patient-to-caretaker", verifyAccessToken, upload.none(), as
 router.get("/get-patient-detail-byguardian/:patientId", verifyAccessToken, getPatientDetailByGuardian);
 
 router.get("/getall-caretakers-byguardian-for-patient/:patientId", verifyAccessToken, getAllCaretakersByGuardianForPatient);
+
+router.get("/get-faq-by-guardian", verifyAccessToken, getFAQbyGuardian);
+
 export default router;

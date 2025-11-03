@@ -139,4 +139,8 @@ router.post("/add-prescription/:patientId", verifyAccessToken, upload.single('pr
 router.post("/upload-medical-report/:patientId", verifyAccessToken, upload.array("files", 5), uploadMedicalReportByCaretaker);
 // -------------------- ADD REMINDER BY CARETAKER --------------------
 router.post("/add-reminder/:patientId", verifyAccessToken, upload.none(), addReminderByCaretaker);
+
+router.post("/add-PatientMeal-ByCaretaker", verifyAccessToken,upload.none(),addPatientMealByCaretaker)
+
+router.post("/add-Patient-Diet-ByCaretaker",verifyAccessToken,upload.none(),addPatientDietByCaretaker)
 export default router;
