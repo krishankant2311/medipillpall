@@ -996,12 +996,80 @@ export const getPatientPersonalContactByCaretaker = async (req, res) => {
   }
 };
 
+// export const getAllPatientsOfCaretaker = async (req, res) => {
+//   try {
+//     const token = req.token;
+
+//     // Step 1: Validate caretaker
+//     const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
+//     if (!caretaker) {
+//       return res.status(404).json({
+//         statusCode: 404,
+//         success: false,
+//         message: "Caretaker not found or inactive",
+//         result: {},
+//       });
+//     }
+
+//     // Step 2: Fetch all patients linked to caretaker
+//     const patients = await Patient.find({ caretakerId: caretaker._id, status: "Active" })
+//       .select("_id fullName age gender status condition");
+
+//     if (!patients.length) {
+//       return res.status(404).json({
+//         statusCode: 404,
+//         success: false,
+//         message: "No patients linked with this caretaker",
+//         result: {},
+//       });
+//     }
+
+//     // Step 3: Fetch each patient’s personal contact
+//     const result = await Promise.all(
+//       patients.map(async (patient) => {
+//         const contact = await PersonalContact.findOne({
+//           patientId: patient._id,
+//           status: "Active",
+//         }).select("name relation phone address status condition");
+
+//         return {
+//           patient_id: patient._id,
+//           name: patient.fullName,
+//           age: patient.age,
+//           gender: patient.gender,
+//           personalContact: contact || null,
+//           condition: patient.condition,
+//         };
+//       })
+//     );
+
+//     // Step 4: Return response
+//     return res.status(200).json({
+//       statusCode: 200,
+//       success: true,
+//       message: "Patients fetched successfully",
+//       result: result,
+//     });
+//   } catch (error) {
+//     return res.status(500).json({
+//       statusCode: 500,
+//       success: false,
+//       message: error.message + " ERROR in getAllPatientsOfCaretaker API",
+//       result: {},
+//     });
+//   }
+// };
+
 export const getAllPatientsOfCaretaker = async (req, res) => {
   try {
     const token = req.token;
 
     // Step 1: Validate caretaker
-    const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+
     if (!caretaker) {
       return res.status(404).json({
         statusCode: 404,
@@ -1012,8 +1080,10 @@ export const getAllPatientsOfCaretaker = async (req, res) => {
     }
 
     // Step 2: Fetch all patients linked to caretaker
-    const patients = await Patient.find({ caretakerId: caretaker._id, status: "Active" })
-      .select("_id fullName age gender status condition");
+    const patients = await Patient.find({
+      caretakerId: caretaker._id,
+      status: "Active",
+    }).select("_id fullName age gender status condition");
 
     if (!patients.length) {
       return res.status(404).json({
@@ -1030,13 +1100,14 @@ export const getAllPatientsOfCaretaker = async (req, res) => {
         const contact = await PersonalContact.findOne({
           patientId: patient._id,
           status: "Active",
-        }).select("name relation phone address status");
+        }).select("name relation phone address status condition");
 
         return {
           patient_id: patient._id,
           name: patient.fullName,
           age: patient.age,
           gender: patient.gender,
+          condition: patient.condition || "Not specified", // 🔥 ensure visible
           personalContact: contact || null,
         };
       })

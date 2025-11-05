@@ -27,6 +27,10 @@ const patientSchema = new mongoose.Schema(
       type: String,
       default: ""
     },
+    condition:{
+      type: String,
+      default: ""
+    },
     language: {
       type: String,
       enum: ["English", "Hindi"],
