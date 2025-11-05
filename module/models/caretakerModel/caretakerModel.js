@@ -45,6 +45,10 @@ const caretakerSchema = new mongoose.Schema(
       type: String,
       default: ""
     },
+    certification:{
+      type: String,
+      default: ""
+    },
     gender: {
       type: String,
       enum: ["Male", "Female", "Transgender", "Other"], 
