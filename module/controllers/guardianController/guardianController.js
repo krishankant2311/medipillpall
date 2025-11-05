@@ -13,6 +13,8 @@ import MedicalReport from "../../models/medicalReportModel.js";
 import Caregiver from "../../../module/models/caretakerModel/caretakerModel.js";
 import Medication from "../../models/medicationModel.js";
 import FAQ from "../../models/patientFAQModel.js";
+import TermsAndConditions from "../../models/termsAndConditionsModel.js";
+import PrivacyPolicy from "../../models/privacyPolicyModel.js";
 // import CareNote from "../../models/guardiansModel/careModel.js";
 export const addGuardian = async (req, res) => {
   try {
@@ -2556,4 +2558,132 @@ export const getFAQbyGuardian = async (req, res) => {
   }
 };
 
+// 📄 Get Terms & Conditions by Guardian
+export const getTermsAndConditionsByGuardian = async (req, res) => {
+  try {
+    const token = req.token; // guardian token
 
+    // Step 1: Validate Guardian
+    const guardian = await Guardian.findOne({
+      _id: token._id,
+      status: "Active",
+    }).select("_id fullName mobileNumber status");
+
+    if (!guardian) {
+      return res.status(401).json({
+        status: false,
+        message: "Invalid guardian or inactive status.",
+      });
+    }
+
+    // Step 2: Fetch Terms & Conditions
+    const terms = await TermsAndConditions.findOne().select("content updatedAt");
+    if (!terms) {
+      return res.status(404).json({
+        status: false,
+        message: "Terms & Conditions not found.",
+      });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "Terms & Conditions fetched successfully.",
+      data: terms,
+    });
+  } catch (error) {
+    console.error("Error in getTermsAndConditionsByGuardian:", error);
+    return res.status(500).json({
+      status: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+
+
+// 🔒 Get Privacy Policy by Guardian
+export const getPrivacyPolicyByGuardian = async (req, res) => {
+  try {
+    const token = req.token; // guardian token
+
+    // Step 1: Validate Guardian
+    const guardian = await Guardian.findOne({
+      _id: token._id,
+      status: "Active",
+    }).select("_id fullName mobileNumber status");
+
+    if (!guardian) {
+      return res.status(401).json({
+        status: false,
+        message: "Invalid guardian or inactive status.",
+      });
+    }
+
+    // Step 2: Fetch Privacy Policy
+    const policy = await PrivacyPolicy.findOne().select("content updatedAt");
+    if (!policy) {
+      return res.status(404).json({
+        status: false,
+        message: "Privacy Policy not found.",
+      });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "Privacy Policy fetched successfully.",
+      data: policy,
+    });
+  } catch (error) {
+    console.error("Error in getPrivacyPolicyByGuardian:", error);
+    return res.status(500).json({
+      status: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+
+
+// ❓ Get FAQ by Guardian
+// export const getFaqByGuardian = async (req, res) => {
+//   try {
+//     const token = req.token; // guardian token
+
+//     // Step 1: Validate Guardian
+//     const guardian = await Guardian.findOne({
+//       _id: token._id,
+//       status: "Active",
+//     }).select("_id fullName mobileNumber status");
+
+//     if (!guardian) {
+//       return res.status(401).json({
+//         status: false,
+//         message: "Invalid guardian or inactive status.",
+//       });
+//     }
+
+//     // Step 2: Fetch all FAQs
+//     const faqs = await Faq.find().select("question answer updatedAt");
+//     if (!faqs.length) {
+//       return res.status(404).json({
+//         status: false,
+//         message: "No FAQs found.",
+//       });
+//     }
+
+//     return res.status(200).json({
+//       status: true,
+//       message: "FAQs fetched successfully.",
+//       data: faqs,
+//     });
+//   } catch (error) {
+//     console.error("Error in getFaqByGuardian:", error);
+//     return res.status(500).json({
+//       status: false,
+//       message: "Server error",
+//       error: error.message,
+//     });
+//   }
+// };

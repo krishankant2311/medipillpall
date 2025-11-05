@@ -13,8 +13,10 @@ import mongoose from "mongoose";
 import MedicationReminder from "../../models/reminderModel.js";
 import MedicalReport from "../../models/medicalReportModel.js";
 import Prescription from "../../models/prescriptionModel.js";
-
-
+import FAQ from "../../models/patientFAQModel.js";
+import TermsAndConditions from "../../models/termsAndConditionsModel.js";
+import PrivacyPolicy from "../../models/privacyPolicyModel.js";
+import MedicalHistory from "../../models/medicalHistoryModel.js";
 export const addCaretaker = async (req, res) => {
   try {
     let { fullName, mobileNumber, email, password } = req.body;
@@ -3283,6 +3285,586 @@ export const addPatientMealByCaretaker = async (req, res) => {
       statusCode: 500,
       success: false,
       message: error.message + " Error in addPatientMealByCaretaker API",
+      result: {},
+    });
+  }
+};
+
+export const getTermsAndConditionsByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+
+    // Step 1: Validate Caretaker
+    const caretaker = await Caretaker.findOne({
+      _id:token._id,
+      status: "Active",
+    }).select("_id fullName mobileNumber status");
+   console.log("Caretaker:", caretaker);
+
+    if (!caretaker) {
+      return res.status(401).json({
+        status: false,
+        message: "Invalid caretaker or inactive status.",
+      });
+    }
+
+    // Step 2: Fetch Terms & Conditions
+    const terms = await TermsAndConditions.findOne().select("content updatedAt");
+    if (!terms) {
+      return res.status(404).json({
+        status: false,
+        message: "Terms & Conditions not found.",
+      });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "Terms & Conditions fetched successfully.",
+      data: terms,
+    });
+  } catch (error) {
+    console.error("Error in getTermsAndConditionsByCaretaker:", error);
+    return res.status(500).json({
+      status: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+
+
+// 🔒 Get Privacy Policy by Caretaker
+export const getPrivacyPolicyByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+
+    // Step 1: Validate Caretaker
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    }).select("_id fullName mobileNumber status");
+
+    if (!caretaker) {
+      return res.status(401).json({
+        status: false,
+        message: "Invalid caretaker or inactive status.",
+      });
+    }
+
+    // Step 2: Fetch Privacy Policy
+    const policy = await PrivacyPolicy.findOne().select("content updatedAt");
+    if (!policy) {
+      return res.status(404).json({
+        status: false,
+        message: "Privacy Policy not found.",
+      });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "Privacy Policy fetched successfully.",
+      data: policy,
+    });
+  } catch (error) {
+    console.error("Error in getPrivacyPolicyByCaretaker:", error);
+    return res.status(500).json({
+      status: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+
+
+// ❓ Get FAQ by Caretaker
+export const getFaqByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+
+    // Step 1: Validate Caretaker
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    }).select("_id fullName mobileNumber status");
+
+    if (!caretaker) {
+      return res.status(401).json({
+        status: false,
+        message: "Invalid caretaker or inactive status.",
+      });
+    }
+
+    // Step 2: Fetch all FAQs
+    const faqs = await FAQ.find().select("question answer updatedAt");
+    if (!faqs.length) {
+      return res.status(404).json({
+        status: false,
+        message: "No FAQs found.",
+      });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "FAQs fetched successfully.",
+      data: faqs,
+    });
+  } catch (error) {
+    console.error("Error in getFaqByCaretaker:", error);
+    return res.status(500).json({
+      status: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+import fs from "fs";
+import path from "path";
+
+export const editCaretakerProfile = async (req, res) => {
+  try {
+    const token = req.token;
+    let { fullName, email, certification, mobileNumber, gender, age } = req.body;
+
+    fullName = fullName?.trim();
+    email = email?.trim()?.toLowerCase();
+
+    // --- Validations ---
+    if (!fullName) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Full name is required",
+        result: {},
+      });
+    }
+
+    if (!email) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Email is required",
+        result: {},
+      });
+    }
+
+    // --- Step 1: Find Caretaker ---
+    const caretaker = await Caretaker.findById(token._id);
+    if (!caretaker) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Caretaker not found",
+        result: {},
+      });
+    }
+
+    // --- Step 2: Handle Profile Photo Upload (if any) ---
+    let profilePhotoUrl = caretaker.profilePhoto; // keep old one if not updated
+
+    if (req.file) {
+      // Delete old photo if exists
+      if (caretaker.profilePhoto) {
+        const oldPath = path.join(
+          "uploads/profilePhotos",
+          path.basename(caretaker.profilePhoto)
+        );
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
+
+      // Build absolute URL for new photo
+      const baseUrl = `${req.protocol}://${req.get("host")}`;
+      profilePhotoUrl = `${baseUrl}/uploads/${req.file.filename}`;
+      // If using profilePhotos folder:
+      // profilePhotoUrl = `${baseUrl}/uploads/profilePhotos/${req.file.filename}`;
+    }
+
+    // --- Step 3: Update Caretaker Info ---
+    caretaker.fullName = fullName;
+    caretaker.email = email;
+    caretaker.profilePhoto = profilePhotoUrl;
+    caretaker.certification = certification;
+    caretaker.mobileNumber = mobileNumber;
+    caretaker.gender = gender;
+    caretaker.age = age;
+
+    await caretaker.save();
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Caretaker profile updated successfully",
+      result: caretaker,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " Error in editCaretakerProfile API",
+      result: {},
+    });
+  }
+};
+
+export const getMedicalHistoryByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+    const { patientId } = req.params;
+
+    // --- Step 1: Validate Caretaker ---
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    }).select("_id fullName status");
+
+    if (!caretaker) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid caretaker or inactive status.",
+        result: {},
+      });
+    }
+
+    // --- Step 2: Check if Patient exists and is assigned to this Caretaker ---
+    const patient = await Patient.findOne({
+      _id: patientId,
+      // caretakerId: caretaker._id, // ensure patient belongs to caretaker
+      status: "Active",
+    }).select("_id fullName status");
+
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found or not assigned to this caretaker.",
+        result: {},
+      });
+    }
+
+    // --- Step 3: Fetch Medical History for the Patient ---
+    const history = await MedicalHistory.find({ patientId })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    if (!history || history.length === 0) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "No medical history found for this patient.",
+        result: [],
+      });
+    }
+
+    // --- Step 4: Return Data ---
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Medical history fetched successfully.",
+      result: history,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " Error in getMedicalHistoryByCaretaker API",
+      result: {},
+    });
+  }
+};
+
+export const getPatientMealByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+    const { patientId } = req.params;
+
+    // --- Step 1: Validate Caretaker ---
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    }).select("_id fullName status");
+
+    if (!caretaker) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid caretaker or inactive status.",
+        result: {},
+      });
+    }
+
+    // --- Step 2: Validate Patient belongs to Caretaker ---
+    const patient = await Patient.findOne({
+      _id: patientId,
+      caretakerId: caretaker._id,
+      status: "Active",
+    }).select("_id fullName status");
+
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found or not assigned to this caretaker.",
+        result: {},
+      });
+    }
+
+    // --- Step 3: Fetch Meal Records ---
+    const meals = await Meal.find({ patientId }).sort({ createdAt: -1 }).lean();
+
+    if (!meals || meals.length === 0) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "No meal records found for this patient.",
+        result: [],
+      });
+    }
+
+    // --- Step 4: Return Response ---
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Patient meal records fetched successfully.",
+      result: meals,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " Error in getPatientMealByCaretaker API",
+      result: {},
+    });
+  }
+};
+
+
+export const getPatientDietByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+    const { patientId } = req.params;
+
+    // --- Step 1: Validate Caretaker ---
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    }).select("_id fullName status");
+
+    if (!caretaker) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid caretaker or inactive status.",
+        result: {},
+      });
+    }
+
+    // --- Step 2: Validate Patient belongs to Caretaker ---
+    const patient = await Patient.findOne({
+      _id: patientId,
+      caretakerId: caretaker._id,
+      status: "Active",
+    }).select("_id fullName status");
+
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found or not assigned to this caretaker.",
+        result: {},
+      });
+    }
+
+    // --- Step 3: Fetch Diet Plan ---
+    const diet = await Diet.find({ patientId }).sort({ createdAt: -1 }).lean();
+
+    if (!diet || diet.length === 0) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "No diet plan found for this patient.",
+        result: [],
+      });
+    }
+
+    // --- Step 4: Return Response ---
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Patient diet plan fetched successfully.",
+      result: diet,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " Error in getPatientDietByCaretaker API",
+      result: {},
+    });
+  }
+};
+
+export const getPatientDailyRoutineByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+    const { patientId } = req.params;
+
+    // --- Step 1: Validate Caretaker ---
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    }).select("_id fullName status");
+
+    if (!caretaker) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid caretaker or inactive status.",
+        result: {},
+      });
+    }
+
+    // --- Step 2: Validate Patient belongs to Caretaker ---
+    const patient = await Patient.findOne({
+      _id: patientId,
+      caretakerId: caretaker._id,
+      status: "Active",
+    }).select("_id fullName status");
+
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found or not assigned to this caretaker.",
+        result: {},
+      });
+    }
+
+    // --- Step 3: Fetch Daily Routine Records ---
+    const routines = await DailyRoutine.find({ patientId })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    if (!routines || routines.length === 0) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "No daily routine found for this patient.",
+        result: [],
+      });
+    }
+
+    // --- Step 4: Return Response ---
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Daily routine fetched successfully.",
+      result: routines,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " Error in getPatientDailyRoutineByCaretaker API",
+      result: {},
+    });
+  }
+};
+
+
+export const getAppLanguageByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+
+    // --- Step 1: Validate Caretaker ---
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    }).select("_id fullName language status");
+
+    if (!caretaker) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid caretaker or inactive status.",
+        result: {},
+      });
+    }
+
+    // --- Step 2: Check if language exists ---
+    if (!caretaker.language) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "App language not set for this caretaker.",
+        result: {},
+      });
+    }
+
+    // --- Step 3: Return response ---
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "App language fetched successfully.",
+      result: { language: caretaker.language },
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " Error in getAppLanguageByCaretaker API",
+      result: {},
+    });
+  }
+};
+
+
+export const changeAppLanguageByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+    const { language } = req.body;
+
+    // --- Step 1: Validate Input ---
+    if (!language) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Language is required.",
+        result: {},
+      });
+    }
+
+    // --- Step 2: Validate Caretaker ---
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    }).select("_id fullName language status");
+
+    if (!caretaker) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid caretaker or inactive status.",
+        result: {},
+      });
+    }
+
+    // --- Step 3: Update Language ---
+    caretaker.language = language;
+    await caretaker.save();
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "App language updated successfully.",
+      result: { language: caretaker.language },
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " Error in changeAppLanguageByCaretaker API",
       result: {},
     });
   }

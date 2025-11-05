@@ -60,6 +60,10 @@ const caretakerSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    language:{
+      type: String,
+      default:"English" 
+    },
   },
   { timestamps: true }
 );

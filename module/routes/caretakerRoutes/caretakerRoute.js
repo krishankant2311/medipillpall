@@ -33,9 +33,13 @@ import { addCaretaker,
   addPatientBloodSugarByCaretaker,
   addPatientBloodPressureByCaretaker,
   addPrescriptionByCaretaker,
+  getPatientDailyRoutineByCaretaker,
   uploadMedicalReportByCaretaker,
-  addReminderByCaretaker,
-  addPatientMealByCaretaker,addPatientDietByCaretaker,
+  getAppLanguageByCaretaker,
+  changeAppLanguageByCaretaker,
+  addReminderByCaretaker,editCaretakerProfile,getMedicalHistoryByCaretaker,
+  getTermsAndConditionsByCaretaker,getPrivacyPolicyByCaretaker,getFaqByCaretaker,
+  addPatientMealByCaretaker,addPatientDietByCaretaker,getPatientDietByCaretaker,getPatientMealByCaretaker,
   caretakerLogout, getAllCaretakersByAdmin } from "../../controllers/caretakerController/caretakerController.js";
 import { verifyAccessToken } from "../../../helpers/jwt.js"; // token verify middleware
 import upload from "../../../config/multer.js";
@@ -140,7 +144,20 @@ router.post("/upload-medical-report/:patientId", verifyAccessToken, upload.array
 // -------------------- ADD REMINDER BY CARETAKER --------------------
 router.post("/add-reminder/:patientId", verifyAccessToken, upload.none(), addReminderByCaretaker);
 
-router.post("/add-PatientMeal-ByCaretaker", verifyAccessToken,upload.none(),addPatientMealByCaretaker)
+router.post("/edit-caretaker-profile", verifyAccessToken, upload.single('profilePhoto'), editCaretakerProfile);
 
+router.post("/add-PatientMeal-ByCaretaker", verifyAccessToken,upload.none(),addPatientMealByCaretaker)
+router.get("/get-medical-history-by-caretaker/:patientId", verifyAccessToken, getMedicalHistoryByCaretaker);
 router.post("/add-Patient-Diet-ByCaretaker",verifyAccessToken,upload.none(),addPatientDietByCaretaker)
+router.get("/terms-and-conditions", verifyAccessToken, getTermsAndConditionsByCaretaker);
+router.get("/privacy-policy", verifyAccessToken, getPrivacyPolicyByCaretaker);
+router.get("/faq", verifyAccessToken, getFaqByCaretaker);
+
+router.get("/get-patient-diet-by-caretaker/:patientId", verifyAccessToken, getPatientDietByCaretaker);
+router.get("/get-patient-meal-by-caretaker/:patientId", verifyAccessToken, getPatientMealByCaretaker);
+
+router.get("/get-patient-daily-routine-by-caretaker/:patientId", verifyAccessToken, getPatientDailyRoutineByCaretaker);
+
+router.get("/get-app-language-by-caretaker", verifyAccessToken, getAppLanguageByCaretaker);
+router.post("/change-app-language-by-caretaker", verifyAccessToken, upload.none(), changeAppLanguageByCaretaker);
 export default router;
