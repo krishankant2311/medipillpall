@@ -1013,7 +1013,7 @@ export const getAllPatientsOfCaretaker = async (req, res) => {
 
     // Step 2: Fetch all patients linked to caretaker
     const patients = await Patient.find({ caretakerId: caretaker._id, status: "Active" })
-      .select("_id fullName age gender status");
+      .select("_id fullName age gender status condition");
 
     if (!patients.length) {
       return res.status(404).json({
