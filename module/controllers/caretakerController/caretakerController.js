@@ -17,6 +17,7 @@ import FAQ from "../../models/patientFAQModel.js";
 import TermsAndConditions from "../../models/termsAndConditionsModel.js";
 import PrivacyPolicy from "../../models/privacyPolicyModel.js";
 import MedicalHistory from "../../models/medicalHistoryModel.js";
+import CareNote from "../../models/guardiansModel/careModel.js";
 export const addCaretaker = async (req, res) => {
   try {
     let { fullName, mobileNumber, email, password } = req.body;
@@ -2111,13 +2112,14 @@ export const getPatientBloodPressureByCaretaker = async (req, res) => {
       });
     }
 
-    const record = await PatientRecord.findOne({
-      patient_id: patientId,
+    const record = await PatientRecord.find({
+      patient_id:patientId,
     })
       .select("bloodPressure createdAt")
       .sort({ createdAt: -1 });
-
-    if (!record || !record.bloodPressure) {
+console.log("Fetched Records:", record);
+console.log("bloodPressure", record.length > 0 ? record[0].bloodPressure : null);
+    if (!record || !record.length || !record[0].bloodPressure) {
       return res.json({
         success: true,
         message: "No blood pressure record found",
@@ -2128,7 +2130,10 @@ export const getPatientBloodPressureByCaretaker = async (req, res) => {
     return res.json({
       success: true,
       message: "Blood Pressure fetched successfully",
-      result: record.bloodPressure,
+      result: record.map((r) => ({
+        ...r.bloodPressure,
+        createdAt: r.createdAt,
+      })),
     });
   } catch (err) {
     console.error("Error in getPatientBloodPressureByCaretaker:", err);
@@ -2166,13 +2171,13 @@ export const getPatientBloodSugarByCaretaker = async (req, res) => {
         message: "Patient not found or inactive",
       });
 
-    const record = await PatientRecord.findOne({
+    const record = await PatientRecord.find({
       patient_id: patientId,
     })
       .select("bloodSugar createdAt")
       .sort({ createdAt: -1 });
 
-    if (!record || !record.bloodSugar)
+    if (!record || !record.length || !record[0].bloodSugar)
       return res.json({
         success: true,
         message: "No blood sugar record found",
@@ -2182,7 +2187,10 @@ export const getPatientBloodSugarByCaretaker = async (req, res) => {
     return res.json({
       success: true,
       message: "Blood Sugar fetched successfully",
-      result: record.bloodSugar,
+      result: record.map((r) => ({
+        ...r.bloodSugar,
+        createdAt: r.createdAt,
+      })),
     });
   } catch (err) {
     console.error("Error in getPatientBloodSugarByCaretaker:", err);
@@ -2220,13 +2228,13 @@ export const getPatientBodyTempByCaretaker = async (req, res) => {
         message: "Patient not found or inactive",
       });
 
-    const record = await PatientRecord.findOne({
+    const record = await PatientRecord.find({
       patient_id: patientId,
     })
       .select("bodyTemp createdAt")
       .sort({ createdAt: -1 });
 
-    if (!record || !record.bodyTemp)
+    if (!record || !record.length || !record[0].bodyTemp)
       return res.json({
         success: true,
         message: "No body temperature record found",
@@ -2236,7 +2244,10 @@ export const getPatientBodyTempByCaretaker = async (req, res) => {
     return res.json({
       success: true,
       message: "Body Temperature fetched successfully",
-      result: record.bodyTemp,
+      result: record.map((r) => ({
+        ...r.bodyTemp,
+        createdAt: r.createdAt,
+      })),
     });
   } catch (err) {
     console.error("Error in getPatientBodyTempByCaretaker:", err);
@@ -2274,13 +2285,13 @@ export const getPatientBodyWeightByCaretaker = async (req, res) => {
         message: "Patient not found or inactive",
       });
 
-    const record = await PatientRecord.findOne({
+    const record = await PatientRecord.find({
       patient_id: patientId,
     })
       .select("bodyWeight createdAt")
       .sort({ createdAt: -1 });
 
-    if (!record || !record.bodyWeight)
+    if (!record || !record.length || !record[0].bodyWeight)
       return res.json({
         success: true,
         message: "No body weight record found",
@@ -2290,7 +2301,10 @@ export const getPatientBodyWeightByCaretaker = async (req, res) => {
     return res.json({
       success: true,
       message: "Body Weight fetched successfully",
-      result: record.bodyWeight,
+      result: record.map((r) => ({
+        ...r.bodyWeight,
+        createdAt: r.createdAt,
+      })),
     });
   } catch (err) {
     console.error("Error in getPatientBodyWeightByCaretaker:", err);
@@ -2328,13 +2342,13 @@ export const getPatientHeartRateByCaretaker = async (req, res) => {
         message: "Patient not found or inactive",
       });
 
-    const record = await PatientRecord.findOne({
+    const record = await PatientRecord.find({
       patient_id: patientId,
     })
       .select("heartRate createdAt")
       .sort({ createdAt: -1 });
 
-    if (!record || !record.heartRate)
+    if (!record || !record.length || !record[0].heartRate)
       return res.json({
         success: true,
         message: "No heart rate record found",
@@ -2344,7 +2358,10 @@ export const getPatientHeartRateByCaretaker = async (req, res) => {
     return res.json({
       success: true,
       message: "Heart Rate fetched successfully",
-      result: record.heartRate,
+      result: record.map((r) => ({
+        ...r.heartRate,
+        createdAt: r.createdAt,
+      })),
     });
   } catch (err) {
     console.error("Error in getPatientHeartRateByCaretaker:", err);
