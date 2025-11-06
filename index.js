@@ -26,6 +26,7 @@ import personalHistoryRouter from "./module/routes/patientPersonalHistoryRoute.j
 import personalContactRouter from "./module/routes/patientPersonalContactRoute.js"
 import careNotesRouter from "./module/routes/guardianRoutes/careRoute.js"
 import guardianReminderrouter from "./module/routes/guardianRoutes/reminderRoute.js"
+import tutorialRouter from "./module/routes/patientTutorialRoute.js"
 import path from "path";
 import { fileURLToPath } from "url";
 dotenv.config();
@@ -73,6 +74,7 @@ app.use('/api/personalHistory',personalHistoryRouter)
 app.use('/api/personalContact',personalContactRouter)
 app.use('/api/careNotes',careNotesRouter)
 app.use('/api/guardianReminder',guardianReminderrouter)
+app.use('/api/tutorial',tutorialRouter)
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(` Server running on port ${PORT}`));
   

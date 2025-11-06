@@ -2542,8 +2542,8 @@ export const addPatientBloodPressureByCaretaker = async (req, res) => {
 export const addPatientBloodSugarByCaretaker = async (req, res) => {
   try {
     const token = req.token;
-    const { patient_id, day, before, after, insulinDose, notes } = req.body;
-
+    const { day, before, after, insulinDose, notes } = req.body;
+    const {patientId} = req.params
     // --- Caretaker Validation ---
     const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
     if (!caretaker) {
@@ -2557,10 +2557,11 @@ export const addPatientBloodSugarByCaretaker = async (req, res) => {
 
     // --- Patient Validation ---
     const patient = await Patient.findOne({
-      _id: patient_id,
-      caretakerId: caretaker._id,
+      _id:patientId,
+      // caretakerId: caretaker._id,
       status: "Active",
     });
+    console.log("Patient:", patient);
     if (!patient) {
       return res.send({
         statusCode: 404,
@@ -2570,7 +2571,7 @@ export const addPatientBloodSugarByCaretaker = async (req, res) => {
       });
     }
 
-    if (!patient_id) {
+    if (!patientId) {
       return res.send({
         statusCode: 400,
         success: false,

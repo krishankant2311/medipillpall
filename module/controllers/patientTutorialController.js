@@ -3,8 +3,8 @@
 import Tutorial from "../models/patientTutorialModel.js"
 import Admin from "../models/adminModel.js"
 import Patient from "../models/patientModel.js"
-
-// ================= CREATE =================
+import Caretaker from "../models/caretakerModel/caretakerModel.js"
+import Guardian from "../models/guardiansModel/guardianModel.js"
 
 import multer from "multer"
 import path from "path"
@@ -26,17 +26,18 @@ export const uploadVideo = multer({ storage: storage }).single("video")
 // ---------------- Create Tutorial (with video upload) ----------------
 export const createTutorial = async (req, res) => {
   try {
-    let token = req.token
-    let { title, description } = req.body
-    let videoFile = req.file
+    const token = req.token;
+    const { title, description } = req.body;
+    const videoFile = req.file;
 
+    // Step 1: Validate inputs
     if (!title) {
       return res.send({
         statusCode: 400,
         success: false,
         message: "Title is required",
         result: {},
-      })
+      });
     }
 
     if (!description) {
@@ -45,7 +46,7 @@ export const createTutorial = async (req, res) => {
         success: false,
         message: "Description is required",
         result: {},
-      })
+      });
     }
 
     if (!videoFile) {
@@ -54,114 +55,117 @@ export const createTutorial = async (req, res) => {
         success: false,
         message: "Video file is required",
         result: {},
-      })
+      });
     }
 
-    const admin = await Admin.findById(token._id)
-
+    // Step 2: Validate admin
+    const admin = await Admin.findById(token._id);
     if (!admin || admin.status !== "Active") {
       return res.send({
         statusCode: 401,
         success: false,
         message: "Unauthorized: Only active admins can create tutorials",
         result: {},
-      })
+      });
     }
 
-    const videoUrl = "/uploads/videos/" + videoFile.filename
+    // Step 3: Build full video URL
+    const videoUrl = `${req.protocol}://${req.get("host")}/uploads/${videoFile.filename}`;
 
+    // Step 4: Save to DB
     const tutorial = await Tutorial.create({
       title,
       description,
       videoUrl,
       adminId: admin._id,
-    })
+    });
 
+    // Step 5: Response
     return res.send({
       statusCode: 200,
       success: true,
       message: "Tutorial created successfully",
       result: tutorial,
-    })
+    });
   } catch (error) {
+    console.error("❌ Error in createTutorial:", error);
     return res.send({
       statusCode: 500,
       success: false,
       message: error.message + " Error in createTutorial API",
-    })
+    });
   }
-}
+};
 
 // ---------------- Edit Tutorial (with video upload) ----------------
 export const editTutorial = async (req, res) => {
   try {
-    let { id } = req.params
-    let adminToken = req.token
-    let { title, description } = req.body
-    let videoFile = req.file
+    const { id } = req.params;
+    const adminToken = req.token;
+    const { title, description } = req.body;
+    const videoFile = req.file;
 
-    if(!id){
+    // 🧩 Step 1: Validate ID
+    if (!id) {
       return res.send({
         statusCode: 400,
         success: false,
-        message: "Tutorial ID required",
+        message: "Tutorial ID is required",
         result: {},
-      })
+      });
     }
 
-    const admin = await Admin.findById(adminToken._id)
-
+    // 🧩 Step 2: Validate admin
+    const admin = await Admin.findById(adminToken._id);
     if (!admin || admin.status !== "Active") {
       return res.send({
         statusCode: 401,
         success: false,
         message: "Unauthorized: Only active admins can edit tutorials",
         result: {},
-      })
+      });
     }
 
-    if (!id) {
-      return res.send({
-        statusCode: 400,
-        success: false,
-        message: "Tutorial ID required",
-        result: {},
-      })
-    }
-
-    const tutorial = await Tutorial.findById(id)
-
+    // 🧩 Step 3: Find tutorial
+    const tutorial = await Tutorial.findOne({ _id: id });
     if (!tutorial) {
       return res.send({
         statusCode: 404,
         success: false,
         message: "Tutorial not found",
         result: {},
-      })
+      });
     }
 
-    // Update fields if provided
-    if (title) tutorial.title = title
-    if (description) tutorial.description = description
-    // if (status) tutorial.status = status
-    if (videoFile) tutorial.videoUrl = "/uploads/videos/" + videoFile.filename
+    // 🧩 Step 4: Update fields only if provided
+    if (title) tutorial.title = title;
+    if (description) tutorial.description = description;
 
-    await tutorial.save()
+    // 🧩 Step 5: Update video (if new file uploaded)
+    if (videoFile) {
+      // Full URL for accessing video
+      const videoUrl = `${req.protocol}://${req.get("host")}/uploads/videos/${videoFile.filename}`;
+      tutorial.videoUrl = videoUrl;
+    }
 
+    await tutorial.save();
+
+    // 🧩 Step 6: Success response
     return res.send({
       statusCode: 200,
       success: true,
       message: "Tutorial updated successfully",
       result: tutorial,
-    })
+    });
   } catch (error) {
+    console.error("❌ Error in editTutorial:", error);
     return res.send({
       statusCode: 500,
       success: false,
       message: error.message + " Error in editTutorial API",
-    })
+    });
   }
-}
+};
 
 // ================= GET ONE (ADMIN) =================
 
@@ -414,3 +418,158 @@ export const deleteTutorial = async (req, res) => {
   }
 }
 
+export const getAllTutorialsByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+
+    // 🧩 Step 1: Validate caretaker token
+    if (!token || !token._id) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Caretaker token required",
+        result: {},
+      });
+    }
+
+    // 🧩 Step 2: Verify caretaker exists and active
+    const caretaker = await Caretaker.findById(token._id);
+    if (!caretaker || caretaker.status !== "Active") {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Caretaker not found or inactive",
+        result: {},
+      });
+    }
+
+    // 🧩 Step 3: Fetch all active tutorials
+    const tutorials = await Tutorial.find({ status: "Active" }).sort({ createdAt: -1 });
+
+    // 🧩 Step 4: Response
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Tutorials fetched successfully",
+      result: tutorials,
+    });
+  } catch (error) {
+    console.error("❌ Error in getAllTutorialsByCaretaker:", error);
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " Error in getAllTutorialsByCaretaker API",
+    });
+  }
+};
+
+
+export const getSingleTutorialByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+    const { tutorialId } = req.params; // tutorial ID from route
+
+    // 🧩 Step 1: Validate ID
+    if (!tutorialId) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Tutorial ID is required",
+        result: {},
+      });
+    }
+
+    // 🧩 Step 2: Validate caretaker
+    if (!token || !token._id) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Caretaker token required",
+        result: {},
+      });
+    }
+
+    const caretaker = await Caretaker.findById(token._id);
+    if (!caretaker || caretaker.status !== "Active") {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Unauthorized: Only active caretakers can access tutorials",
+        result: {},
+      });
+    }
+
+    // 🧩 Step 3: Fetch tutorial
+    const tutorial = await Tutorial.findOne({ _id: tutorialId, status: "Active" });
+
+    if (!tutorial) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Tutorial not found",
+        result: {},
+      });
+    }
+
+    // 🧩 Step 4: Success response
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Tutorial fetched successfully",
+      result: tutorial,
+    });
+  } catch (error) {
+    console.error("❌ Error in getSingleTutorialByCaretaker:", error);
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " Error in getSingleTutorialByCaretaker API",
+    });
+  }
+};
+
+export const getAllTutorialsByGuardian = async (req, res) => {
+  try {
+    const token = req.token; // guardian token
+
+    // 🧩 Step 1: Validate guardian token
+    if (!token || !token._id) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Guardian token required",
+        result: {},
+      });
+    }
+
+    // 🧩 Step 2: Verify guardian exists and active
+    const guardian = await Guardian.findOne({_id:token._id});
+    console.log("Guardian found:", guardian);
+    if (!guardian || guardian.status !== "Active") {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Guardian not found or inactive",
+        result: {},
+      });
+    }
+
+    // 🧩 Step 3: Fetch all active tutorials
+    const tutorials = await Tutorial.find({ status: "Active" }).sort({ createdAt: -1 });
+
+    // 🧩 Step 4: Response
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Tutorials fetched successfully",
+      result: tutorials,
+    });
+  } catch (error) {
+    console.error("❌ Error in getAllTutorialsByGuardian:", error);
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " Error in getAllTutorialsByGuardian API",
+    });
+  }
+};
