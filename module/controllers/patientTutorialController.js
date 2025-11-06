@@ -573,3 +573,49 @@ export const getAllTutorialsByGuardian = async (req, res) => {
     });
   }
 };
+
+
+export const getTutorialByGuardian = async (req, res) => {
+  try {
+    const token = req.token; // guardian token
+    const { id } = req.params; // tutorial id
+
+    // 🧩 Step 1: Validate guardian
+    const guardian = await Guardian.findOne({ _id: token._id, status: "Active" });
+    if (!guardian) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "Guardian not found or inactive",
+        result: {},
+      });
+    }
+
+    // 🧩 Step 2: Fetch single tutorial by ID
+    const tutorial = await Tutorial.findOne({ _id: id, status: "Active" });
+    if (!tutorial) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "Tutorial not found",
+        result: {},
+      });
+    }
+
+    // 🧩 Step 3: Return success response
+    return res.status(200).json({
+      statusCode: 200,
+      success: true,
+      message: "Tutorial fetched successfully",
+      result: tutorial,
+    });
+  } catch (error) {
+    console.error("❌ Error in getTutorialByGuardian:", error);
+    return res.status(500).json({
+      statusCode: 500,
+      success: false,
+      message: error.message + " Error in getTutorialByGuardian API",
+      result: {},
+    });
+  }
+};

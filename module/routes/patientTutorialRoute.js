@@ -11,6 +11,7 @@ import {
   getSingleTutorialByCaretaker,
   getAllTutorialsByCaretaker,
   getAllTutorialsByGuardian,
+  getTutorialByGuardian,
 } from "../controllers/patientTutorialController.js";
 import upload from "../../config/multer.js";
 import { verifyAccessToken } from "../../helpers/jwt.js";
@@ -51,4 +52,5 @@ router.get("/getby-caretaker", verifyAccessToken, getAllTutorialsByCaretaker);
 router.get("/getby-caretaker/:tutorialId", verifyAccessToken, getSingleTutorialByCaretaker);
 
 router.get("/getby-guardian", verifyAccessToken, getAllTutorialsByGuardian);
+router.get("/getby-guardian/:id", verifyAccessToken, getTutorialByGuardian);
 export default router;
