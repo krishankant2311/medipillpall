@@ -32,6 +32,7 @@ const patientRecordSchema = new mongoose.Schema(
       amTemp: { type: String, default: "" },
       pmTemp: { type: String, default: "" },
       notes: { type: String, default: "" },
+      insulinDose: { type: String, default: "" }, // m/l dose
     },
     heartRate: {
       day: { type: String, default: "" }, // e.g. Monday

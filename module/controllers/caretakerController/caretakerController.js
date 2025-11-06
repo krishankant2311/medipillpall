@@ -2793,7 +2793,7 @@ export const addPatientHeartRateByCaretaker = async (req, res) => {
 export const addPatientBodyTempByCaretaker = async (req, res) => {
   try {
     const token = req.token;
-    const {  day, time, amTemp, pmTemp, notes } = req.body;
+    const {  day, time, amTemp, pmTemp, notes, insulinDose } = req.body;
     const {patientId}=req.params
     // --- Caretaker Validation ---
     const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
@@ -2847,12 +2847,12 @@ export const addPatientBodyTempByCaretaker = async (req, res) => {
     });
 
     if (record) {
-      record.bodyTemp = { day, time, amTemp, pmTemp, notes };
+      record.bodyTemp = { day, time, amTemp, pmTemp, notes, insulinDose };
       await record.save();
     } else {
       record = await PatientRecord.create({
         patient_id: patientId,
-        bodyTemp: { day, time, amTemp, pmTemp, notes },
+        bodyTemp: { day, time, amTemp, pmTemp, notes, insulinDose },
       });
       await record.save();
     }
