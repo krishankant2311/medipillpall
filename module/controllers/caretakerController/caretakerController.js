@@ -2454,11 +2454,17 @@ export const getPatientPrescriptionByCaretaker = async (req, res) => {
     });
   }
 };
+const getDateRange = (date = new Date()) => {
+  const start = new Date(date.setHours(0, 0, 0, 0));
+  const end = new Date(date.setHours(23, 59, 59, 999));
+  return { start, end };
+};
 
 export const addPatientBloodPressureByCaretaker = async (req, res) => {
   try {
-    const token = req.token; // caretaker token
-    const { patient_id, day, amBP, pmBP, comments } = req.body;
+    const token = req.token;
+    const { day, amBP, pmBP, comments } = req.body;
+    const { patientId } = req.params;
 
     // --- Caretaker Validation ---
     const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
@@ -2472,11 +2478,7 @@ export const addPatientBloodPressureByCaretaker = async (req, res) => {
     }
 
     // --- Patient Validation ---
-    const patient = await Patient.findOne({
-      _id: patient_id,
-      caretakerId: caretaker._id,
-      status: "Active",
-    });
+    const patient = await Patient.findOne({ _id: patientId, status: "Active" });
     if (!patient) {
       return res.send({
         statusCode: 404,
@@ -2486,11 +2488,11 @@ export const addPatientBloodPressureByCaretaker = async (req, res) => {
       });
     }
 
-    if (!patient_id) {
+    if (!patientId) {
       return res.send({
         statusCode: 400,
         success: false,
-        message: "patient_id required",
+        message: "patientId required",
         result: {},
       });
     }
@@ -2505,9 +2507,8 @@ export const addPatientBloodPressureByCaretaker = async (req, res) => {
     }
 
     const { start, end } = getDateRange(new Date());
-
     let record = await PatientRecord.findOne({
-      patient_id,
+      patient_id: patientId,
       createdAt: { $gte: start, $lte: end },
     });
 
@@ -2516,10 +2517,9 @@ export const addPatientBloodPressureByCaretaker = async (req, res) => {
       await record.save();
     } else {
       record = await PatientRecord.create({
-        patient_id,
+        patient_id: patientId,
         bloodPressure: { day, amBP, pmBP, comments },
       });
-      await record.save();
     }
 
     return res.send({
@@ -2528,7 +2528,6 @@ export const addPatientBloodPressureByCaretaker = async (req, res) => {
       message: "Blood Pressure added/updated successfully",
       result: record,
     });
-
   } catch (err) {
     return res.send({
       statusCode: 500,
@@ -2539,11 +2538,13 @@ export const addPatientBloodPressureByCaretaker = async (req, res) => {
   }
 };
 
+
 export const addPatientBloodSugarByCaretaker = async (req, res) => {
   try {
     const token = req.token;
     const { day, before, after, insulinDose, notes } = req.body;
-    const {patientId} = req.params
+    const { patientId } = req.params;
+
     // --- Caretaker Validation ---
     const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
     if (!caretaker) {
@@ -2556,12 +2557,7 @@ export const addPatientBloodSugarByCaretaker = async (req, res) => {
     }
 
     // --- Patient Validation ---
-    const patient = await Patient.findOne({
-      _id:patientId,
-      // caretakerId: caretaker._id,
-      status: "Active",
-    });
-    console.log("Patient:", patient);
+    const patient = await Patient.findOne({ _id: patientId, status: "Active" });
     if (!patient) {
       return res.send({
         statusCode: 404,
@@ -2575,7 +2571,7 @@ export const addPatientBloodSugarByCaretaker = async (req, res) => {
       return res.send({
         statusCode: 400,
         success: false,
-        message: "patient_id required",
+        message: "patientId required",
         result: {},
       });
     }
@@ -2590,9 +2586,8 @@ export const addPatientBloodSugarByCaretaker = async (req, res) => {
     }
 
     const { start, end } = getDateRange(new Date());
-
     let record = await PatientRecord.findOne({
-      patient_id,
+      patient_id: patientId,
       createdAt: { $gte: start, $lte: end },
     });
 
@@ -2601,10 +2596,9 @@ export const addPatientBloodSugarByCaretaker = async (req, res) => {
       await record.save();
     } else {
       record = await PatientRecord.create({
-        patient_id,
+        patient_id: patientId,
         bloodSugar: { day, before, after, insulinDose, notes },
       });
-      await record.save();
     }
 
     return res.send({
@@ -2613,7 +2607,6 @@ export const addPatientBloodSugarByCaretaker = async (req, res) => {
       message: "Blood Sugar added/updated successfully",
       result: record,
     });
-
   } catch (err) {
     return res.send({
       statusCode: 500,
@@ -2623,10 +2616,12 @@ export const addPatientBloodSugarByCaretaker = async (req, res) => {
     });
   }
 };
+
 export const addPatientBodyWeightByCaretaker = async (req, res) => {
   try {
     const token = req.token;
-    const { patient_id, day, weight } = req.body;
+    const { day, weight } = req.body;
+    const { patientId } = req.params;
 
     // --- Caretaker Validation ---
     const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
@@ -2640,11 +2635,7 @@ export const addPatientBodyWeightByCaretaker = async (req, res) => {
     }
 
     // --- Patient Validation ---
-    const patient = await Patient.findOne({
-      _id: patient_id,
-      caretakerId: caretaker._id,
-      status: "Active",
-    });
+    const patient = await Patient.findOne({ _id: patientId, status: "Active" });
     if (!patient) {
       return res.send({
         statusCode: 404,
@@ -2654,11 +2645,11 @@ export const addPatientBodyWeightByCaretaker = async (req, res) => {
       });
     }
 
-    if (!patient_id) {
+    if (!patientId) {
       return res.send({
         statusCode: 400,
         success: false,
-        message: "patient_id required",
+        message: "patientId required",
         result: {},
       });
     }
@@ -2673,9 +2664,8 @@ export const addPatientBodyWeightByCaretaker = async (req, res) => {
     }
 
     const { start, end } = getDateRange(new Date());
-
     let record = await PatientRecord.findOne({
-      patient_id,
+      patient_id: patientId,
       createdAt: { $gte: start, $lte: end },
     });
 
@@ -2684,10 +2674,9 @@ export const addPatientBodyWeightByCaretaker = async (req, res) => {
       await record.save();
     } else {
       record = await PatientRecord.create({
-        patient_id,
+        patient_id: patientId,
         bodyWeight: { day, weight },
       });
-      await record.save();
     }
 
     return res.send({
@@ -2696,7 +2685,6 @@ export const addPatientBodyWeightByCaretaker = async (req, res) => {
       message: "Body Weight added/updated successfully",
       result: record,
     });
-
   } catch (err) {
     return res.send({
       statusCode: 500,
@@ -2706,10 +2694,12 @@ export const addPatientBodyWeightByCaretaker = async (req, res) => {
     });
   }
 };
+
 export const addPatientHeartRateByCaretaker = async (req, res) => {
   try {
     const token = req.token;
-    const { patient_id, day, time, amRate, pmRate, notes } = req.body;
+    const { day, time, amRate, pmRate, notes } = req.body;
+    const { patientId } = req.params;
 
     // --- Caretaker Validation ---
     const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
@@ -2723,11 +2713,7 @@ export const addPatientHeartRateByCaretaker = async (req, res) => {
     }
 
     // --- Patient Validation ---
-    const patient = await Patient.findOne({
-      _id: patient_id,
-      caretakerId: caretaker._id,
-      status: "Active",
-    });
+    const patient = await Patient.findOne({ _id: patientId, status: "Active" });
     if (!patient) {
       return res.send({
         statusCode: 404,
@@ -2737,11 +2723,11 @@ export const addPatientHeartRateByCaretaker = async (req, res) => {
       });
     }
 
-    if (!patient_id) {
+    if (!patientId) {
       return res.send({
         statusCode: 400,
         success: false,
-        message: "patient_id required",
+        message: "patientId required",
         result: {},
       });
     }
@@ -2756,9 +2742,8 @@ export const addPatientHeartRateByCaretaker = async (req, res) => {
     }
 
     const { start, end } = getDateRange(new Date());
-
     let record = await PatientRecord.findOne({
-      patient_id,
+      patient_id: patientId,
       createdAt: { $gte: start, $lte: end },
     });
 
@@ -2767,10 +2752,9 @@ export const addPatientHeartRateByCaretaker = async (req, res) => {
       await record.save();
     } else {
       record = await PatientRecord.create({
-        patient_id,
+        patient_id: patientId,
         heartRate: { day, time, amRate, pmRate, notes },
       });
-      await record.save();
     }
 
     return res.send({
@@ -2779,7 +2763,6 @@ export const addPatientHeartRateByCaretaker = async (req, res) => {
       message: "Heart Rate added/updated successfully",
       result: record,
     });
-
   } catch (err) {
     return res.send({
       statusCode: 500,
@@ -2789,11 +2772,12 @@ export const addPatientHeartRateByCaretaker = async (req, res) => {
     });
   }
 };
+
 export const addPatientBodyTempByCaretaker = async (req, res) => {
   try {
     const token = req.token;
-    const { patient_id, day, time, amTemp, pmTemp, notes } = req.body;
-
+    const {  day, time, amTemp, pmTemp, notes } = req.body;
+    const {patientId}=req.params
     // --- Caretaker Validation ---
     const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
     if (!caretaker) {
@@ -2807,8 +2791,8 @@ export const addPatientBodyTempByCaretaker = async (req, res) => {
 
     // --- Patient Validation ---
     const patient = await Patient.findOne({
-      _id: patient_id,
-      caretakerId: caretaker._id,
+      _id: patientId,
+      // caretakerId: caretaker._id,
       status: "Active",
     });
     if (!patient) {
@@ -2820,11 +2804,11 @@ export const addPatientBodyTempByCaretaker = async (req, res) => {
       });
     }
 
-    if (!patient_id) {
+    if (!patientId) {
       return res.send({
         statusCode: 400,
         success: false,
-        message: "patient_id required",
+        message: "patientId required",
         result: {},
       });
     }
@@ -2841,7 +2825,7 @@ export const addPatientBodyTempByCaretaker = async (req, res) => {
     const { start, end } = getDateRange(new Date());
 
     let record = await PatientRecord.findOne({
-      patient_id,
+      patient_id: patientId,
       createdAt: { $gte: start, $lte: end },
     });
 
@@ -2850,7 +2834,7 @@ export const addPatientBodyTempByCaretaker = async (req, res) => {
       await record.save();
     } else {
       record = await PatientRecord.create({
-        patient_id,
+        patient_id: patientId,
         bodyTemp: { day, time, amTemp, pmTemp, notes },
       });
       await record.save();
@@ -3937,6 +3921,77 @@ export const changeAppLanguageByCaretaker = async (req, res) => {
       statusCode: 500,
       success: false,
       message: error.message + " Error in changeAppLanguageByCaretaker API",
+      result: {},
+    });
+  }
+};
+
+export const addPatientCareNotesByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // Caretaker token
+    const { patientId } = req.params; // patient ID from params
+    const { title, noteType, description, date } = req.body;
+
+    // 🧩 Step 1: Validate caretaker token
+    if (!token || !token._id) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Caretaker token required",
+        result: {},
+      });
+    }
+
+    // 🧩 Step 2: Verify caretaker
+    const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
+    if (!caretaker) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Caretaker not found or inactive",
+        result: {},
+      });
+    }
+
+    // 🧩 Step 3: Verify patient assigned to caretaker
+    const patient = await Patient.findOne({
+      _id: patientId,
+      caretakerId: caretaker._id,
+      status: "Active",
+    });
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found or not assigned to this caretaker",
+        result: {},
+      });
+    }
+
+    // 🧩 Step 4: Create Care Note
+    const newCareNote = await CareNote.create({
+      patientId: patient._id,
+      caretakerId: caretaker._id,
+      title: title?.trim() || "",
+      noteType: noteType || "other",
+      description: description?.trim() || "",
+      date: date || new Date(),
+      status: "Active",
+    });
+
+    // 🧩 Step 5: Response
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Care note added successfully",
+      result: newCareNote,
+    });
+  } catch (error) {
+    console.error("❌ Error in addPatientCareNotesByCaretaker:", error);
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " Error in addPatientCareNotesByCaretaker API",
       result: {},
     });
   }

@@ -36,6 +36,7 @@ import { addCaretaker,
   getPatientDailyRoutineByCaretaker,
   uploadMedicalReportByCaretaker,
   getAppLanguageByCaretaker,
+  addPatientCareNotesByCaretaker,
   changeAppLanguageByCaretaker,
   addReminderByCaretaker,editCaretakerProfile,getMedicalHistoryByCaretaker,
   getTermsAndConditionsByCaretaker,getPrivacyPolicyByCaretaker,getFaqByCaretaker,
@@ -160,4 +161,6 @@ router.get("/get-patient-daily-routine-by-caretaker/:patientId", verifyAccessTok
 
 router.get("/get-app-language-by-caretaker", verifyAccessToken, getAppLanguageByCaretaker);
 router.post("/change-app-language-by-caretaker", verifyAccessToken, upload.none(), changeAppLanguageByCaretaker);
+
+router.post("/add-patient-carenotes-by-caretaker/:patientId", verifyAccessToken, upload.none(), addPatientCareNotesByCaretaker);
 export default router;
