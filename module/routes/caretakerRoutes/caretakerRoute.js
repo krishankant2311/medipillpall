@@ -38,6 +38,7 @@ import { addCaretaker,
   getAppLanguageByCaretaker,
   addPatientCareNotesByCaretaker,
   changeAppLanguageByCaretaker,
+  getCareNotesByCaretaker,
   addReminderByCaretaker,editCaretakerProfile,getMedicalHistoryByCaretaker,
   getTermsAndConditionsByCaretaker,getPrivacyPolicyByCaretaker,getFaqByCaretaker,
   addPatientMealByCaretaker,addPatientDietByCaretaker,getPatientDietByCaretaker,getPatientMealByCaretaker,
@@ -163,4 +164,5 @@ router.get("/get-app-language-by-caretaker", verifyAccessToken, getAppLanguageBy
 router.post("/change-app-language-by-caretaker", verifyAccessToken, upload.none(), changeAppLanguageByCaretaker);
 
 router.post("/add-patient-carenotes-by-caretaker/:patientId", verifyAccessToken, upload.none(), addPatientCareNotesByCaretaker);
+router.get("/get-patient-carenotes-by-caretaker/:patientId", verifyAccessToken, getCareNotesByCaretaker);
 export default router;

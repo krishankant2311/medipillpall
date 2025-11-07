@@ -27,6 +27,10 @@ const patientSchema = new mongoose.Schema(
       type: String,
       default: ""
     },
+    dnrForm: {
+      type: String,
+      default: ""
+    },
     condition:{
       type: String,
       default: ""
