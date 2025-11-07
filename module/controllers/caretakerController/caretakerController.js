@@ -1064,8 +1064,9 @@ export const getPatientPersonalContactByCaretaker = async (req, res) => {
 export const getAllPatientsOfCaretaker = async (req, res) => {
   try {
     const token = req.token;
-
-    // Step 1: Validate caretaker
+    const { name, age, gender, mobileNumber } = req.query;
+    const { search } = req.query;
+    // 🧩 Step 1: Validate caretaker
     const caretaker = await Caretaker.findOne({
       _id: token._id,
       status: "Active",
@@ -1080,46 +1081,80 @@ export const getAllPatientsOfCaretaker = async (req, res) => {
       });
     }
 
-    // Step 2: Fetch all patients linked to caretaker
-    const patients = await Patient.find({
+    // 🧩 Step 2: Build dynamic filter
+    let filter = {
       caretakerId: caretaker._id,
       status: "Active",
-    }).select("_id fullName age gender status condition");
+    };
+
+    if (name) {
+      filter.fullName = { $regex: name, $options: "i" };
+    }
+
+    if (mobileNumber) {
+      filter.mobileNumber = { $regex: mobileNumber, $options: "i" };
+    }
+
+    if (age) {
+      filter.age = age;
+    }
+
+    if (gender) {
+      filter.gender = gender;
+    }
+
+    if (search) {
+      filter.$or = [
+        { fullName: { $regex: search, $options: "i" } },
+        { mobileNumber: { $regex: search, $options: "i" } },
+        { condition: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // 🧩 Step 3: Fetch patients with selected details
+    const patients = await Patient.find(filter)
+      .select(
+        "_id fullName age gender mobileNumber email profilePhoto status condition"
+      )
+      .sort({ createdAt: -1 });
 
     if (!patients.length) {
       return res.status(404).json({
         statusCode: 404,
         success: false,
-        message: "No patients linked with this caretaker",
-        result: {},
+        message: "No patients found for this caretaker",
+        result: [],
       });
     }
 
-    // Step 3: Fetch each patient’s personal contact
+    // 🧩 Step 4: Fetch Personal Contacts
     const result = await Promise.all(
       patients.map(async (patient) => {
         const contact = await PersonalContact.findOne({
           patientId: patient._id,
           status: "Active",
-        }).select("name relation phone address status condition");
+        }).select("name relation phone address");
 
         return {
           patient_id: patient._id,
           name: patient.fullName,
           age: patient.age,
           gender: patient.gender,
-          condition: patient.condition || "Not specified", // 🔥 ensure visible
+          mobileNumber: patient.mobileNumber,
+          email: patient.email,
+          condition: patient.condition || "Not specified",
+          profilePhoto: patient.profilePhoto || null,
           personalContact: contact || null,
         };
       })
     );
 
-    // Step 4: Return response
+    // 🧩 Step 5: Send response
     return res.status(200).json({
       statusCode: 200,
       success: true,
       message: "Patients fetched successfully",
-      result: result,
+      result,
     });
   } catch (error) {
     return res.status(500).json({
@@ -1130,6 +1165,76 @@ export const getAllPatientsOfCaretaker = async (req, res) => {
     });
   }
 };
+
+// export const getAllPatientsOfCaretaker = async (req, res) => {
+//   try {
+//     const token = req.token;
+
+//     // Step 1: Validate caretaker
+//     const caretaker = await Caretaker.findOne({
+//       _id: token._id,
+//       status: "Active",
+//     });
+
+//     if (!caretaker) {
+//       return res.status(404).json({
+//         statusCode: 404,
+//         success: false,
+//         message: "Caretaker not found or inactive",
+//         result: {},
+//       });
+//     }
+
+//     // Step 2: Fetch all patients linked to caretaker
+//     const patients = await Patient.find({
+//       caretakerId: caretaker._id,
+//       status: "Active",
+//     }).select("_id fullName age gender status condition");
+
+//     if (!patients.length) {
+//       return res.status(404).json({
+//         statusCode: 404,
+//         success: false,
+//         message: "No patients linked with this caretaker",
+//         result: {},
+//       });
+//     }
+
+//     // Step 3: Fetch each patient’s personal contact
+//     const result = await Promise.all(
+//       patients.map(async (patient) => {
+//         const contact = await PersonalContact.findOne({
+//           patientId: patient._id,
+//           status: "Active",
+//         }).select("name relation phone address status condition");
+
+//         return {
+//           patient_id: patient._id,
+//           name: patient.fullName,
+//           age: patient.age,
+//           gender: patient.gender,
+//           condition: patient.condition || "Not specified", // 🔥 ensure visible
+//           personalContact: contact || null,
+//         };
+//       })
+//     );
+
+//     // Step 4: Return response
+//     return res.status(200).json({
+//       statusCode: 200,
+//       success: true,
+//       message: "Patients fetched successfully",
+//       result: result,
+//     });
+//   } catch (error) {
+//     return res.status(500).json({
+//       statusCode: 500,
+//       success: false,
+//       message: error.message + " ERROR in getAllPatientsOfCaretaker API",
+//       result: {},
+//     });
+//   }
+// };
 
 
 export const getActiveMedicationsByPatient = async (req, res) => {
