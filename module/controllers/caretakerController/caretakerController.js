@@ -1419,6 +1419,15 @@ export const getActiveMedicationsByPatient = async (req, res) => {
 //   }
 // };
 
+
+
+//
+
+
+//
+
+
+
 export const getPatientByCaretaker = async (req, res) => {
   try {
     const token = req.token;
@@ -4781,3 +4790,81 @@ export const editPatientBloodSugarByCaretaker = async (req, res) => {
       });
   }
 };
+
+export const getAllCareNotesByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+
+    // 🧩 Step 1: Validate caretaker
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    }).select("_id patients");
+
+    if (!caretaker) {
+      return res.status(401).json({
+        statusCode: 401,
+        success: false,
+        message: "Invalid or inactive caretaker",
+        result: {},
+      });
+    }
+
+    // 🧩 Step 2: If no patients assigned
+    if (!caretaker.patients || caretaker.patients.length === 0) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "No patients assigned to this caretaker",
+        result: [],
+      });
+    }
+
+    // 🧩 Step 3: Fetch all CareNotes of caretaker’s patients
+    const careNotes = await CareNote.find({
+      patientId: { $in: caretaker.patients },
+      status: "Active",
+    })
+      .populate("patientId", "fullName") // ✅ bring patient name
+      .sort({ createdAt: -1 })
+      .select("-__v");
+
+    if (!careNotes.length) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "No care notes found for your patients",
+        result: [],
+      });
+    }
+
+    // 🧩 Step 4: Format response (optional clean output)
+    const formattedNotes = careNotes.map((note) => ({
+      _id: note._id,
+      patientId: note.patientId?._id,
+      patientName: note.patientId?.fullName || "Unknown",
+      title: note.title,
+      description: note.description,
+      createdAt: note.createdAt,
+      updatedAt: note.updatedAt,
+      status: note.status,
+    }));
+
+    // 🧩 Step 5: Send response
+    return res.status(200).json({
+      statusCode: 200,
+      success: true,
+      message: "All care notes fetched successfully",
+      result: formattedNotes,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      statusCode: 500,
+      success: false,
+      message:
+        error.message + " ERROR in getAllCareNotesByCaretaker controller",
+      result: {},
+    });
+  }
+};
+
