@@ -4341,3 +4341,443 @@ export const getCareNotesByCaretaker = async (req, res) => {
     });
   }
 };
+
+
+export const editPatientBloodPressureByCaretaker = async (req, res) => {
+  try {
+    const token = req.token;
+    const { patientId } = req.params;
+    const { day, amBP, pmBP, comments } = req.body;
+
+    // 🧩 Step 1: Validate caretaker
+    const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
+    if (!caretaker) {
+      return res
+        .status(401)
+        .json({
+          statusCode: 401,
+          success: false,
+          message: "Invalid caretaker token",
+          result: {},
+        });
+    }
+
+    // 🧩 Step 2: Check patient assignment
+    // const isAssigned = caretaker.patients.some(p => p.toString() === patientId);
+    // if (!isAssigned) {
+    //   return res
+    //     .status(403)
+    //     .json({
+    //       statusCode: 403,
+    //       success: false,
+    //       message: "This patient is not assigned to you",
+    //       result: {},
+    //     });
+    // }
+
+    // 🧩 Step 3: Validate body
+    if (!day && !amBP && !pmBP && !comments) {
+      return res
+        .status(400)
+        .json({
+          statusCode: 400,
+          success: false,
+          message: "At least one field is required to update (day, amBP, pmBP, comments)",
+          result: {},
+        });
+    }
+
+    const { start, end } = getDateRange(new Date());
+    const record = await PatientRecord.findOne({
+      patient_id: patientId,
+      createdAt: { $gte: start, $lte: end },
+    });
+
+    if (!record) {
+      return res
+        .status(404)
+        .json({
+          statusCode: 404,
+          success: false,
+          message: "No patient record found for today",
+          result: {},
+        });
+    }
+
+    record.bloodPressure = {
+      ...record.bloodPressure?.toObject?.() || record.bloodPressure || {},
+      ...(day && { day }),
+      ...(amBP && { amBP }),
+      ...(pmBP && { pmBP }),
+      ...(comments && { comments }),
+    };
+
+    await record.save();
+
+    return res
+      .status(200)
+      .json({
+        statusCode: 200,
+        success: true,
+        message: "Blood Pressure updated successfully",
+        result: record.bloodPressure,
+      });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({
+        statusCode: 500,
+        success: false,
+        message: error.message,
+        result: {},
+      });
+  }
+};
+export const editPatientBodyTempByCaretaker = async (req, res) => {
+  try {
+    const token = req.token;
+    const { patientId } = req.params;
+    const { day, time, amTemp, pmTemp, notes } = req.body;
+
+    const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
+    if (!caretaker) {
+      return res
+        .status(401)
+        .json({
+          statusCode: 401,
+          success: false,
+          message: "Invalid caretaker token",
+          result: {},
+        });
+    }
+
+    // const isAssigned = caretaker.patients.some(p => p.toString() === patientId);
+    // if (!isAssigned) {
+    //   return res
+    //     .status(403)
+    //     .json({
+    //       statusCode: 403,
+    //       success: false,
+    //       message: "This patient is not assigned to you",
+    //       result: {},
+    //     });
+    // }
+
+    if (!day && !time && !amTemp && !pmTemp && !notes) {
+      return res
+        .status(400)
+        .json({
+          statusCode: 400,
+          success: false,
+          message: "At least one field is required to update (day, time, amTemp, pmTemp, notes)",
+          result: {},
+        });
+    }
+
+    const { start, end } = getDateRange(new Date());
+    const record = await PatientRecord.findOne({
+      patient_id: patientId,
+      createdAt: { $gte: start, $lte: end },
+    });
+
+    if (!record) {
+      return res
+        .status(404)
+        .json({
+          statusCode: 404,
+          success: false,
+          message: "No patient record found for today",
+          result: {},
+        });
+    }
+
+    record.bodyTemp = {
+      ...record.bodyTemp?.toObject?.() || record.bodyTemp || {},
+      ...(day && { day }),
+      ...(time && { time }),
+      ...(amTemp && { amTemp }),
+      ...(pmTemp && { pmTemp }),
+      ...(notes && { notes }),
+    };
+
+    await record.save();
+
+    return res
+      .status(200)
+      .json({
+        statusCode: 200,
+        success: true,
+        message: "Body Temperature updated successfully",
+        result: record.bodyTemp,
+      });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({
+        statusCode: 500,
+        success: false,
+        message: error.message,
+        result: {},
+      });
+  }
+};
+export const editPatientHeartRateByCaretaker = async (req, res) => {
+  try {
+    const token = req.token;
+    const { patientId } = req.params;
+    const { day, time, amRate, pmRate, notes } = req.body;
+
+    const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
+    if (!caretaker) {
+      return res
+        .status(401)
+        .json({
+          statusCode: 401,
+          success: false,
+          message: "Invalid caretaker token",
+          result: {},
+        });
+    }
+
+    // const isAssigned = caretaker.patients.some(p => p.toString() === patientId);
+    // if (!isAssigned) {
+    //   return res
+    //     .status(403)
+    //     .json({
+    //       statusCode: 403,
+    //       success: false,
+    //       message: "This patient is not assigned to you",
+    //       result: {},
+    //     });
+    // }
+
+    if (!day && !time && !amRate && !pmRate && !notes) {
+      return res
+        .status(400)
+        .json({
+          statusCode: 400,
+          success: false,
+          message: "At least one field is required to update (day, time, amRate, pmRate, notes)",
+          result: {},
+        });
+    }
+
+    const { start, end } = getDateRange(new Date());
+    const record = await PatientRecord.findOne({
+      patient_id: patientId,
+      createdAt: { $gte: start, $lte: end },
+    });
+
+    if (!record) {
+      return res
+        .status(404)
+        .json({
+          statusCode: 404,
+          success: false,
+          message: "No patient record found for today",
+          result: {},
+        });
+    }
+
+    record.heartRate = {
+      ...record.heartRate?.toObject?.() || record.heartRate || {},
+      ...(day && { day }),
+      ...(time && { time }),
+      ...(amRate && { amRate }),
+      ...(pmRate && { pmRate }),
+      ...(notes && { notes }),
+    };
+
+    await record.save();
+
+    return res
+      .status(200)
+      .json({
+        statusCode: 200,
+        success: true,
+        message: "Heart Rate updated successfully",
+        result: record.heartRate,
+      });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({
+        statusCode: 500,
+        success: false,
+        message: error.message,
+        result: {},
+      });
+  }
+};
+export const editPatientBodyWeightByCaretaker = async (req, res) => {
+  try {
+    const token = req.token;
+    const { patientId } = req.params;
+    const { day, weight } = req.body;
+
+    const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
+    if (!caretaker) {
+      return res
+        .status(401)
+        .json({
+          statusCode: 401,
+          success: false,
+          message: "Invalid caretaker token",
+          result: {},
+        });
+    }
+
+    // const isAssigned = caretaker.patients.some(p => p.toString() === patientId);
+    // if (!isAssigned) {
+    //   return res
+    //     .status(403)
+    //     .json({
+    //       statusCode: 403,
+    //       success: false,
+    //       message: "This patient is not assigned to you",
+    //       result: {},
+    //     });
+    // }
+
+    if (!day && !weight) {
+      return res
+        .status(400)
+        .json({
+          statusCode: 400,
+          success: false,
+          message: "At least one field is required to update (day or weight)",
+          result: {},
+        });
+    }
+
+    const { start, end } = getDateRange(new Date());
+    const record = await PatientRecord.findOne({
+      patient_id: patientId,
+      createdAt: { $gte: start, $lte: end },
+    });
+
+    if (!record) {
+      return res
+        .status(404)
+        .json({
+          statusCode: 404,
+          success: false,
+          message: "No patient record found for today",
+          result: {},
+        });
+    }
+
+    record.bodyWeight = {
+      ...record.bodyWeight?.toObject?.() || record.bodyWeight || {},
+      ...(day && { day }),
+      ...(weight && { weight }),
+    };
+
+    await record.save();
+
+    return res
+      .status(200)
+      .json({
+        statusCode: 200,
+        success: true,
+        message: "Body Weight updated successfully",
+        result: record.bodyWeight,
+      });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({
+        statusCode: 500,
+        success: false,
+        message: error.message,
+        result: {},
+      });
+  }
+};
+export const editPatientBloodSugarByCaretaker = async (req, res) => {
+  try {
+    const token = req.token;
+    const { patientId } = req.params;
+    const { day, fasting, afterMeal, comments } = req.body;
+
+    const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
+    if (!caretaker) {
+      return res
+        .status(401)
+        .json({
+          statusCode: 401,
+          success: false,
+          message: "Invalid caretaker token",
+          result: {},
+        });
+    }
+
+    const isAssigned = caretaker.patients.some(p => p.toString() === patientId);
+    if (!isAssigned) {
+      return res
+        .status(403)
+        .json({
+          statusCode: 403,
+          success: false,
+          message: "This patient is not assigned to you",
+          result: {},
+        });
+    }
+
+    if (!day && !fasting && !afterMeal && !comments) {
+      return res
+        .status(400)
+        .json({
+          statusCode: 400,
+          success: false,
+          message: "At least one field is required to update (day, fasting, afterMeal, comments)",
+          result: {},
+        });
+    }
+
+    const { start, end } = getDateRange(new Date());
+    const record = await PatientRecord.findOne({
+      patient_id: patientId,
+      createdAt: { $gte: start, $lte: end },
+    });
+
+    if (!record) {
+      return res
+        .status(404)
+        .json({
+          statusCode: 404,
+          success: false,
+          message: "No patient record found for today",
+          result: {},
+        });
+    }
+
+    record.bloodSugar = {
+      ...record.bloodSugar?.toObject?.() || record.bloodSugar || {},
+      ...(day && { day }),
+      ...(fasting && { fasting }),
+      ...(afterMeal && { afterMeal }),
+      ...(comments && { comments }),
+    };
+
+    await record.save();
+
+    return res
+      .status(200)
+      .json({
+        statusCode: 200,
+        success: true,
+        message: "Blood Sugar updated successfully",
+        result: record.bloodSugar,
+      });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({
+        statusCode: 500,
+        success: false,
+        message: error.message,
+        result: {},
+      });
+  }
+};

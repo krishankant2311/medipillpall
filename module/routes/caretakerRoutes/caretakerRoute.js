@@ -39,6 +39,11 @@ import { addCaretaker,
   addPatientCareNotesByCaretaker,
   changeAppLanguageByCaretaker,
   getCareNotesByCaretaker,
+  editPatientBloodPressureByCaretaker,
+  editPatientBodyTempByCaretaker,
+  editPatientHeartRateByCaretaker,
+  editPatientBodyWeightByCaretaker,
+  editPatientBloodSugarByCaretaker,
   addReminderByCaretaker,editCaretakerProfile,getMedicalHistoryByCaretaker,
   getTermsAndConditionsByCaretaker,getPrivacyPolicyByCaretaker,getFaqByCaretaker,
   addPatientMealByCaretaker,addPatientDietByCaretaker,getPatientDietByCaretaker,getPatientMealByCaretaker,
@@ -165,4 +170,11 @@ router.post("/change-app-language-by-caretaker", verifyAccessToken, upload.none(
 
 router.post("/add-patient-carenotes-by-caretaker/:patientId", verifyAccessToken, upload.none(), addPatientCareNotesByCaretaker);
 router.get("/get-patient-carenotes-by-caretaker/:patientId", verifyAccessToken, getCareNotesByCaretaker);
+
+router.post("/edit-patient-blood-pressure-by-caretaker/:patientId", verifyAccessToken, upload.none(), editPatientBloodPressureByCaretaker);
+router.post("/edit-patient-body-temp-by-caretaker/:patientId", verifyAccessToken, upload.none(), editPatientBodyTempByCaretaker);
+router.post("/edit-patient-heart-rate-by-caretaker/:patientId", verifyAccessToken, upload.none(), editPatientHeartRateByCaretaker);
+router.post("/edit-patient-body-weight-by-caretaker/:patientId", verifyAccessToken, upload.none(), editPatientBodyWeightByCaretaker);
+router.post("/edit-patient-blood-sugar-by-caretaker/:patientId", verifyAccessToken, upload.none(), editPatientBloodSugarByCaretaker);
+  
 export default router;
