@@ -4824,6 +4824,8 @@ export const getAllCareNotesByCaretaker = async (req, res) => {
     const careNotes = await CareNote.find({
       patientId: { $in: caretaker.patients },
       status: "Active",
+      $or: [{ guardianId: { $exists: false } }, { guardianId: null }],
+
     })
       .populate("patientId", "fullName") // ✅ bring patient name
       .sort({ createdAt: -1 })
