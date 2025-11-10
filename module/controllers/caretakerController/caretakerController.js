@@ -234,13 +234,13 @@ export const getAllCaretakersByAdmin = async (req, res) => {
     const searchRegex = new RegExp(search.trim(), "i");
     const searchFilter = search.trim()
       ? {
-          status: { $ne: "Delete" },
-          $or: [
-            { fullName: { $regex: searchRegex } },
-            { mobileNumber: { $regex: searchRegex } },
-            { email: { $regex: searchRegex } },
-          ],
-        }
+        status: { $ne: "Delete" },
+        $or: [
+          { fullName: { $regex: searchRegex } },
+          { mobileNumber: { $regex: searchRegex } },
+          { email: { $regex: searchRegex } },
+        ],
+      }
       : { status: { $ne: "Delete" } };
     // :white_tick: Fetch caretakers with populated references
     const caretakers = await Caretaker.find(searchFilter)
@@ -372,7 +372,7 @@ export const verifyCaretakerOTP = async (req, res) => {
         result: {},
       });
     }
-//  console.log("Caretaker OTP object:", caretaker.otp);
+    //  console.log("Caretaker OTP object:", caretaker.otp);
     if (!caretaker.otp.otpValue) {
       return res.status(400).json({
         statusCode: 400,
@@ -872,7 +872,7 @@ export const getAllMedicationsByCaretaker = async (req, res) => {
 
     // Optional: Step 4 — Verify caretaker is authorized for this patient
     // (Uncomment if you maintain caretaker–patient mapping)
-    const isLinked = await Patient.findOne({ caretakerId: token._id, _id:patient_id });
+    const isLinked = await Patient.findOne({ caretakerId: token._id, _id: patient_id });
     if (!isLinked) {
       return res.status(403).json({
         statusCode: 403,
@@ -1465,14 +1465,14 @@ export const getPatientByCaretaker = async (req, res) => {
         (p) => p.toString() === patient_id.toString()
       );
 
-    if (!isAssigned) {
-      return res.status(403).json({
-        statusCode: 403,
-        success: false,
-        message: "This patient is not assigned to you",
-        result: {},
-      });
-    }
+    // if (!isAssigned) {
+    //   return res.status(403).json({
+    //     statusCode: 403,
+    //     success: false,
+    //     message: "This patient is not assigned to you",
+    //     result: {},
+    //   });
+    // }
 
     // 🧩 Step 4: Fetch patient’s core details
     const patient = await Patient.findOne({
@@ -1480,7 +1480,7 @@ export const getPatientByCaretaker = async (req, res) => {
       status: "Active",
     })
       .select(
-        "_id fullName age gender mobileNumber email profilePhoto condition diagnosis ongoingTreatment doctorId department emergencyContact dnrForm createdAt updatedAt"
+        "_id fullName age gender mobileNumber email profilePhoto condition department createdAt updatedAt"
       )
       .lean();
 
@@ -1493,73 +1493,59 @@ export const getPatientByCaretaker = async (req, res) => {
       });
     }
 
-    // 🧩 Step 5: Fetch related doctor information
-    let doctorInfo = null;
-    if (patient.doctorId) {
-      const doctor = await HealthcareProvider.findOne({
-        _id: patient.doctorId,
-        status: "Active",
-      }).select("_id fullName department specialization contact email");
-      if (doctor) doctorInfo = doctor;
-    }
+     let doctorInfo = null;
+    const doctor = await HealthcareProvider.findOne({
+      patient_id: patient._id,
+      status: "Active",
+    }).select("_id doctorName speciality specialization phone email hospitalPhone hospitalOrClinic");
+
+    if (doctor) doctorInfo = doctor;
+
 
     // 🧩 Step 6: Fetch emergency contact details (if any)
-    const emergency = await PersonalContact.findOne({
-      patient_id: patient_id,
-      status: "Active",
-      // isEmergencyContact: true,
-    }).select("doctorName hospitalOrClinic phone speciality");
+   const emergency = await PersonalContact.findOne({ 
+  patient_id: patient_id,
+  status: "Active",
+}).select("contactName phoneNo relationship");
 
-    // 🧩 Step 7: Construct structured response
-    const result = {
-      personalInfo: {
-        name: patient.fullName,
-        age: patient.age,
-        gender: patient.gender,
-        mobileNumber: patient.mobileNumber,
-        email: patient.email,
-        profilePhoto: patient.profilePhoto || null,
-      },
-      medicalInfo: {
-        condition: patient.condition || "Not specified",
-        // diagnosis: patient.diagnosis || "Not provided",
-        // ongoingTreatment: patient.ongoingTreatment || "Not provided",
-      },
-      doctorInfo: doctorInfo
-        ? {
-            doctorId: doctorInfo._id,
-            name: doctorInfo.fullName,
-            department:
-              doctorInfo.department || patient.department || "Not specified",
-            specialization: doctorInfo.specialization || "General Medicine",
-            contact: doctorInfo.contact || null,
-            email: doctorInfo.email || null,
-          }
-        : {
-            doctorId: null,
-            name: "Not assigned",
-            department: patient.department || "Not specified",
-          },
-      emergencyDetails: {
-        contact: emergency
+    return res.status(200).json({
+  success: true,
+  message: "Patient fetched successfully",
+  data: {
+    patientDetails: {
+      name: patient.fullName,
+      gender: patient.gender,
+      dob: patient.dob,
+      bloodGroup: patient.bloodGroup,
+    },
+ doctorInfo: doctorInfo
           ? {
-              name: emergency.name,
-              relation: emergency.relation,
-              phone: emergency.phone,
-              address: emergency.address,
+              id: doctorInfo._id,
+              name: doctorInfo.doctorName,
+              department: doctorInfo.department,
+              specialization: doctorInfo.speciality,
+              contact: doctorInfo.phone,
+              hostname: doctorInfo.hospitalOrClinic,
+              hospitalPhone: doctorInfo.hospitalPhone,
+              email: doctorInfo.email,
             }
           : null,
-        dnrForm: patient.dnrForm || null,
-      },
-    };
+          
+    emergencyDetails: {
+      contact: emergency
+        ? {
+            name: emergency.contactName,
+            phone: emergency.phoneNo,
+            relation: emergency.relationship,
+          }
+        : null,
+      dnrForm: patient.dnrForm || null,
+    },
+  },
+});
 
     // 🧩 Step 8: Return response
-    return res.status(200).json({
-      statusCode: 200,
-      success: true,
-      message: "Patient details fetched successfully",
-      result,
-    });
+  
   } catch (error) {
     return res.status(500).json({
       statusCode: 500,
@@ -1912,7 +1898,7 @@ export const addMedicationByCaretaker = async (req, res) => {
     }
 
     // --- Step 1: Verify Caretaker ---
-    const caretaker = await Caretaker.findOne({ _id:token._id, status: "Active" });
+    const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
     if (!caretaker) {
       return res.send({
         statusCode: 401,
@@ -1924,7 +1910,7 @@ export const addMedicationByCaretaker = async (req, res) => {
 
     // --- Step 2: Verify Patient belongs to this Caretaker ---
     const patient = await Patient.findOne({
-      _id:patientId,
+      _id: patientId,
       caretakerId: caretaker._id,
       status: "Active",
     });
@@ -1992,13 +1978,13 @@ export const getAllMealsByCaretakerForPatient = async (req, res) => {
     }
 
     // --- Step 2: Validate patient belongs to caretaker ---
-   const patient = await Patient.findOne({
-  _id: patientId,
-  caretakerId: new mongoose.Types.ObjectId(caretaker._id),
-  status: "Active",
-});
-console.log("Caretaker ID:", caretaker._id);
-console.log("Patient ID:", patientId);
+    const patient = await Patient.findOne({
+      _id: patientId,
+      caretakerId: new mongoose.Types.ObjectId(caretaker._id),
+      status: "Active",
+    });
+    console.log("Caretaker ID:", caretaker._id);
+    console.log("Patient ID:", patientId);
 
     if (!patient) {
       return res.send({
@@ -2407,7 +2393,7 @@ export const getPatientBloodPressureByCaretaker = async (req, res) => {
   try {
     const token = req.token;
     const { patientId } = req.params;
-    const { filter, week, from, to } = req.query; 
+    const { filter, week, from, to } = req.query;
     // filter = 'weekly' for last 7 days
     // week = 'YYYY-MM-DD' (specific week start date)
     // from & to = 'YYYY-MM-DD' (custom date range)
@@ -3440,8 +3426,8 @@ export const addPatientHeartRateByCaretaker = async (req, res) => {
 export const addPatientBodyTempByCaretaker = async (req, res) => {
   try {
     const token = req.token;
-    const {  day, time, amTemp, pmTemp, notes, insulinDose } = req.body;
-    const {patientId}=req.params
+    const { day, time, amTemp, pmTemp, notes, insulinDose } = req.body;
+    const { patientId } = req.params
     // --- Caretaker Validation ---
     const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
     if (!caretaker) {
@@ -4016,10 +4002,10 @@ export const getTermsAndConditionsByCaretaker = async (req, res) => {
 
     // Step 1: Validate Caretaker
     const caretaker = await Caretaker.findOne({
-      _id:token._id,
+      _id: token._id,
       status: "Active",
     }).select("_id fullName mobileNumber status");
-   console.log("Caretaker:", caretaker);
+    console.log("Caretaker:", caretaker);
 
     if (!caretaker) {
       return res.status(401).json({
@@ -4141,6 +4127,7 @@ export const getFaqByCaretaker = async (req, res) => {
 };
 import fs from "fs";
 import path from "path";
+import { hostname } from "os";
 
 export const editCaretakerProfile = async (req, res) => {
   try {
@@ -4714,13 +4701,13 @@ export const getCareNotesByCaretaker = async (req, res) => {
       note: note.note,
       patient: note.patientId
         ? {
-            patient_id: note.patientId._id,
-            name: note.patientId.fullName,
-            age: note.patientId.age,
-            gender: note.patientId.gender,
-            profilePhoto: note.patientId.profilePhoto || null,
-            condition: note.patientId.condition || "Not specified",
-          }
+          patient_id: note.patientId._id,
+          name: note.patientId.fullName,
+          age: note.patientId.age,
+          gender: note.patientId.gender,
+          profilePhoto: note.patientId.profilePhoto || null,
+          condition: note.patientId.condition || "Not specified",
+        }
         : null,
     }));
 
