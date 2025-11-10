@@ -2340,53 +2340,134 @@ export const getAllMedicationRemindersByCaretakerForPatient = async (req, res) =
 };
 
 // -------------------- GET BLOOD PRESSURE BY CARETAKER --------------------
+// export const getPatientBloodPressureByCaretaker = async (req, res) => {
+//   try {
+//     const token = req.token; // caretaker token
+//     const { patientId } = req.params;
+
+//     // Validate caretaker
+//     const caretaker = await Caretaker.findOne({
+//       _id: token._id,
+//       status: "Active",
+//     });
+//     if (!caretaker) {
+//       return res.status(401).json({
+//         success: false,
+//         message: "Invalid or inactive caretaker",
+//       });
+//     }
+
+//     // Validate patient
+//     const patient = await Patient.findOne({
+//       _id: patientId,
+//       status: "Active",
+//     });
+//     if (!patient) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Patient not found or inactive",
+//       });
+//     }
+
+//     const record = await PatientRecord.find({
+//       patient_id:patientId,
+//     })
+//       .select("bloodPressure createdAt")
+//       .sort({ createdAt: -1 });
+// console.log("Fetched Records:", record);
+// console.log("bloodPressure", record.length > 0 ? record[0].bloodPressure : null);
+//     if (!record || !record.length || !record[0].bloodPressure) {
+//       return res.json({
+//         success: true,
+//         message: "No blood pressure record found",
+//         result: {},
+//       });
+//     }
+
+//     return res.json({
+//       success: true,
+//       message: "Blood Pressure fetched successfully",
+//       result: record.map((r) => ({
+//         ...r.bloodPressure,
+//         createdAt: r.createdAt,
+//       })),
+//     });
+//   } catch (err) {
+//     console.error("Error in getPatientBloodPressureByCaretaker:", err);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error",
+//       error: err.message,
+//     });
+//   }
+// };
+
+// -------------------- GET BLOOD PRESSURE BY CARETAKER --------------------
 export const getPatientBloodPressureByCaretaker = async (req, res) => {
   try {
-    const token = req.token; // caretaker token
+    const token = req.token;
     const { patientId } = req.params;
+    const { filter, week, from, to } = req.query; 
+    // filter = 'weekly' for last 7 days
+    // week = 'YYYY-MM-DD' (specific week start date)
+    // from & to = 'YYYY-MM-DD' (custom date range)
 
-    // Validate caretaker
-    const caretaker = await Caretaker.findOne({
-      _id: token._id,
-      status: "Active",
-    });
-    if (!caretaker) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid or inactive caretaker",
-      });
+    // 🧩 Validate caretaker
+    const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
+    if (!caretaker)
+      return res.status(401).json({ success: false, message: "Invalid or inactive caretaker" });
+
+    // 🧩 Validate patient
+    const patient = await Patient.findOne({ _id: patientId, status: "Active" });
+    if (!patient)
+      return res.status(404).json({ success: false, message: "Patient not found or inactive" });
+
+    // 🧩 Build dynamic date filter
+    let dateFilter = {};
+
+    // Case 1: Weekly (last 7 days)
+    if (filter === "weekly") {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      dateFilter = { createdAt: { $gte: sevenDaysAgo } };
     }
 
-    // Validate patient
-    const patient = await Patient.findOne({
-      _id: patientId,
-      status: "Active",
-    });
-    if (!patient) {
-      return res.status(404).json({
-        success: false,
-        message: "Patient not found or inactive",
-      });
+    // Case 2: Specific week (week param)
+    else if (week) {
+      const startOfWeek = new Date(week);
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6); // include next 6 days
+      dateFilter = { createdAt: { $gte: startOfWeek, $lte: endOfWeek } };
     }
 
+    // Case 3: Custom date range
+    else if (from && to) {
+      const fromDate = new Date(from);
+      const toDate = new Date(to);
+      toDate.setHours(23, 59, 59, 999); // include full day
+      dateFilter = { createdAt: { $gte: fromDate, $lte: toDate } };
+    }
+
+    // 🧩 Fetch records
     const record = await PatientRecord.find({
-      patient_id:patientId,
+      patient_id: patientId,
+      ...dateFilter,
     })
       .select("bloodPressure createdAt")
       .sort({ createdAt: -1 });
-console.log("Fetched Records:", record);
-console.log("bloodPressure", record.length > 0 ? record[0].bloodPressure : null);
+
     if (!record || !record.length || !record[0].bloodPressure) {
       return res.json({
         success: true,
-        message: "No blood pressure record found",
-        result: {},
+        message: "No blood pressure record found for given date range",
+        result: [],
       });
     }
 
     return res.json({
       success: true,
       message: "Blood Pressure fetched successfully",
+      filterApplied: dateFilter,
       result: record.map((r) => ({
         ...r.bloodPressure,
         createdAt: r.createdAt,
@@ -2728,6 +2809,7 @@ export const getPatientPrescriptionByCaretaker = async (req, res) => {
     });
   }
 };
+
 const getDateRange = (date = new Date()) => {
   const start = new Date(date.setHours(0, 0, 0, 0));
   const end = new Date(date.setHours(23, 59, 59, 999));
