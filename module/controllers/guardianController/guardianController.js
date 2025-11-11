@@ -520,7 +520,9 @@ export const verifyGuardianOTP = async (req, res) => {
 
     // OTP clear after successful verification
     guardian.otp = {};
-    guardian.status = "Active"; // Status change to Active after OTP verification
+    guardian.status = "Active";
+    guardian.accessToken = accessToken;
+    guardian.refreshToken = refreshToken;
     await guardian.save();
 
     return res.status(200).json({
@@ -790,6 +792,145 @@ export const editGuardianProfile = async (req, res) => {
 //   }
 // };
 
+// export const addPatient = async (req, res) => {
+//   try {
+//     let token = req.token; // token se guardian identify hoga
+//     const { fullName, age, diseaseCondition, mobileNumber, gender, relation } = req.body;
+
+//     // --- Validation ---
+//     if (!fullName) {
+//       return res.send({
+//         statusCode: 400,
+//         success: false,
+//         message: "Full name is required",
+//         result: {},
+//       });
+//     }
+
+//     if (!age) {
+//       return res.send({
+//         statusCode: 400,
+//         success: false,
+//         message: "Age is required",
+//         result: {},
+//       });
+//     }
+
+//     if (!mobileNumber) {
+//       return res.send({
+//         statusCode: 400,
+//         success: false,
+//         message: "Mobile number is required",
+//         result: {},
+//       });
+//     }
+
+//     if (!gender) {
+//       return res.send({
+//         statusCode: 400,
+//         success: false,
+//         message: "Gender is required",
+//         result: {},
+//       });
+//     }
+
+//     if (!relation) {
+//       return res.send({
+//         statusCode: 400,
+//         success: false,
+//         message: "Relation is required",
+//         result: {},
+//       });
+//     }
+
+//     // Validate Guardian
+//     const guardian = await Guardian.findOne({ _id: token._id, status: "Active" });
+//     if (!guardian) {
+//       return res.send({
+//         statusCode: 404,
+//         success: false,
+//         message: "Guardian not found or inactive",
+//         result: {},
+//       });
+//     }
+
+//     // Check if Patient already exists with same mobile under same guardian
+//     const existingPatient = await Patient.findOne({
+//       guardianId: guardian._id,
+//       mobileNumber: mobileNumber.trim(),
+//     });
+
+//     if (existingPatient) {
+//       // If patient exists and status is Pending → resend OTP
+//       if (existingPatient.status === "Pending") {
+//     const { otpValue, otpExpiry } = genrateOTP();
+//         existingPatient.otp = { otpValue, otpExpiry };
+//         await existingPatient.save();
+//         return res.send({
+//           statusCode: 200,
+//           success: true,
+//           message: "OTP resent successfully",
+//           result: { mobileNumber: existingPatient.mobileNumber, otpValue, otpExpiry },
+//         });
+//       }
+
+//       // If already Active → cannot add again
+//       if (existingPatient.status === "Active") {
+//         return res.send({
+//           statusCode: 409,
+//           success: false,
+//           message: "Patient with this mobile number already exists",
+//           result: existingPatient,
+//         });
+//       }
+//     }
+
+//     // Handle file upload
+//     let filePath = "";
+//     if (req.file) {
+//       filePath = `/uploads/patients/${req.file.filename}`;
+//     }
+
+//     // Generate OTP
+//     const { otpValue, otpExpiry } = genrateOTP();
+
+//     // Create Patient (Pending until OTP verified)
+//     const newPatient = new Patient({
+//       guardianId: guardian._id,
+//       fullName: fullName.trim(),
+//       age,
+//       mobileNumber: mobileNumber.trim(),
+//       diseaseCondition: diseaseCondition?.trim() || "",
+//       filePath,
+//       gender,
+//       relation,
+//       status: "Pending",
+//       otp: { otpValue, otpExpiry },
+//     });
+
+//     // ⚠️ Tokens NOT generated at this stage
+//     await newPatient.save();
+
+//     guardian.patients = guardian.patients || [];
+//     guardian.patients.push(newPatient._id);
+//     await guardian.save();
+
+//     return res.send({
+//       statusCode: 200,
+//       success: true,
+//       message: "OTP sent successfully",
+//       result: { mobileNumber, otpValue, otpExpiry },
+//     });
+//   } catch (error) {
+//     return res.send({
+//       statusCode: 500,
+//       success: false,
+//       message: error.message + " ERROR in addPatient API",
+//       result: {},
+//     });
+//   }
+// };
+//updated add patient 
 export const addPatient = async (req, res) => {
   try {
     let token = req.token; // token se guardian identify hoga
@@ -841,7 +982,7 @@ export const addPatient = async (req, res) => {
       });
     }
 
-    // Validate Guardian
+    // --- Validate Guardian ---
     const guardian = await Guardian.findOne({ _id: token._id, status: "Active" });
     if (!guardian) {
       return res.send({
@@ -852,7 +993,7 @@ export const addPatient = async (req, res) => {
       });
     }
 
-    // Check if Patient already exists with same mobile under same guardian
+    // --- Check if Patient already exists with same mobile under same guardian ---
     const existingPatient = await Patient.findOne({
       guardianId: guardian._id,
       mobileNumber: mobileNumber.trim(),
@@ -861,14 +1002,19 @@ export const addPatient = async (req, res) => {
     if (existingPatient) {
       // If patient exists and status is Pending → resend OTP
       if (existingPatient.status === "Pending") {
-    const { otpValue, otpExpiry } = genrateOTP();
+        const { otpValue, otpExpiry } = genrateOTP();
         existingPatient.otp = { otpValue, otpExpiry };
         await existingPatient.save();
+
         return res.send({
           statusCode: 200,
           success: true,
           message: "OTP resent successfully",
-          result: { mobileNumber: existingPatient.mobileNumber, otpValue, otpExpiry },
+          result: {
+            mobileNumber: existingPatient.mobileNumber,
+            otpValue,
+            otpExpiry,
+          },
         });
       }
 
@@ -883,32 +1029,32 @@ export const addPatient = async (req, res) => {
       }
     }
 
-    // Handle file upload
-    let filePath = "";
+    // --- Handle DNR Form upload ---
+    let dnrForm = "";
     if (req.file) {
-      filePath = `/uploads/patients/${req.file.filename}`;
+      dnrForm = `/uploads/patients/${req.file.filename}`; // actual uploaded file path
     }
 
-    // Generate OTP
+    // --- Generate OTP ---
     const { otpValue, otpExpiry } = genrateOTP();
 
-    // Create Patient (Pending until OTP verified)
+    // --- Create Patient (Pending until OTP verified) ---
     const newPatient = new Patient({
       guardianId: guardian._id,
       fullName: fullName.trim(),
       age,
       mobileNumber: mobileNumber.trim(),
       diseaseCondition: diseaseCondition?.trim() || "",
-      filePath,
       gender,
       relation,
+      dnrForm, // ⬅️ DNR Form file path added here
       status: "Pending",
       otp: { otpValue, otpExpiry },
     });
 
-    // ⚠️ Tokens NOT generated at this stage
     await newPatient.save();
 
+    // --- Update Guardian’s patient list ---
     guardian.patients = guardian.patients || [];
     guardian.patients.push(newPatient._id);
     await guardian.save();
@@ -917,7 +1063,12 @@ export const addPatient = async (req, res) => {
       statusCode: 200,
       success: true,
       message: "OTP sent successfully",
-      result: { mobileNumber, otpValue, otpExpiry },
+      result: {
+        mobileNumber,
+        otpValue,
+        otpExpiry,
+        dnrForm,
+      },
     });
   } catch (error) {
     return res.send({
