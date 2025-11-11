@@ -1144,7 +1144,7 @@ export const getAllPatientsOfCaretaker = async (req, res) => {
           gender: patient.gender,
           mobileNumber: patient.mobileNumber,
           email: patient.email,
-          condition: patient.condition || "Not specified",
+          condition: patient.diseaseCondition || "Not specified",
           profilePhoto: patient.profilePhoto || null,
           personalContact: contact || null,
         };
