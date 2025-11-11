@@ -1116,7 +1116,7 @@ export const getAllPatientsOfCaretaker = async (req, res) => {
     // 🧩 Step 3: Fetch patients with selected details
     const patients = await Patient.find(filter)
       .select(
-        "_id fullName age gender mobileNumber email profilePhoto status condition"
+        "_id fullName age gender mobileNumber email profilePhoto status diseaseCondition"
       )
       .sort({ createdAt: -1 });
 
