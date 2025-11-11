@@ -1146,7 +1146,7 @@ export const getAllPatientsOfCaretaker = async (req, res) => {
           email: patient.email,
           condition: patient.diseaseCondition || "Not specified",
           profilePhoto: patient.profilePhoto || null,
-          personalContact: contact || null,
+          personalContact: patient.mobileNumber || null,
         };
       })
     );
