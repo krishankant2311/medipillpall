@@ -27,7 +27,7 @@ router.post("/edit-guardian-profile", verifyAccessToken, upload.single('profileP
 router.get("/getall-patients-byguardian", verifyAccessToken, getallPatientsbyGuardian);
 
 router.get("/get-patient/:id", verifyAccessToken, getPatient);
-router.post("/add-patient-byguardian", verifyAccessToken, upload.single('profileImage'), addPatient);
+router.post("/add-patient-byguardian", verifyAccessToken, upload.single('dnrForm'), addPatient);
 router.get("/getall-carenotes-byguardian", verifyAccessToken, getAllCareNotesByGuardian);
 
 router.get("/getall-meds-byguardian", verifyAccessToken, getAllMedsByGuardian);
