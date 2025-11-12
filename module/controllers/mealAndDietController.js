@@ -106,3 +106,84 @@ const {patientId} = req.params;
     });
   }
 };
+
+
+// 🧾 Get All Meal and Diet (Caretaker)
+export const getAllMealAndDiet = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+    const { patientId } = req.query;
+
+    // 🧩 caretaker validate karo
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active"
+    });
+
+    if (!caretaker) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid caretaker"
+      });
+    }
+
+    // 🧩 Query prepare karo
+    const query = {
+      caretakerId: caretaker._id
+    };
+
+    if (patientId) {
+      query.patientId = patientId;
+    }
+
+    // 🌐 Base URL (for exact file path)
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+    // 🧩 Data fetch karo
+    const records = await MealAndDiet.find(query)
+      .populate("patientId", "fullName age gender")
+      .sort({ createdAt: -1 });
+
+    // 🧩 File URLs fix karo (ensure exact path)
+    const result = records.map((item) => ({
+      _id: item._id,
+      caretakerId: item.caretakerId,
+      patientId: item.patientId,
+      type: item.type,
+      mealType: item.mealType,
+      scheduleTime: item.scheduleTime,
+      foodType: item.foodType,
+      portionSize: item.portionSize,
+      specialDietFollowed: item.specialDietFollowed,
+      remarks: item.remarks,
+      planName: item.planName,
+      startDate: item.startDate,
+      endDate: item.endDate,
+      instructions: item.instructions,
+      dailyMeals: item.dailyMeals,
+      mealPhoto: item.mealPhoto
+        ? item.mealPhoto.startsWith("http")
+          ? item.mealPhoto
+          : `${baseUrl}${item.mealPhoto}`
+        : "",
+      attachedDoc: item.attachedDoc
+        ? item.attachedDoc.startsWith("http")
+          ? item.attachedDoc
+          : `${baseUrl}${item.attachedDoc}`
+        : "",
+      createdAt: item.createdAt
+    }));
+
+    return res.status(200).json({
+      success: true,
+      message: "Meal and Diet records fetched successfully",
+      result
+    });
+  } catch (error) {
+    console.error("Get Meal/Diet Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
