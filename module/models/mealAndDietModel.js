@@ -18,8 +18,8 @@ const mealAndDietSchema = new mongoose.Schema({
   type: {
     type: String,
     enum: ["Meal", "Diet"],
-    required: true,
-    default: ""
+    // required: true,
+    default: "Meal"
   },
 
   // -------------------------------
@@ -57,10 +57,10 @@ const mealAndDietSchema = new mongoose.Schema({
     default: ""
   },
 
-  mealPhoto: {
-    type: String,
-    default: ""
-  },
+ mealPhoto: {
+  type: [String],
+  default: []
+},
 
   status: {
     type: String,

@@ -6,7 +6,7 @@ import upload from "../../config/multer.js"; // 🔹 yahi tera existing multer i
 const router = express.Router();
 
 // 🥗 Route: Add Meal / Diet by Caretaker
-router.post("/addMealAndDiet/:patientId", verifyAccessToken,upload.single("file"), addMealAndDiet);
+router.post("/addMealAndDiet/:patientId", verifyAccessToken,upload.array("mealPhoto", 10), addMealAndDiet);
 // 🥗 Route: Get All Meals and Diets by Caretaker for a Patient
 router.get("/getAllMealAndDiet/:patientId", verifyAccessToken, getAllMealAndDiet);
 
