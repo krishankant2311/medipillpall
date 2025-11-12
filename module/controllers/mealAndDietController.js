@@ -486,3 +486,49 @@ export const getAllMealAndDiet = async (req, res) => {
 //     });
 //   }
 // };
+
+
+export const deleteMealAndDiet = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+    const { id } = req.params; // Meal/Diet record ID
+
+    // 🧩 Validate caretaker
+    const caretaker = await Caretaker.findOne({ _id: token._id, status: "Active" });
+    if (!caretaker) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid caretaker",
+      });
+    }
+
+    // 🧩 Find the record
+    const record = await MealAndDiet.findOne({
+      _id: id,
+      caretakerId: caretaker._id,
+      status: { $ne: "Deleted" },
+    });
+
+    if (!record) {
+      return res.status(404).json({
+        success: false,
+        message: "Meal or Diet record not found or already deleted",
+      });
+    }
+
+    // 🧩 Soft delete (mark as Deleted)
+    record.status = "Deleted";
+    await record.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Meal or Diet record deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete Meal/Diet Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
