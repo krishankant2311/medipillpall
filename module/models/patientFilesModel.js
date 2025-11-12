@@ -13,23 +13,24 @@ const patientFileSchema = new mongoose.Schema(
       ref: "Patient",
       required: true,
     },
-    file: {
+    documentType: {
       type: String,
-      default: "",
-      required: true,
+      enum: ["Lab Reports", "Prescription", "DNR Form", "Other"],
+      default: "Other",
     },
-    fileType: {
+    fileUrl: {
       type: String,
       default: "",
-    //   required: true,
     },
-    description: {
-      type: String,
-      default: "",
+    fileName: String,
+    fileSize: String,
+    uploadedAt: {
+      type: Date,
+      default: Date.now,
     },
     status: {
       type: String,
-        enum: ["Active", "Deleted"],        
+      enum: ["Active", "Deleted"],
       default: "Active",
     },
   },

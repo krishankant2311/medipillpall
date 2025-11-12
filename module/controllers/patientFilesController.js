@@ -302,3 +302,206 @@ export const deletePatientFileByCaretaker = async (req, res) => {
   }
 };
 
+
+// export const uploadPatientFile = async (req, res) => {
+//   try {
+//     const token = req.token; // from verifyToken middleware
+//     const { documentType } = req.body;
+//     const { patientId } = req.params;
+//     // --- Validation ---
+//     if (!patientId || !documentType) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Patient ID and document type are required",
+//       });
+//     }
+
+//     if (!req.file) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Please upload a file",
+//       });
+//     }
+
+//     // --- File Path ---
+//     const fileUrl = `/uploads/patientFiles/${req.file.filename}`;
+//     const fullFileURL = `${req.protocol}://${req.get("host")}${fileUrl}`;
+
+//     // --- Prepare Save Data ---
+//     const fileData = {
+//       patientId,
+//       documentType,
+//       fileUrl,
+//       fileName: req.file.originalname,
+//       fileSize: (req.file.size / (1024 * 1024)).toFixed(2) + " MB",
+//       status: "Active",
+//       uploadedAt: new Date(),
+//     };
+//     console.log("Incoming Body:", req.body);
+
+//     if (token.role === "Caretaker") fileData.caretakerId = token._id;
+//     if (token.role === "Guardian") fileData.guardianId = token._id;
+
+//     // --- Save in MongoDB ---
+//     const file = await PatientFile.create(fileData);
+
+//     // --- Add Full File URL for response ---
+//     file._doc.fullFileURL = fullFileURL;
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "File uploaded successfully",
+//       result: file,
+//     });
+//   } catch (err) {
+//     console.error("❌ uploadPatientFile Error:", err);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Server error",
+//       error: err.message,
+//     });
+//   }
+// };
+
+
+export const uploadPatientFile = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+    const {  documentType } = req.body;
+    const { patientId } = req.params;
+    // --- Validation ---
+    if (!patientId || !documentType) {
+      return res.status(400).json({
+        success: false,
+        message: "Patient ID and document type are required",
+      });
+    }
+
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active", 
+    });
+    if (!caretaker) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid or inactive caretaker",
+      });
+    }
+
+    const patient = await Patient.findOne({
+      _id: patientId,
+      status: "Active", 
+    });
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient not found or inactive",
+      });
+    }
+    
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Please upload a file",
+      });
+    }
+
+    // --- File Path ---
+    const fileUrl = `/uploads/patientFiles/${req.file.filename}`;
+    const fullFileURL = `${req.protocol}://${req.get("host")}${fileUrl}`;
+
+    // --- Save in MongoDB ---
+    const file = await PatientFile.create({
+      caretakerId: token._id,
+      patientId,
+      documentType,
+      fileUrl,
+      fileName: req.file.originalname,
+      fileSize: (req.file.size / (1024 * 1024)).toFixed(2) + " MB",
+      status: "Active",
+      uploadedAt: new Date(),
+    });
+
+    // --- Add Full URL in Response ---
+    file._doc.fullFileURL = fullFileURL;
+
+    return res.status(200).json({
+      success: true,
+      message: "File uploaded successfully",
+      result: file,
+    });
+  } catch (err) {
+    console.error("❌ uploadPatientFile Error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
+
+// export const uploadPatientFile = async (req, res) => {
+//   try {
+//     const token = req.token; // guardian/caretaker identified from token
+//     const { patientId, documentType } = req.body;
+
+//     if (!req.file) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Please upload a file",
+//       });
+//     }
+
+//     const fileUrl = `/uploads/patientFiles/${req.file.filename}`;
+
+//     const file = await PatientFile.create({
+//       patientId,
+//       uploadedBy: token._id,
+//       documentType,
+//       fileUrl,
+//       fileName: req.file.originalname,
+//       fileSize: (req.file.size / (1024 * 1024)).toFixed(2) + " MB",
+//     });
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "File uploaded successfully",
+//       result: file,
+//     });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({
+//       success: false,
+//       message: "Server error",
+//       error: err.message,
+//     });
+//   }
+// };
+
+
+export const getUploadedFiles = async (req, res) => {
+  try {
+    const { patientId } = req.query;
+
+    const filter = {};
+    if (patientId) filter.patientId = patientId;
+
+    const files = await PatientFile.find(filter)
+      .populate("patientId", "fullName")
+      .sort({ uploadedAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "Files fetched successfully",
+      result: files,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
