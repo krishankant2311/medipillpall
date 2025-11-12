@@ -364,41 +364,14 @@ export const deletePatientFileByCaretaker = async (req, res) => {
 // };
 
 
+
 export const uploadPatientFile = async (req, res) => {
   try {
-    const token = req.token; // caretaker token
+    const token = req.token; // caretaker identified from token
     const {  documentType } = req.body;
+
     const { patientId } = req.params;
-    // --- Validation ---
-    if (!patientId || !documentType) {
-      return res.status(400).json({
-        success: false,
-        message: "Patient ID and document type are required",
-      });
-    }
-
-    const caretaker = await Caretaker.findOne({
-      _id: token._id,
-      status: "Active", 
-    });
-    if (!caretaker) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid or inactive caretaker",
-      });
-    }
-
-    const patient = await Patient.findOne({
-      _id: patientId,
-      status: "Active", 
-    });
-    if (!patient) {
-      return res.status(404).json({
-        success: false,
-        message: "Patient not found or inactive",
-      });
-    }
-
+    // 🧩 Validation
     if (!req.file) {
       return res.status(400).json({
         success: false,
@@ -406,24 +379,21 @@ export const uploadPatientFile = async (req, res) => {
       });
     }
 
-    // --- File Path ---
-    const fileUrl = `/uploads/patientFiles/${req.file.filename}`;
-    const fullFileURL = `${req.protocol}://${req.get("host")}${fileUrl}`;
+    // 🧩 Build full URL for the uploaded file
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    const fileUrl = `${baseUrl}/uploads/patientFiles/${req.file.filename}`;
 
-    // --- Save in MongoDB ---
+    // 🧩 Save in DB (fileUrl = full URL)
     const file = await PatientFile.create({
       caretakerId: token._id,
       patientId,
       documentType,
-      fileUrl,
+      fileUrl, // ✅ full URL stored here
       fileName: req.file.originalname,
       fileSize: (req.file.size / (1024 * 1024)).toFixed(2) + " MB",
-      status: "Active",
       uploadedAt: new Date(),
+      status: "Active",
     });
-
-    // --- Add Full URL in Response ---
-    file._doc.fullFileURL = fullFileURL;
 
     return res.status(200).json({
       success: true,
@@ -431,7 +401,7 @@ export const uploadPatientFile = async (req, res) => {
       result: file,
     });
   } catch (err) {
-    console.error("❌ uploadPatientFile Error:", err);
+    console.error("❌ Upload error:", err);
     res.status(500).json({
       success: false,
       message: "Server error",
@@ -439,6 +409,9 @@ export const uploadPatientFile = async (req, res) => {
     });
   }
 };
+
+
+
 
 
 // export const uploadPatientFile = async (req, res) => {
