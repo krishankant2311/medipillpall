@@ -5,6 +5,10 @@ import {
   getPatientFileByCaretaker,
   deletePatientFileByCaretaker,
   uploadPatientFile, getUploadedFiles,
+  getPatientFilesByCaretaker,
+  getAllPatientsWithFilesByCaretaker,
+  getAllFilesByCaretaker,
+  getAllPatientFiles,
 } from "../controllers/patientFilesController.js";
 import { verifyAccessToken } from "../../helpers/jwt.js";
 import upload from "../../config/multer.js"; // your multer file
@@ -25,5 +29,8 @@ router.post("/delete/:patientId/:fileId", verifyAccessToken, deletePatientFileBy
 
 router.post("/upload/:patientId", verifyAccessToken, upload.single("file"), uploadPatientFile);
 router.get("/uploads", verifyAccessToken, getUploadedFiles);
-
+router.get("/getPatient-FilesBy-Caretaker/:patientId", verifyAccessToken, getPatientFilesByCaretaker);
+router.get("/patients-with-files", verifyAccessToken, getAllPatientsWithFilesByCaretaker);
+router.get("/all-files", verifyAccessToken, getAllFilesByCaretaker);
+router.get("/all-patient-files", verifyAccessToken, getAllPatientFiles);
 export default router;

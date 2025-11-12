@@ -398,7 +398,7 @@ export const uploadPatientFile = async (req, res) => {
         message: "Patient not found or inactive",
       });
     }
-    
+
     if (!req.file) {
       return res.status(400).json({
         success: false,
@@ -502,6 +502,267 @@ export const getUploadedFiles = async (req, res) => {
       success: false,
       message: "Server error",
       error: err.message,
+    });
+  }
+};
+
+
+export const getPatientFilesByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker identified from token
+    const { patientId } = req.params;
+
+    // 🧩 Validate caretaker
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    }).select("_id fullName status");
+
+    if (!caretaker) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid or inactive caretaker token",
+      });
+    }
+
+    // 🧩 Fetch files for given patient
+    const files = await PatientFile.find({
+      patientId,
+      status: "Active",
+    })
+      .sort({ createdAt: -1 })
+      .select("documentType fileUrl fileName fileSize uploadedAt");
+
+    if (!files.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No files found for this patient",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Patient files fetched successfully",
+      result: files,
+    });
+  } catch (err) {
+    console.error("Error fetching patient files:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+export const getAllFilesByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker identified from token
+
+    // 🧩 Validate caretaker
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    }).select("_id fullName status");
+
+    if (!caretaker) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid or inactive caretaker token",
+      });
+    }
+
+    // 🧩 Get all files uploaded by this caretaker
+    const files = await PatientFile.find({
+      caretakerId: caretaker._id,
+      status: "Active",
+    })
+      .populate({
+        path: "patientId",
+        select: "_id fullName age gender diseaseCondition",
+      })
+      .sort({ createdAt: -1 })
+      .select(
+        "_id documentType fileUrl fileName fileSize uploadedAt createdAt updatedAt status patientId"
+      );
+
+    if (!files.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No files found for this caretaker",
+      });
+    }
+
+    // 🧩 Add full URL for file
+    const result = files.map((file) => ({
+      ...file._doc,
+      fullFileURL: `${req.protocol}://${req.get("host")}${file.fileUrl}`,
+    }));
+
+    return res.status(200).json({
+      success: true,
+      message: "All files uploaded by caretaker fetched successfully",
+      result,
+    });
+  } catch (err) {
+    console.error("Error fetching files by caretaker:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
+export const getAllPatientsWithFilesByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+
+    // 🧩 Step 1: Validate caretaker
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    }).select("_id fullName status");
+
+    if (!caretaker) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid or inactive caretaker token",
+      });
+    }
+
+    // 🧩 Step 2: Find all active patients linked to this caretaker
+    const patients = await Patient.find({
+      caretakerId: caretaker._id,
+      status: "Active",
+    }).select("_id fullName age gender diseaseCondition");
+
+    if (!patients.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No patients found for this caretaker",
+      });
+    }
+
+    // 🧩 Step 3: For each patient → fetch files from PatientFile model
+    const results = await Promise.all(
+      patients.map(async (patient) => {
+        const files = await PatientFile.find({
+          patientId: patient._id,
+          status: "Active",
+        })
+          .sort({ createdAt: -1 }).select(
+"documentType fileUrl fileName fileSize uploadedAt createdAt updatedAt status")
+        // Build full URL
+        const filesWithFullURL = files.map((f) => ({
+          ...f._doc,
+          fullFileURL: `${req.protocol}://${req.get("host")}${f.file}`,
+        }));
+
+        return {
+          ...patient._doc,
+          files: filesWithFullURL,
+        };
+      })
+    );
+
+    // 🧩 Step 4: Send response
+    return res.status(200).json({
+      success: true,
+      message: "Patients with files fetched successfully",
+      result: results,
+    });
+  } catch (err) {
+    console.error("Error fetching patients with files:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: err.message,
+    });
+  }
+};
+
+
+export const getAllPatientFiles = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+
+    // 🧩 Step 1: Validate caretaker
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    }).select("_id patients");
+
+    if (!caretaker) {
+      return res.status(401).json({
+        statusCode: 401,
+        success: false,
+        message: "Invalid or inactive caretaker",
+        result: {},
+      });
+    }
+
+    // 🧩 Step 2: If no patients assigned
+    if (!caretaker.patients || caretaker.patients.length === 0) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "No patients assigned to this caretaker",
+        result: [],
+      });
+    }
+
+    // 🧩 Step 3: Fetch all files uploaded by caretaker for assigned patients
+    const files = await PatientFile.find({
+      caretakerId: caretaker._id,
+      patientId: { $in: caretaker.patients },
+      status: "Active",
+    })
+      .populate("patientId", "fullName age gender diseaseCondition")
+      .sort({ createdAt: -1 })
+      .select(
+        "_id documentType fileUrl fileName fileSize uploadedAt createdAt updatedAt status patientId"
+      );
+
+    if (!files.length) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "No files found for your assigned patients",
+        result: [],
+      });
+    }
+
+    // 🧩 Step 4: Format clean response
+    const formattedFiles = files.map((file) => ({
+      _id: file._id,
+      patientId: file.patientId?._id,
+      patientName: file.patientId?.fullName || "Unknown",
+      age: file.patientId?.age || null,
+      gender: file.patientId?.gender || null,
+      diseaseCondition: file.patientId?.diseaseCondition || "",
+      documentType: file.documentType,
+      fileName: file.fileName,
+      fileSize: file.fileSize,
+      fileUrl: `${req.protocol}://${req.get("host")}${file.fileUrl}`,
+      uploadedAt: file.uploadedAt,
+      createdAt: file.createdAt,
+      updatedAt: file.updatedAt,
+      status: file.status,
+    }));
+
+    // 🧩 Step 5: Send response
+    return res.status(200).json({
+      statusCode: 200,
+      success: true,
+      message: "All files uploaded by caretaker fetched successfully",
+      result: formattedFiles,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in getAllPatientFilesByCaretaker controller",
+      result: {},
     });
   }
 };
