@@ -219,11 +219,91 @@ export const addMealAndDiet = async (req, res) => {
 
 
 // 🧾 Get All Meal and Diet (Caretaker)
+// export const getAllMealAndDiet = async (req, res) => {
+//   try {
+//     const token = req.token; // caretaker token
+//     const { patientId } = req.query;
+
+//     // 🧩 caretaker validate karo
+//     const caretaker = await Caretaker.findOne({
+//       _id: token._id,
+//       status: "Active"
+//     });
+
+//     if (!caretaker) {
+//       return res.status(401).json({
+//         success: false,
+//         message: "Invalid caretaker"
+//       });
+//     }
+
+//     // 🧩 Query prepare karo
+//     const query = {
+//       caretakerId: caretaker._id
+//     };
+
+//     if (patientId) {
+//       query.patientId = patientId;
+//     }
+
+//     // 🌐 Base URL (for exact file path)
+//     const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+//     // 🧩 Data fetch karo
+//     const records = await MealAndDiet.find(query)
+//       .populate("patientId", "fullName age gender")
+//       .sort({ createdAt: -1 });
+
+//     // 🧩 File URLs fix karo (ensure exact path)
+//     const result = records.map((item) => ({
+//       _id: item._id,
+//       caretakerId: item.caretakerId,
+//       patientId: item.patientId,
+//       type: item.type,
+//       mealType: item.mealType,
+//       scheduleTime: item.scheduleTime,
+//       foodType: item.foodType,
+//       portionSize: item.portionSize,
+//       specialDietFollowed: item.specialDietFollowed,
+//       remarks: item.remarks,
+//       planName: item.planName,
+//       startDate: item.startDate,
+//       endDate: item.endDate,
+//       instructions: item.instructions,
+//       dailyMeals: item.dailyMeals,
+//       mealPhoto: item.mealPhoto
+//         ? item.mealPhoto.startsWith("http")
+//           ? item.mealPhoto
+//           : `${baseUrl}${item.mealPhoto}`
+//         : "",
+//       attachedDoc: item.attachedDoc
+//         ? item.attachedDoc.startsWith("http")
+//           ? item.attachedDoc
+//           : `${baseUrl}${item.attachedDoc}`
+//         : "",
+//       createdAt: item.createdAt
+//     }));
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Meal and Diet records fetched successfully",
+//       result
+//     });
+//   } catch (error) {
+//     console.error("Get Meal/Diet Error:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: error.message
+//     });
+//   }
+// };
+
+
 export const getAllMealAndDiet = async (req, res) => {
   try {
     const token = req.token; // caretaker token
-    const { patientId } = req.query;
-
+    const {  date } = req.query; // 👈 date query me milega (YYYY-MM-DD)
+ const { patientId } = req.params;
     // 🧩 caretaker validate karo
     const caretaker = await Caretaker.findOne({
       _id: token._id,
@@ -238,12 +318,18 @@ export const getAllMealAndDiet = async (req, res) => {
     }
 
     // 🧩 Query prepare karo
-    const query = {
-      caretakerId: caretaker._id
-    };
+    const query = { caretakerId: caretaker._id };
+    if (patientId) query.patientId = patientId;
 
-    if (patientId) {
-      query.patientId = patientId;
+    // 🧩 Date filter (agar date diya gaya hai)
+    if (date) {
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      query.createdAt = { $gte: startOfDay, $lte: endOfDay };
     }
 
     // 🌐 Base URL (for exact file path)
@@ -254,35 +340,49 @@ export const getAllMealAndDiet = async (req, res) => {
       .populate("patientId", "fullName age gender")
       .sort({ createdAt: -1 });
 
-    // 🧩 File URLs fix karo (ensure exact path)
-    const result = records.map((item) => ({
-      _id: item._id,
-      caretakerId: item.caretakerId,
-      patientId: item.patientId,
-      type: item.type,
-      mealType: item.mealType,
-      scheduleTime: item.scheduleTime,
-      foodType: item.foodType,
-      portionSize: item.portionSize,
-      specialDietFollowed: item.specialDietFollowed,
-      remarks: item.remarks,
-      planName: item.planName,
-      startDate: item.startDate,
-      endDate: item.endDate,
-      instructions: item.instructions,
-      dailyMeals: item.dailyMeals,
-      mealPhoto: item.mealPhoto
-        ? item.mealPhoto.startsWith("http")
-          ? item.mealPhoto
-          : `${baseUrl}${item.mealPhoto}`
-        : "",
-      attachedDoc: item.attachedDoc
-        ? item.attachedDoc.startsWith("http")
-          ? item.attachedDoc
-          : `${baseUrl}${item.attachedDoc}`
-        : "",
-      createdAt: item.createdAt
-    }));
+    // 🧩 File URLs fix karo (array-safe version)
+    const result = records.map((item) => {
+      let mealPhotos = [];
+
+      // ✅ handle multiple meal photos safely
+      if (Array.isArray(item.mealPhoto)) {
+        mealPhotos = item.mealPhoto.map((photo) =>
+          photo.startsWith("http") ? photo : `${baseUrl}${photo}`
+        );
+      } else if (typeof item.mealPhoto === "string" && item.mealPhoto) {
+        mealPhotos = [item.mealPhoto.startsWith("http") ? item.mealPhoto : `${baseUrl}${item.mealPhoto}`];
+      }
+
+      // ✅ handle attachedDoc safely
+      const attachedDoc =
+        item.attachedDoc && typeof item.attachedDoc === "string"
+          ? item.attachedDoc.startsWith("http")
+            ? item.attachedDoc
+            : `${baseUrl}${item.attachedDoc}`
+          : "";
+
+      return {
+        _id: item._id,
+        caretakerId: item.caretakerId,
+        patientId: item.patientId,
+        type: item.type,
+        mealType: item.mealType,
+        scheduleTime: item.scheduleTime,
+        foodType: item.foodType,
+        portionSize: item.portionSize,
+        specialDietFollowed: item.specialDietFollowed,
+        remarks: item.remarks,
+        planName: item.planName,
+        startDate: item.startDate,
+        endDate: item.endDate,
+        instructions: item.instructions,
+        dailyMeals: item.dailyMeals,
+        mealPhoto: mealPhotos, // always array
+        attachedDoc,
+        status: item.status,
+        createdAt: item.createdAt
+      };
+    });
 
     return res.status(200).json({
       success: true,
@@ -297,3 +397,92 @@ export const getAllMealAndDiet = async (req, res) => {
     });
   }
 };
+
+
+// export const getAllMealAndDiet = async (req, res) => {
+//   try {
+//     const token = req.token; // caretaker token
+//     const { patientId } = req.query;
+
+//     // 🧩 caretaker validate karo
+//     const caretaker = await Caretaker.findOne({
+//       _id: token._id,
+//       status: "Active"
+//     });
+
+//     if (!caretaker) {
+//       return res.status(401).json({
+//         success: false,
+//         message: "Invalid caretaker"
+//       });
+//     }
+
+//     // 🧩 Query prepare karo
+//     const query = { caretakerId: caretaker._id };
+//     if (patientId) query.patientId = patientId;
+
+//     // 🌐 Base URL (for exact file path)
+//     const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+//     // 🧩 Data fetch karo
+//     const records = await MealAndDiet.find(query)
+//       .populate("patientId", "fullName age gender")
+//       .sort({ createdAt: -1 });
+
+//     // 🧩 File URLs fix karo (array-safe version)
+//     const result = records.map((item) => {
+//       let mealPhotos = [];
+
+//       // ✅ handle multiple meal photos safely
+//       if (Array.isArray(item.mealPhoto)) {
+//         mealPhotos = item.mealPhoto.map((photo) =>
+//           photo.startsWith("http") ? photo : `${baseUrl}${photo}`
+//         );
+//       } else if (typeof item.mealPhoto === "string" && item.mealPhoto) {
+//         mealPhotos = [item.mealPhoto.startsWith("http") ? item.mealPhoto : `${baseUrl}${item.mealPhoto}`];
+//       }
+
+//       // ✅ handle attachedDoc safely
+//       const attachedDoc =
+//         item.attachedDoc && typeof item.attachedDoc === "string"
+//           ? item.attachedDoc.startsWith("http")
+//             ? item.attachedDoc
+//             : `${baseUrl}${item.attachedDoc}`
+//           : "";
+
+//       return {
+//         _id: item._id,
+//         caretakerId: item.caretakerId,
+//         patientId: item.patientId,
+//         type: item.type,
+//         mealType: item.mealType,
+//         scheduleTime: item.scheduleTime,
+//         foodType: item.foodType,
+//         portionSize: item.portionSize,
+//         specialDietFollowed: item.specialDietFollowed,
+//         remarks: item.remarks,
+//         planName: item.planName,
+//         startDate: item.startDate,
+//         endDate: item.endDate,
+//         instructions: item.instructions,
+//         dailyMeals: item.dailyMeals,
+//         mealPhoto: mealPhotos, // always array
+//         attachedDoc,
+//         status: item.status,
+//         createdAt: item.createdAt
+//       };
+//     });
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Meal and Diet records fetched successfully",
+//       result
+//     });
+//   } catch (error) {
+//     console.error("Get Meal/Diet Error:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: error.message
+//     });
+//   }
+// };
