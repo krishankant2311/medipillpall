@@ -56,7 +56,7 @@ export const addMealAndDiet = async (req, res) => {
     // 🖼️ Multiple meal photos (array)
     let mealPhotos = [];
     if (req.files && req.files.length > 0) {
-      mealPhotos = req.files.map((file) => `${baseUrl}/uploads/mealPhotos/${file.filename}`);
+      mealPhotos = req.files.map((file) => `${baseUrl}/uploads/${file.filename}`);
     }
 
     // 📄 Single diet doc (if uploaded)
