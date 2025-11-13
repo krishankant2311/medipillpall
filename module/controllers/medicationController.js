@@ -386,4 +386,119 @@ export const getAllActiveMedications = async (req, res) => {
   }
 };
 
+export const addMedicationByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker identify hoga token se
+    const {
+      medicationName,
+      dosage,
+      times,
+      startingDate,
+      reason,
+      quantity,
+      alertLevel,
+      comments,
+    } = req.body;
+  
+    const { patientId } = req.params;
+    // ---------------- VALIDATIONS ----------------
+    if (!token || !token._id) {
+      return res.status(400).json({
+        success: false,
+        message: "Caretaker token is required",
+      });
+    }
+
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+
+    if (!caretaker) {
+      return res.status(404).json({
+        success: false,
+        message: "Caretaker not found or inactive",
+      });
+    }
+
+    if (!patientId) {
+      return res.status(400).json({
+        success: false,
+        message: "Patient ID is required",
+      });
+    }
+
+    const patient = await Patient.findOne({
+      _id: patientId,
+      status: "Active",
+    });
+
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient not found or inactive",
+      });
+    }
+
+    if (!medicationName) {
+      return res.status(400).json({
+        success: false,
+        message: "Medication name is required",
+      });
+    }
+
+    if (!dosage) {
+      return res.status(400).json({
+        success: false,
+        message: "Dosage is required",
+      });
+    }
+
+    if (!times || times.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "At least one medication time is required",
+      });
+    }
+
+    if (!startingDate) {
+      return res.status(400).json({
+        success: false,
+        message: "Starting date is required",
+      });
+    }
+
+    // ---------------- CREATE MEDICATION ----------------
+    const newMedication = new Medication({
+      patientId,
+      caretakerId: caretaker._id,
+      medicationName,
+      dosage,
+      times,
+      startingDate,
+      reason,
+      quantity,
+      alertLevel,
+      comments,
+    });
+
+    await newMedication.save();
+
+    // ---------------- RESPONSE ----------------
+    return res.status(200).json({
+      success: true,
+      message: "Medication added successfully by caretaker",
+      result: newMedication,
+    });
+
+  } catch (error) {
+    console.error("Error adding medication by caretaker:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
 

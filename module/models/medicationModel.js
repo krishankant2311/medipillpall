@@ -5,44 +5,68 @@ const medicationSchema = new mongoose.Schema(
     patientId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Patient",
+      required: true,
     },
+
+    caretakerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Caretaker",
+      default: null, // null means patient khud add kar raha hai
+    },
+
     medicationName: {
       type: String,
+      trim: true,
       default: "",
-    //   trim: true,
     },
+
     dosage: {
       type: String, // Example: "10mg"
       default: "",
     },
+
     times: [
       {
         type: String, // Example: "08:00 AM", "08:00 PM"
-      default: "",
+        default: "",
       },
     ],
+
     startingDate: {
       type: Date,
-    //   required: true,
-          default: "",
+      default: null,
     },
+
     reason: {
       type: String,
       default: "",
     },
-    quantity:{
-        type:String,
-        default:""
+
+    quantity: {
+      type: String,
+      default: "",
     },
-    status:{
+
+    status: {
       type: String,
       enum: ["Active", "Stopped"],
       default: "Active",
     },
-    alertLevel:{
-        type:String,
-        default:""
-    }
+
+    alertLevel: {
+      type: String,
+      default: "",
+    },
+
+    comments: {
+      type: String,
+      default: "",
+    },
+
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

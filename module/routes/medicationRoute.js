@@ -1,5 +1,6 @@
 import express from "express";
-import { addMedication, updateMedication, getAllMedications,getAllMedicationsByAdmin,stopMedication,getAllActiveMedications } from "../controllers/medicationController.js"; 
+import { addMedication, updateMedication,addMedicationByCaretaker,
+     getAllMedications,getAllMedicationsByAdmin,stopMedication,getAllActiveMedications } from "../controllers/medicationController.js"; 
 import upload from "../../config/multer.js";
 import { verifyAccessToken } from "../../helpers/jwt.js";
 const router = express.Router();
@@ -18,4 +19,7 @@ router.get("/medication-list-byAdmin",verifyAccessToken,upload.none(), getAllMed
 router.get("/active-medication-list", verifyAccessToken, upload.none(), getAllActiveMedications);
 
 router.post("/stop-medication",upload.none(),  verifyAccessToken,  stopMedication);
+
+router.post("/addByCaretaker/:patientId", verifyAccessToken,upload.none(), addMedicationByCaretaker);
+
 export default router;
