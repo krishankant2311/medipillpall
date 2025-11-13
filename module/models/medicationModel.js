@@ -49,9 +49,13 @@ const medicationSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["Active", "Stopped", "Completed","Skipped"],
+      enum: ["Active", "Stopped", "Completed",],
       default: "Active",
     },
+ medicationStatus:{
+      type: String,
+      default: "",
+ },
 
     alertLevel: {
       type: String,
