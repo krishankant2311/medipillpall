@@ -752,3 +752,51 @@ export const getAllActiveMedicationsByCaretaker = async (req, res) => {
     });
   }
 };
+
+export const updateMedicationStatus = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+    const { medicationId } = req.params;
+    const { medicationStatus } = req.body;
+
+    // Validate caretaker
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+    if (!caretaker) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid caretaker token",
+      });
+    }
+
+    // Validate medication
+    const medication = await Medication.findById(medicationId);
+    if (!medication) {
+      return res.status(404).json({
+        success: false,
+        message: "Medication not found",
+      });
+    }
+
+    // Update status
+    medication.medicationStatus = medicationStatus;
+    medication.updatedAt = new Date();
+
+    await medication.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `Medication status updated to ${medicationStatus}`,
+      result: medication,
+    });
+  } catch (error) {
+    console.error("Error updating medication status:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
