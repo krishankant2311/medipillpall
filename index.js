@@ -29,6 +29,7 @@ import guardianReminderrouter from "./module/routes/guardianRoutes/reminderRoute
 import tutorialRouter from "./module/routes/patientTutorialRoute.js"
 import patientFilesRouter from "./module/routes/patientFilesRoute.js"
 import mealAndDietRouter from "./module/routes/mealAndDietRoute.js";
+import medicationInventory from "./module/routes/medicationInventoryRoute.js";
 import path from "path";
 import { fileURLToPath } from "url";
 dotenv.config();
@@ -79,6 +80,7 @@ app.use('/api/guardianReminder',guardianReminderrouter)
 app.use('/api/tutorial',tutorialRouter)
 app.use('/api/patientFiles',patientFilesRouter)
 app.use('/api/mealAndDiet',mealAndDietRouter)
+app.use('/api/medicationInventory',medicationInventory)
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(` Server running on port ${PORT}`));
   
