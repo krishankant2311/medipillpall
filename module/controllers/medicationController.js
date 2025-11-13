@@ -502,3 +502,253 @@ export const addMedicationByCaretaker = async (req, res) => {
 };
 
 
+export const stopMedicationByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker identify hoga token se
+    const { medicationId } = req.params;
+
+    // ---------------- VALIDATIONS ----------------
+    if (!token || !token._id) {
+      return res.status(400).json({
+        success: false,
+        message: "Caretaker token is required",
+      });
+    }
+
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+
+    if (!caretaker) {
+      return res.status(404).json({
+        success: false,
+        message: "Caretaker not found or inactive",
+      });
+    }
+
+    if (!medicationId) {
+      return res.status(400).json({
+        success: false,
+        message: "Medication ID is required",
+      });
+    }
+
+    const medication = await Medication.findById(medicationId);
+
+    if (!medication) {
+      return res.status(404).json({
+        success: false,
+        message: "Medication not found",
+      });
+    }
+
+    // ---------------- UPDATE STATUS ----------------
+    medication.status = "Stopped";
+    await medication.save();
+
+    // ---------------- RESPONSE ----------------
+    return res.status(200).json({
+      success: true,
+      message: "Medication stopped successfully by caretaker",
+      result: medication,
+    });
+  } catch (error) {
+    console.error("Error stopping medication:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+
+export const completeMedicationByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker identify hoga token se
+    const { medicationId } = req.body;
+
+    // ---------------- VALIDATIONS ----------------
+    if (!token || !token._id) {
+      return res.status(400).json({
+        success: false,
+        message: "Caretaker token is required",
+      });
+    }
+
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+
+    if (!caretaker) {
+      return res.status(404).json({
+        success: false,
+        message: "Caretaker not found or inactive",
+      });
+    }
+
+    if (!medicationId) {
+      return res.status(400).json({
+        success: false,
+        message: "Medication ID is required",
+      });
+    }
+
+    const medication = await Medication.findById(medicationId);
+
+    if (!medication) {
+      return res.status(404).json({
+        success: false,
+        message: "Medication not found",
+      });
+    }
+
+    // ---------------- UPDATE STATUS ----------------
+    medication.status = "Completed";
+    await medication.save();
+
+    // ---------------- RESPONSE ----------------
+    return res.status(200).json({
+      success: true,
+      message: "Medication marked as completed by caretaker",
+      result: medication,
+    });
+  } catch (error) {
+    console.error("Error completing medication:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+export const getAllStoppedMedicationsByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+    const { patientId } = req.params;
+
+    // ---------------- VALIDATIONS ----------------
+    if (!token || !token._id) {
+      return res.status(400).json({
+        success: false,
+        message: "Caretaker token is required",
+      });
+    }
+
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+
+    if (!caretaker) {
+      return res.status(404).json({
+        success: false,
+        message: "Caretaker not found or inactive",
+      });
+    }
+
+    if (!patientId) {
+      return res.status(400).json({
+        success: false,
+        message: "Patient ID is required",
+      });
+    }
+
+    // ---------------- FETCH STOPPED MEDICATIONS ----------------
+    const medications = await Medication.find({
+      patientId: patientId,
+      status: "Stopped",
+    })
+      .sort({ updatedAt: -1 })
+      .lean();
+
+    // ---------------- RESPONSE ----------------
+    if (!medications.length) {
+      return res.status(200).json({
+        success: true,
+        message: "No stopped medications found for this patient",
+        result: [],
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Stopped medications fetched successfully",
+      result: medications,
+    });
+  } catch (error) {
+    console.error("Error fetching stopped medications:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+export const getAllActiveMedicationsByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+    const { patientId } = req.params;
+
+    // ---------------- VALIDATIONS ----------------
+    if (!token || !token._id) {
+      return res.status(400).json({
+        success: false,
+        message: "Caretaker token is required",
+      });
+    }
+
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+
+    if (!caretaker) {
+      return res.status(404).json({
+        success: false,
+        message: "Caretaker not found or inactive",
+      });
+    }
+
+    if (!patientId) {
+      return res.status(400).json({
+        success: false,
+        message: "Patient ID is required",
+      });
+    }
+
+    // ---------------- FETCH ACTIVE MEDICATIONS ----------------
+    const medications = await Medication.find({
+      patientId: patientId,
+      status: "Active",
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // ---------------- RESPONSE ----------------
+    if (!medications.length) {
+      return res.status(200).json({
+        success: true,
+        message: "No active medications found for this patient",
+        result: [],
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Active medications fetched successfully",
+      result: medications,
+    });
+  } catch (error) {
+    console.error("Error fetching active medications:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
