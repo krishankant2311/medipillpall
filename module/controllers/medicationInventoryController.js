@@ -279,3 +279,76 @@ export const softDeleteMedication = async (req, res) => {
     });
   }
 };
+
+
+export const getAllMedicationByCaretaker = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+    const { patientId } = req.params; // patientId from query
+
+    // 🔹 Validate caretaker existence
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active"
+    });
+
+    if (!caretaker) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid caretaker."
+      });
+    }
+
+    // 🔹 Validate patientId
+    if (!patientId) {
+      return res.status(400).json({
+        success: false,
+        message: "Patient ID is required."
+      });
+    }
+
+    // 🔹 Validate patient existence
+    const patient = await Patient.findOne({
+      _id: patientId,
+      status: "Active"
+    });
+
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient not found."
+      });
+    }
+
+    // 🔹 Fetch medications for that patient (added by caretaker)
+    const records = await MedicationInventory.find({
+      caretakerId: caretaker._id,
+      patientId: patient._id
+    })
+    .populate("patientId", "fullName age gender")
+      .sort({ createdAt: -1 });
+
+    // 🔹 If no data found
+    if (!records.length) {
+      return res.status(200).json({
+        success: true,
+        message: "No medication records found for this patient.",
+        result: []
+      });
+    }
+
+    // 🔹 Success response
+    return res.status(200).json({
+      success: true,
+      message: "Medication records fetched successfully.",
+      result: records
+    });
+
+  } catch (error) {
+    console.error("Get Medication (Caretaker) Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
