@@ -1583,7 +1583,7 @@ export const blockGuardianbyAdmin = async (req, res) => {
       });
     }
 
-    const guardian = await Guardian.findById(guardianId);
+    const guardian = await Guardian.findById(guardianId).select("-password -otp -accessToken -refreshToken");
 
     if (!guardian) {
       return res.status(404).json({
@@ -1610,6 +1610,301 @@ export const blockGuardianbyAdmin = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Server error while blocking guardian",
+    });
+  }
+};
+export const unblockGuardian = async (req, res) => {
+  try {
+    const token = req.token; // admin ka token
+    const { guardianId } = req.params;
+
+    // ---- Admin token check ----
+    if (!token || !token._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Admin token required",
+      });
+    }
+
+    // ---- Admin find ----
+    const admin = await Admin.findOne({ _id: token._id, status: "Active" });
+    if (!admin) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid admin token",
+      });
+    }
+
+    // ---- guardianId check ----
+    if (!guardianId) {
+      return res.status(400).json({
+        success: false,
+        message: "guardianId is required",
+      });
+    }
+
+    // ---- Guardian find ----
+    const guardian = await Guardian.findById(guardianId).select("-password -otp -accessToken -refreshToken");
+    if (!guardian) {
+      return res.status(404).json({
+        success: false,
+        message: "Guardian not found",
+      });
+    }
+
+    // ---- Update to unblocked ----
+    guardian.status = "Active";
+    // guardian.isBlocked = false;
+    // guardian.unblockedAt = new Date();
+    // guardian.unblockedBy = admin._id;
+
+    await guardian.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Guardian unblocked successfully",
+      result: guardian,
+    });
+
+  } catch (err) {
+    console.log("unblockGuardian error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while unblocking guardian",
+    });
+  }
+};
+
+export const blockCaretakerByAdmin = async (req, res) => {
+  try {
+    const token = req.token; // admin token
+    const { caretakerId } = req.params;
+
+    // ---- Check token ----
+    if (!token || !token._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Admin token required",
+      });
+    }
+
+    // ---- Check Admin from DB ----
+    const admin = await Admin.findOne({ _id: token._id, status: "Active" });
+
+    if (!admin) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid admin token",
+      });
+    }
+
+    if (!caretakerId) {
+      return res.status(400).json({
+        success: false,
+        message: "caretakerId is required",
+      });
+    }
+
+    const caretaker = await Caretaker.findById(caretakerId).select(
+      "-password -otp -accessToken -refreshToken"
+    );
+
+    if (!caretaker) {
+      return res.status(404).json({
+        success: false,
+        message: "Caretaker not found",
+      });
+    }
+
+    caretaker.status = "Blocked";
+
+    await caretaker.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Caretaker blocked successfully",
+      result: caretaker,
+    });
+
+  } catch (err) {
+    console.log("blockCaretaker error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while blocking caretaker",
+    });
+  }
+};
+export const unblockCaretaker = async (req, res) => {
+  try {
+    const token = req.token;
+    const { caretakerId } = req.params;
+
+    // ---- Admin token check ----
+    if (!token || !token._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Admin token required",
+      });
+    }
+
+    // ---- Admin find ----
+    const admin = await Admin.findOne({ _id: token._id, status: "Active" });
+    if (!admin) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid admin token",
+      });
+    }
+
+    if (!caretakerId) {
+      return res.status(400).json({
+        success: false,
+        message: "caretakerId is required",
+      });
+    }
+
+    const caretaker = await Caretaker.findById(caretakerId).select(
+      "-password -otp -accessToken -refreshToken"
+    );
+
+    if (!caretaker) {
+      return res.status(404).json({
+        success: false,
+        message: "Caretaker not found",
+      });
+    }
+
+    caretaker.status = "Active";
+
+    await caretaker.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Caretaker unblocked successfully",
+      result: caretaker,
+    });
+
+  } catch (err) {
+    console.log("unblockCaretaker error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while unblocking caretaker",
+    });
+  }
+};
+export const blockPatientByAdmin = async (req, res) => {
+  try {
+    const token = req.token;
+    const { patientId } = req.params;
+
+    // ---- Admin token check ----
+    if (!token || !token._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Admin token required",
+      });
+    }
+
+    // ---- Admin find ----
+    const admin = await Admin.findOne({ _id: token._id, status: "Active" });
+    if (!admin) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid admin token",
+      });
+    }
+
+    if (!patientId) {
+      return res.status(400).json({
+        success: false,
+        message: "patientId is required",
+      });
+    }
+
+    const patient = await Patient.findById(patientId).select(
+      "-password -otp -accessToken -refreshToken"
+    );
+
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient not found",
+      });
+    }
+
+    patient.status = "Blocked";
+
+    await patient.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Patient blocked successfully",
+      result: patient,
+    });
+
+  } catch (err) {
+    console.log("blockPatient error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while blocking patient",
+    });
+  }
+};
+export const unblockPatient = async (req, res) => {
+  try {
+    const token = req.token;
+    const { patientId } = req.params;
+
+    // ---- Admin token check ----
+    if (!token || !token._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Admin token required",
+      });
+    }
+
+    // ---- Admin find ----
+    const admin = await Admin.findOne({ _id: token._id, status: "Active" });
+    if (!admin) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid admin token",
+      });
+    }
+
+    if (!patientId) {
+      return res.status(400).json({
+        success: false,
+        message: "patientId is required",
+      });
+    }
+
+    const patient = await Patient.findById(patientId).select(
+      "-password -otp -accessToken -refreshToken"
+    );
+
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient not found",
+      });
+    }
+
+    patient.status = "Active";
+
+    await patient.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Patient unblocked successfully",
+      result: patient,
+    });
+
+  } catch (err) {
+    console.log("unblockPatient error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while unblocking patient",
     });
   }
 };

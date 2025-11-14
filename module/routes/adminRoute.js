@@ -14,6 +14,12 @@ import {
   getDashboardPiechart,
   getAdminDashboardPiechart,
   blockGuardianbyAdmin,
+  unblockGuardian,
+  blockCaretakerByAdmin,
+unblockCaretaker,
+
+blockPatientByAdmin,
+unblockPatient,
 } from "../controllers/adminController.js";
 
 import { verifyAccessToken } from "../../helpers/jwt.js"; // token verify middleware
@@ -42,5 +48,10 @@ router.get("/user-piechart", verifyAccessToken, getUserPiechartData);
 router.get("/admin-dashboard-piechart", verifyAccessToken, getAdminDashboardPiechart);
 // 🚫 User management
 router.post("/block-guardian-byadmin/:guardianId", verifyAccessToken, upload.none(), blockGuardianbyAdmin);
+router.post("/unblock-guardian/:guardianId", verifyAccessToken, upload.none(), unblockGuardian);
+router.post("/block-caretaker-byadmin/:caretakerId", verifyAccessToken, upload.none(), blockCaretakerByAdmin);
+router.post("/unblock-caretaker/:caretakerId", verifyAccessToken, upload.none(), unblockCaretaker);
+router.post("/block-patient-byadmin/:patientId", verifyAccessToken, upload.none(), blockPatientByAdmin);
+router.post("/unblock-patient/:patientId", verifyAccessToken, upload.none(), unblockPatient);
 
 export default router;
