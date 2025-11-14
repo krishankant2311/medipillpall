@@ -1305,3 +1305,47 @@ export const resendPatientOTPforLogin = async (req, res) => {
 
 
 
+export const deletePatientByAdmin = async (req, res) => {
+  try {
+    const token = req.token;
+    const { patientId } = req.params;
+
+    // Validate Admin
+    const adminUser = await Admin.findById(token._id);
+    if (!adminUser || adminUser.status !== "Active") {
+      return res.status(403).send({
+        statusCode: 403,
+        success: false,
+        message: "Access denied: Admins only",
+      });
+    }
+
+    // Update patient status → Delete
+    const updatedPatient = await Patient.findByIdAndUpdate(
+      patientId,
+      { status: "Delete" },
+      { new: true }
+    );
+
+    if (!updatedPatient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found",
+      });
+    }
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Patient deleted successfully (status updated)",
+      result: updatedPatient,
+    });
+  } catch (error) {
+    return res.status(500).send({
+      statusCode: 500,
+      success: false,
+      message: error.message,
+    });
+  }
+};

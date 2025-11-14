@@ -5252,3 +5252,47 @@ export const getAllCareNotesByCaretaker = async (req, res) => {
   }
 };
 
+export const deleteCaretakerByAdmin = async (req, res) => {
+  try {
+    const token = req.token;
+    const { caretakerId } = req.params;
+
+    // Validate Admin
+    const adminUser = await Admin.findById(token._id);
+    if (!adminUser || adminUser.status !== "Active") {
+      return res.status(403).send({
+        statusCode: 403,
+        success: false,
+        message: "Access denied: Admins only",
+      });
+    }
+
+    // Update caretaker status → Delete
+    const updatedCaretaker = await Caretaker.findByIdAndUpdate(
+      caretakerId,
+      { status: "Delete" },
+      { new: true }
+    );
+
+    if (!updatedCaretaker) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Caretaker not found",
+      });
+    }
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Caretaker deleted successfully (status updated)",
+      result: updatedCaretaker,
+    });
+  } catch (error) {
+    return res.status(500).send({
+      statusCode: 500,
+      success: false,
+      message: error.message,
+    });
+  }
+};

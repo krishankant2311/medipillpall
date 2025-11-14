@@ -1821,7 +1821,7 @@ export const blockPatientByAdmin = async (req, res) => {
       });
     }
 
-    const patient = await Patient.findById(patientId).select(
+    const patient = await Patient.findOne({_id:patientId, status:"Active"}).select(
       "-password -otp -accessToken -refreshToken"
     );
 
