@@ -336,7 +336,7 @@ export const getAllGuardiansByAdmin = async (req, res) => {
     const searchRegex = new RegExp(search.trim(), "i");
     const searchFilter = search.trim()
       ? {
-          status: "Active",
+        status: { $ne: "Delete" },
           $or: [
             { fullName: { $regex: searchRegex } },
             { email: { $regex: searchRegex } },

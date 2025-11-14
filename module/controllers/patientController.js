@@ -1021,7 +1021,7 @@ export const getAllPatientsByAdmin = async (req, res) => {
     const searchRegex = new RegExp(search.trim(), "i");
     const searchFilter = search.trim()
       ? {
-          status: status || "Active",
+        status: { $ne: "Delete" },
           $or: [
             { fullName: { $regex: searchRegex } },
             { mobileNumber: { $regex: searchRegex } },
