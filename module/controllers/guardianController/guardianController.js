@@ -338,15 +338,13 @@ export const getAllGuardiansByAdmin = async (req, res) => {
 
     const searchFilter = search.trim()
       ? {
-          status: { $ne: "Delete" },
-          $or: [
+status: { $nin: ["Pending", "Delete"] },          $or: [
             { fullName: { $regex: searchRegex } },
             { email: { $regex: searchRegex } },
             { mobileNumber: { $regex: searchRegex } },
           ],
         }
-      : { status: { $ne: "Delete" } };
-
+ : { status: { $nin: ["Pending", "Delete"] } };
     // --- Step 3: Fetch Guardians ---
     const guardians = await Guardian.find(searchFilter).select("-password -otp -accessToken -refreshToken")
       .skip(skip)

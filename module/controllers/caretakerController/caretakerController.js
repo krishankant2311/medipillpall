@@ -209,12 +209,14 @@ export const getAllCaretakersByAdmin = async (req, res) => {
   try {
     const token = req.token;
     let { page = 1, limit = 10, search = "" } = req.query;
+
     page = Number.parseInt(page);
     limit = Number.parseInt(limit);
     const skip = (page - 1) * limit;
-    // :white_tick: Check admin authorization
-    const adminUser = await Admin.findOne({ _id: token._id, status: "Active" });
-    if (!adminUser) {
+
+    // --- Step 1: Validate Admin ---
+    const adminUser = await Admin.findById(token._id);
+    if (!adminUser || adminUser.status !== "Active") {
       return res.status(403).send({
         statusCode: 403,
         success: false,
@@ -222,47 +224,48 @@ export const getAllCaretakersByAdmin = async (req, res) => {
         result: {},
       });
     }
-    if (adminUser.status === "Delete") {
-      return res.send({
-        statusCode: 403,
-        success: false,
-        message: "Your account has been deleted",
-        result: {},
-      });
-    }
-    // :white_tick: Build search filter
+
+    // --- Step 2: Search & Filter ---
     const searchRegex = new RegExp(search.trim(), "i");
+
     const searchFilter = search.trim()
       ? {
-        status: { $ne: "Delete" },
-        $or: [
-          { fullName: { $regex: searchRegex } },
-          { mobileNumber: { $regex: searchRegex } },
-          { email: { $regex: searchRegex } },
-        ],
-      }
-      : { status: { $ne: "Delete" } };
-    // :white_tick: Fetch caretakers with populated references
+          status: { $nin: ["Pending", "Delete"] }, // <-- updated
+          $or: [
+            { fullName: { $regex: searchRegex } },
+            { email: { $regex: searchRegex } },
+            { mobileNumber: { $regex: searchRegex } },
+          ],
+        }
+      : { status: { $nin: ["Pending", "Delete"] } }; // <-- updated
+
+    // --- Step 3: Fetch Caretakers ---
     const caretakers = await Caretaker.find(searchFilter)
-      .select("-password -refreshToken -otp -refreshToken -accessToken ")
-      .populate({
-        path: "patients",
-        select: "fullName gender mobileNumber status createdAt age", // include needed fields only
-      })
-      .populate({
-        path: "guardianId",
-        select: "fullName gender mobileNumber email status createdAt", // include needed fields only
-      })
       .skip(skip)
       .limit(limit)
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "patients",
+        match: { status: "Active" },
+        select: "fullName age diseaseCondition gender mobileNumber createdAt",
+      });
+
+    // --- Step 4: Count ---
     const totalCaretakers = await Caretaker.countDocuments(searchFilter);
+
+    // --- Step 5: Add total patient count ---
+    const caretakersWithCount = caretakers.map((ct) => ({
+      ...ct.toObject(),
+      totalPatients: ct.patients?.length || 0,
+    }));
+
+    // --- Step 6: Response ---
     return res.send({
       statusCode: 200,
       success: true,
       message: "All caretakers fetched successfully (Admin)",
       result: {
-        caretakers,
+        caretakers: caretakersWithCount,
         currentPage: page,
         totalPage: Math.ceil(totalCaretakers / limit),
         totalRecord: totalCaretakers,
@@ -277,6 +280,8 @@ export const getAllCaretakersByAdmin = async (req, res) => {
     });
   }
 };
+
+
 
 // ------------------- LOGIN (send OTP) -------------------
 export const caretakerLogin = async (req, res) => {
