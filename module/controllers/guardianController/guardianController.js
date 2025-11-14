@@ -2839,3 +2839,49 @@ export const getPrivacyPolicyByGuardian = async (req, res) => {
 //     });
 //   }
 // };
+
+
+export const deleteGuardianByAdmin = async (req, res) => {
+  try {
+    const token = req.token;
+    const { guardianId } = req.params;
+
+    // Validate Admin
+    const adminUser = await Admin.findById(token._id);
+    if (!adminUser || adminUser.status !== "Active") {
+      return res.status(403).send({
+        statusCode: 403,
+        success: false,
+        message: "Access denied: Admins only",
+      });
+    }
+
+    // Update guardian status → Delete
+    const updatedGuardian = await Guardian.findByIdAndUpdate(
+      guardianId,
+      { status: "Delete" },
+      { new: true }
+    );
+
+    if (!updatedGuardian) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Guardian not found",
+      });
+    }
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Guardian deleted successfully (status updated)",
+      result: updatedGuardian,
+    });
+  } catch (error) {
+    return res.status(500).send({
+      statusCode: 500,
+      success: false,
+      message: error.message,
+    });
+  }
+};
