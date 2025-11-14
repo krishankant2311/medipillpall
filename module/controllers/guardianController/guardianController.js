@@ -348,7 +348,7 @@ export const getAllGuardiansByAdmin = async (req, res) => {
       : { status: { $ne: "Delete" } };
 
     // --- Step 3: Fetch Guardians ---
-    const guardians = await Guardian.find(searchFilter)
+    const guardians = await Guardian.find(searchFilter).select("-password -otp -accessToken -refreshToken")
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 })
