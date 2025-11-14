@@ -381,7 +381,7 @@ export const uploadPatientFile = async (req, res) => {
 
     // 🧩 Build full URL for the uploaded file
     const baseUrl = `${req.protocol}://${req.get("host")}`;
-    const fileUrl = `${baseUrl}/uploads/patientFiles/${req.file.filename}`;
+    const fileUrl = `${baseUrl}/uploads/${req.file.filename}`;
 
     // 🧩 Save in DB (fileUrl = full URL)
     const file = await PatientFile.create({
