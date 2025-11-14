@@ -1583,8 +1583,20 @@ export const blockGuardianbyAdmin = async (req, res) => {
       });
     }
 
-    const guardian = await Guardian.findById(guardianId).select("-password -otp -accessToken -refreshToken");
-
+    const guardian = await Guardian.findOne({_id:guardianId}).select("-password -otp -accessToken -refreshToken");
+    if (guardian.status === "Blocked" ) {
+      return res.status(400).json({
+        success: false,
+        message: "Guardian is already blocked",
+      });
+    }
+    if(!guardian.status === "Active" ) {
+      return res.status(400).json({
+        success: false,
+        message: "Only active guardians can be blocked",
+      });
+    }
+      
     if (!guardian) {
       return res.status(404).json({
         success: false,
@@ -1705,10 +1717,21 @@ export const blockCaretakerByAdmin = async (req, res) => {
       });
     }
 
-    const caretaker = await Caretaker.findById(caretakerId).select(
+    const caretaker = await Caretaker.findOne({_id:caretakerId}).select(
       "-password -otp -accessToken -refreshToken"
     );
-
+    if (caretaker.status === "Blocked" ) {
+      return res.status(400).json({
+        success: false,
+        message: "Caretaker is already blocked",
+      });
+    }
+    if(!caretaker.status === "Active" ) {
+      return res.status(400).json({
+        success: false,
+        message: "Only active caretakers can be blocked",
+      });
+    }
     if (!caretaker) {
       return res.status(404).json({
         success: false,
@@ -1821,9 +1844,22 @@ export const blockPatientByAdmin = async (req, res) => {
       });
     }
 
-    const patient = await Patient.findOne({_id:patientId, status:"Active"}).select(
+    const patient = await Patient.findOne({_id:patientId}).select(
       "-password -otp -accessToken -refreshToken"
     );
+    if (patient.status === "Blocked" ) {
+      return res.status(400).json({
+        success: false,
+        message: "Patient is already blocked",
+      });
+    }
+
+    if(!patient.status === "Active" ) {
+      return res.status(400).json({
+        success: false,
+        message: "Only active patients can be blocked",
+      });
+    }
 
     if (!patient) {
       return res.status(404).json({
@@ -1879,7 +1915,7 @@ export const unblockPatient = async (req, res) => {
       });
     }
 
-    const patient = await Patient.findById(patientId).select(
+    const patient = await Patient.findOne({_id:patientId}).select(
       "-password -otp -accessToken -refreshToken"
     );
 
