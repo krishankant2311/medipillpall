@@ -716,7 +716,7 @@ export const getAllPatientFiles = async (req, res) => {
       documentType: file.documentType,
       fileName: file.fileName,
       fileSize: file.fileSize,
-      fileUrl: `${req.protocol}://${req.get("host")}${file.fileUrl}`,
+    fileUrl: file.fileUrl,
       uploadedAt: file.uploadedAt,
       createdAt: file.createdAt,
       updatedAt: file.updatedAt,
