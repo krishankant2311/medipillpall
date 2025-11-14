@@ -1551,3 +1551,65 @@ export const getAdminDashboardPiechart = async (req, res) => {
     });
   }
 };
+
+
+export const blockGuardianbyAdmin = async (req, res) => {
+  try {
+    const token = req.token; // admin token
+    const { guardianId } = req.params;
+
+    // ---- Check token ----
+    if (!token || !token._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Admin token required",
+      });
+    }
+
+    // ---- Check Admin from DB ----
+    const admin = await Admin.findOne({ _id: token._id, status: "Active" });
+
+    if (!admin) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid admin token",
+      });
+    }
+
+    if (!guardianId) {
+      return res.status(400).json({
+        success: false,
+        message: "guardianId is required",
+      });
+    }
+
+    const guardian = await Guardian.findById(guardianId);
+
+    if (!guardian) {
+      return res.status(404).json({
+        success: false,
+        message: "Guardian not found",
+      });
+    }
+
+    guardian.status = "Blocked";
+    // guardian.isBlocked = true;
+    // guardian.blockedAt = new Date();
+    // guardian.blockedBy = admin._id;
+
+    await guardian.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Guardian blocked successfully",
+      result: guardian,
+    });
+
+  } catch (err) {
+    console.log("blockGuardian error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while blocking guardian",
+    });
+  }
+};

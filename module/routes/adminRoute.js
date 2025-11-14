@@ -13,6 +13,7 @@ import {
   getUserPiechartData,
   getDashboardPiechart,
   getAdminDashboardPiechart,
+  blockGuardianbyAdmin,
 } from "../controllers/adminController.js";
 
 import { verifyAccessToken } from "../../helpers/jwt.js"; // token verify middleware
@@ -39,5 +40,7 @@ router.post("/send-forgot-password-otp", upload.none(),sendForgotPasswordOTP);
 router.get("/dashboard-piechart", verifyAccessToken, getDashboardPiechart);
 router.get("/user-piechart", verifyAccessToken, getUserPiechartData);
 router.get("/admin-dashboard-piechart", verifyAccessToken, getAdminDashboardPiechart);
+// 🚫 User management
+router.post("/block-guardian-byadmin/:guardianId", verifyAccessToken, upload.none(), blockGuardianbyAdmin);
 
 export default router;
