@@ -2256,6 +2256,11 @@ export const assignPatientToCaregiver = async (req, res) => {
     patient.caretakerId = caregiver._id;
     await patient.save();
 
+    guardian.patients = guardian.patients || [];
+    if (!guardian.patients.includes(patient._id)) {
+      guardian.patients.push(patient._id);
+      await guardian.save();
+    }
     // Step 7: Add patient reference in Caregiver model
     if (!caregiver.patients) caregiver.patients = [];
 
