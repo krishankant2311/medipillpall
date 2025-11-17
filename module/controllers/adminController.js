@@ -192,7 +192,7 @@ export const changePassword = async (req, res) => {
 
     if (admin.status !== "Active") {
       return res.send({
-        statusCode: 401,
+        statusCode: 400,
         success: false,
         message: "Unauthorized access",
         result: {},
@@ -324,14 +324,14 @@ export const verifyOtp = async (req, res) => {
     }
     if (admin === "Delete") {
       return res.send({
-        statusCode: 401,
+        statusCode: 400,
         success: false,
         message: "Admin account has been delete",
       });
     }
     if (admin === "Blocked") {
       return res.send({
-        statusCode: 401,
+        statusCode: 400,
         success: false,
         message: "Admin account has been Block",
         result: {},
@@ -347,7 +347,7 @@ export const verifyOtp = async (req, res) => {
     }
     if (admin.otp.otpExpiry < Date.now()) {
       return res.send({
-        statusCode: 401,
+        statusCode: 400,
         success: false,
         message: "OTP expired",
       });
@@ -762,7 +762,7 @@ export const changeForgotPassword = async (req, res) => {
 //     }
 //     if (admin.status === "Delete") {
 //       return res.send({
-//         statusCode: 401,
+//         statusCode: 400,
 //         success: false,
 //         message: "unauthorise access",
 //         result: {},
@@ -876,7 +876,7 @@ export const resendOTPForChangePassword = async (req, res) => {
 
     if (admin.status !== "Active") {
       return res.send({
-        statusCode: 401,
+        statusCode: 400,
         success: false,
         message: "Unauthorized access",
         result: {},
@@ -962,7 +962,7 @@ export const sendForgotPasswordOTP = async (req, res) => {
 
     if (admin.status !== "Active") {
       return res.send({
-        statusCode: 401,
+        statusCode: 400,
         success: false,
         message: "Unauthorized access",
         result: {},
@@ -1560,7 +1560,7 @@ export const blockGuardianbyAdmin = async (req, res) => {
 
     // ---- Check token ----
     if (!token || !token._id) {
-      return res.status(401).json({
+      return res.status(400).json({
         success: false,
         message: "Admin token required",
       });
@@ -1570,7 +1570,7 @@ export const blockGuardianbyAdmin = async (req, res) => {
     const admin = await Admin.findOne({ _id: token._id, status: "Active" });
 
     if (!admin) {
-      return res.status(401).json({
+      return res.status(400).json({
         success: false,
         message: "Invalid admin token",
       });
@@ -1632,7 +1632,7 @@ export const unblockGuardian = async (req, res) => {
 
     // ---- Admin token check ----
     if (!token || !token._id) {
-      return res.status(401).json({
+      return res.status(400).json({
         success: false,
         message: "Admin token required",
       });
@@ -1641,7 +1641,7 @@ export const unblockGuardian = async (req, res) => {
     // ---- Admin find ----
     const admin = await Admin.findOne({ _id: token._id, status: "Active" });
     if (!admin) {
-      return res.status(401).json({
+      return res.status(400).json({
         success: false,
         message: "Invalid admin token",
       });
@@ -1694,7 +1694,7 @@ export const blockCaretakerByAdmin = async (req, res) => {
 
     // ---- Check token ----
     if (!token || !token._id) {
-      return res.status(401).json({
+      return res.status(400).json({
         success: false,
         message: "Admin token required",
       });
@@ -1704,7 +1704,7 @@ export const blockCaretakerByAdmin = async (req, res) => {
     const admin = await Admin.findOne({ _id: token._id, status: "Active" });
 
     if (!admin) {
-      return res.status(401).json({
+      return res.status(400).json({
         success: false,
         message: "Invalid admin token",
       });
@@ -1764,7 +1764,7 @@ export const unblockCaretaker = async (req, res) => {
 
     // ---- Admin token check ----
     if (!token || !token._id) {
-      return res.status(401).json({
+      return res.status(400).json({
         success: false,
         message: "Admin token required",
       });
@@ -1773,7 +1773,7 @@ export const unblockCaretaker = async (req, res) => {
     // ---- Admin find ----
     const admin = await Admin.findOne({ _id: token._id, status: "Active" });
     if (!admin) {
-      return res.status(401).json({
+      return res.status(400).json({
         success: false,
         message: "Invalid admin token",
       });
@@ -1822,7 +1822,7 @@ export const blockPatientByAdmin = async (req, res) => {
 
     // ---- Admin token check ----
     if (!token || !token._id) {
-      return res.status(401).json({
+      return res.status(400).json({
         success: false,
         message: "Admin token required",
       });
@@ -1831,7 +1831,7 @@ export const blockPatientByAdmin = async (req, res) => {
     // ---- Admin find ----
     const admin = await Admin.findOne({ _id: token._id, status: "Active" });
     if (!admin) {
-      return res.status(401).json({
+      return res.status(400).json({
         success: false,
         message: "Invalid admin token",
       });
@@ -1893,7 +1893,7 @@ export const unblockPatient = async (req, res) => {
 
     // ---- Admin token check ----
     if (!token || !token._id) {
-      return res.status(401).json({
+      return res.status(400).json({
         success: false,
         message: "Admin token required",
       });
@@ -1902,7 +1902,7 @@ export const unblockPatient = async (req, res) => {
     // ---- Admin find ----
     const admin = await Admin.findOne({ _id: token._id, status: "Active" });
     if (!admin) {
-      return res.status(401).json({
+      return res.status(400).json({
         success: false,
         message: "Invalid admin token",
       });
