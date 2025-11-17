@@ -1713,7 +1713,7 @@ export const blockCaretakerByAdmin = async (req, res) => {
     if (!caretakerId) {
       return res.status(400).json({
         success: false,
-        message: "caretakerId is required",
+        message: "caregiverId is required",
       });
     }
 
@@ -1723,19 +1723,19 @@ export const blockCaretakerByAdmin = async (req, res) => {
     if (caretaker.status === "Blocked" ) {
       return res.status(400).json({
         success: false,
-        message: "Caretaker is already blocked",
+        message: "Caregiver is already blocked",
       });
     }
     if(!caretaker.status === "Active" ) {
       return res.status(400).json({
         success: false,
-        message: "Only active caretakers can be blocked",
+        message: "Only active caregiver can be blocked",
       });
     }
     if (!caretaker) {
       return res.status(404).json({
         success: false,
-        message: "Caretaker not found",
+        message: "Caregiver not found",
       });
     }
 
@@ -1745,12 +1745,12 @@ export const blockCaretakerByAdmin = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Caretaker blocked successfully",
+      message: "Caregiver blocked successfully",
       result: caretaker,
     });
 
   } catch (err) {
-    console.log("blockCaretaker error:", err);
+    console.log("blockCaregiver error:", err);
     return res.status(500).json({
       success: false,
       message: "Server error while blocking caretaker",
@@ -1782,7 +1782,7 @@ export const unblockCaretaker = async (req, res) => {
     if (!caretakerId) {
       return res.status(400).json({
         success: false,
-        message: "caretakerId is required",
+        message: "caregiverId is required",
       });
     }
 
@@ -1793,7 +1793,7 @@ export const unblockCaretaker = async (req, res) => {
     if (!caretaker) {
       return res.status(404).json({
         success: false,
-        message: "Caretaker not found",
+        message: "Caregiver not found",
       });
     }
 
@@ -1803,7 +1803,7 @@ export const unblockCaretaker = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Caretaker unblocked successfully",
+      message: "Caregiver unblocked successfully",
       result: caretaker,
     });
 
@@ -1811,7 +1811,7 @@ export const unblockCaretaker = async (req, res) => {
     console.log("unblockCaretaker error:", err);
     return res.status(500).json({
       success: false,
-      message: "Server error while unblocking caretaker",
+      message: "Server error while unblocking caregiver",
     });
   }
 };
@@ -1950,7 +1950,7 @@ export const adminEditCaretakerProfile = async (req, res) => {
   try {
     const token = req.token; // admin token
     const { caretakerId } = req.params;
-    let { fullName, email, certification, mobileNumber, gender, age } = req.body;
+    let { fullName, certification, mobileNumber, gender, age } = req.body;
 
     fullName = fullName?.trim();
     email = email?.trim()?.toLowerCase();
@@ -1974,23 +1974,14 @@ export const adminEditCaretakerProfile = async (req, res) => {
       });
     }
     // --- Validations ---
-    if (!fullName) {
-      return res.send({
-        statusCode: 400,
-        success: false,
-        message: "Full name is required",
-        result: {},
-      });
-    }
-
-    if (!email) {
-      return res.send({
-        statusCode: 400,
-        success: false,
-        message: "Email is required",
-        result: {},
-      });
-    }
+    // if (!fullName) {
+    //   return res.send({
+    //     statusCode: 400,
+    //     success: false,
+    //     message: "Full name is required",
+    //     result: {},
+    //   });
+    // }
 
     // --- Step 1: Find Caretaker ---
     const caretaker = await Caretaker.findById(caretakerId);
@@ -2050,7 +2041,7 @@ export const adminEditCaretakerProfile = async (req, res) => {
 export const editGuardianProfile = async (req, res) => {
   try {
     const token = req.token;
-    let { fullName, email, certification, mobileNumber, gender, age } = req.body;
+    let { fullName, certification, mobileNumber, gender, age } = req.body;
  const {guardianId} =  req.params;
     fullName = fullName?.trim();
     email = email?.trim()?.toLowerCase();
@@ -2082,23 +2073,14 @@ if (!guardianId) {
     }
 
     // --- Validations ---
-    if (!fullName) {
-      return res.send({
-        statusCode: 400,
-        success: false,
-        message: "Full name is required",
-        result: {},
-      });
-    }
-
-    if (!email) {
-      return res.send({
-        statusCode: 400,
-        success: false,
-        message: "Email is required",
-        result: {},
-      });
-    }
+    // if (!fullName) {
+    //   return res.send({
+    //     statusCode: 400,
+    //     success: false,
+    //     message: "Full name is required",
+    //     result: {},
+    //   });
+    // }
 
     // --- Step 1: Find Guardian ---
     const guardian = await Guardian.findById(token._id);
