@@ -2496,37 +2496,79 @@ export const assignPatientToCaregiver = async (req, res) => {
     patient.caretakerId = caregiver_id;
     await patient.save();
 
-    // ---------------------- Step 7: Update Guardian Model ----------------------
-    guardian.patients = guardian.patients || [];
-    guardian.caretakers = guardian.caretakers || [];
+//     // ---------------------- Step 7: Update Guardian Model ----------------------
+//     guardian.patients = guardian.patients || [];
+//     guardian.caretakers = guardian.caretakers || [];
 
-    // add patient
-    if (!guardian.patients.some(p => p.toString() === patient_id.toString())) {
-      guardian.patients.push(patient_id);
-    }
+//     // add patient
+//     if (!guardian.patients.some(p => p.toString() === patient_id.toString())) {
+//       guardian.patients.push(patient_id);
+//     }
 
-    // add caretaker
-    if (!guardian.caretakers.some(c => c.toString() === caregiver_id.toString())) {
-      guardian.caretakers.push(caregiver_id);
-    }
+//     // add caretaker
+//     if (!guardian.caretakers.some(c => c.toString() === caregiver_id.toString())) {
+//       guardian.caretakers.push(caregiver_id);
+//     }
 
-    await guardian.save();
+//     await guardian.save();
 
-    // ---------------------- Step 8: Update Caregiver Model ----------------------
-    caregiver.patients = caregiver.patients || [];
-    caregiver.guardianId = caregiver.guardianId || [];
+//     // ---------------------- Step 8: Update Caregiver Model ----------------------
+//     caregiver.patients = caregiver.patients || [];
+// if (!Array.isArray(caregiver.guardianId)) {
+//   caregiver.guardianId = [];
+// }
 
-    // add patient to caregiver
-    if (!caregiver.patients.some(p => p.toString() === patient_id.toString())) {
-      caregiver.patients.push(patient_id);
-    }
+//     // add patient to caregiver
+//     if (!caregiver.patients.some(p => p.toString() === patient_id.toString())) {
+//       caregiver.patients.push(patient_id);
+//     }
 
-    // add guardian to caregiver
-    if (!caregiver.guardianId.some(g => g.toString() === token._id.toString())) {
-      caregiver.guardianId.push(token._id);
-    }
+//     // add guardian to caregiver
+//     if (!caregiver.guardianId.some(g => g.toString() === token._id.toString())) {
+//       caregiver.guardianId.push(token._id);
+//     }
 
-    await caregiver.save();
+//     await caregiver.save();
+
+// --- Step 7: Update Guardian Model ---
+guardian.patients = guardian.patients || [];
+
+if (!Array.isArray(guardian.caretakers)) {
+  guardian.caretakers = [];
+}
+
+// add patient
+if (!guardian.patients.some(p => p.toString() === patient_id.toString())) {
+  guardian.patients.push(patient_id);
+}
+
+// add caretaker
+if (!guardian.caretakers.some(c => c.toString() === caregiver_id.toString())) {
+  guardian.caretakers.push(caregiver_id);
+}
+
+await guardian.save();
+
+
+// --- Step 8: Update Caregiver Model ---
+caregiver.patients = caregiver.patients || [];
+
+if (!Array.isArray(caregiver.guardianId)) {
+  caregiver.guardianId = [];
+}
+
+// add patient
+if (!caregiver.patients.some(p => p.toString() === patient_id.toString())) {
+  caregiver.patients.push(patient_id);
+}
+
+// add guardian
+if (!caregiver.guardianId.some(g => g.toString() === token._id.toString())) {
+  caregiver.guardianId.push(token._id);
+}
+
+await caregiver.save();
+
 
     // ---------------------- Step 9: Response ----------------------
     return res.status(200).json({
