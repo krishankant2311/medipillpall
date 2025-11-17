@@ -1046,7 +1046,8 @@ export const getAllPatientsByAdmin = async (req, res) => {
 
     // --- Step 4: Count ---
     const totalPatients = await Patient.countDocuments(searchFilter);
-
+//  const totalGuardians = await Patient.countDocuments({ guardianId: { $ne: null }, status: { $nin: ["Pending", "Delete"] } });
+//  const totalCaretakers = await Patient.countDocuments({ caretakerId: { $ne: null }, status: { $nin: ["Pending", "Delete"] } });
     // --- Step 5: Response ---
     return res.send({
       statusCode: 200,
@@ -1057,6 +1058,8 @@ export const getAllPatientsByAdmin = async (req, res) => {
         currentPage: page,
         totalPage: Math.ceil(totalPatients / limit),
         totalRecord: totalPatients,
+        // totalGuardians,
+        // totalCaretakers,
       },
     });
   } catch (error) {
