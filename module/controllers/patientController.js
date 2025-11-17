@@ -996,7 +996,7 @@ export const changePatientLanguage = async (req, res) => {
 export const getAllPatientsByAdmin = async (req, res) => {
   try {
     const token = req.token;
-    let { page = 1, limit = 10, search = "", status = "All" } = req.query;
+    let { page = 1, limit = 10, search = "", statusFilter = "All" } = req.query;
 
     page = Number.parseInt(page);
     limit = Number.parseInt(limit);
@@ -1016,21 +1016,19 @@ export const getAllPatientsByAdmin = async (req, res) => {
     // --- Step 2: Build Filters ---
     const searchRegex = new RegExp(search.trim(), "i");
 
-    // Status filter
-    let statusFilter = {};
-    if (status === "Active") {
-      statusFilter.status = "Active";
-    } else if (status === "Blocked") {
-      statusFilter.status = "Blocked";
+    // --- Status Filter (MATCH OTHER APIS) ---
+    let statusQuery = {};
+    if (statusFilter === "Active") {
+      statusQuery.status = "Active";
+    } else if (statusFilter === "Blocked") {
+      statusQuery.status = "Blocked";
     } else {
-      // ALL
-      statusFilter.status = { $nin: ["Pending", "Delete"] };
+      // ALL (exclude Pending + Delete)
+      statusQuery.status = { $nin: ["Pending", "Delete"] };
     }
 
-    // Search filter
-    let searchFilter = {
-      ...statusFilter,
-    };
+    // --- Search Filter ---
+    let searchFilter = { ...statusQuery };
 
     if (search.trim()) {
       searchFilter.$or = [
@@ -1056,10 +1054,10 @@ export const getAllPatientsByAdmin = async (req, res) => {
       .limit(limit)
       .sort({ createdAt: -1 });
 
-    // --- Step 4: Total Patient Count ---
+    // --- Step 4: Total Count ---
     const totalPatients = await Patient.countDocuments(searchFilter);
 
-    // --- Step 5: Add guardian & caretaker count for each patient ---
+    // --- Step 5: Add Counts ---
     const patientsWithCounts = patients.map((p) => ({
       ...p.toObject(),
       totalGuardian: p.guardianId ? 1 : 0,
@@ -1087,6 +1085,7 @@ export const getAllPatientsByAdmin = async (req, res) => {
     });
   }
 };
+
 
 // export const getAllPatientsByAdmin = async (req, res) => {
 //   try {
