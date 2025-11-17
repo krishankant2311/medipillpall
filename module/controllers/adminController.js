@@ -1953,7 +1953,7 @@ export const adminEditCaretakerProfile = async (req, res) => {
     let { fullName, certification, mobileNumber, gender, age } = req.body;
 
     fullName = fullName?.trim();
-    email = email?.trim()?.toLowerCase();
+    // email = email?.trim()?.toLowerCase();
 
     // --- Validate Admin Token ---
     if (!token || !token._id) {
@@ -2013,7 +2013,7 @@ export const adminEditCaretakerProfile = async (req, res) => {
 
     // --- Step 3: Update Fields ---
     caretaker.fullName = fullName;
-    caretaker.email = email;
+    // caretaker.email = email;
     caretaker.profilePhoto = profilePhotoUrl;
     caretaker.certification = certification;
     caretaker.mobileNumber = mobileNumber;
@@ -2044,7 +2044,7 @@ export const editGuardianProfile = async (req, res) => {
     let { fullName, certification, mobileNumber, gender, age } = req.body;
  const {guardianId} =  req.params;
     fullName = fullName?.trim();
-    email = email?.trim()?.toLowerCase();
+    // email = email?.trim()?.toLowerCase();
 if (!guardianId) {
       return res.send({
         statusCode: 400,
@@ -2083,7 +2083,7 @@ if (!guardianId) {
     // }
 
     // --- Step 1: Find Guardian ---
-    const guardian = await Guardian.findById(token._id);
+    const guardian = await Guardian.findById(guardianId);
     if (!guardian) {
       return res.send({
         statusCode: 404,
@@ -2116,7 +2116,7 @@ if (!guardianId) {
 
     // --- Step 3: Update Guardian Info ---
     guardian.fullName = fullName;
-    guardian.email = email;
+    // guardian.email = email;
     guardian.profilePhoto = profilePhotoUrl;
     guardian.certification=certification;
     guardian.mobileNumber=mobileNumber;
