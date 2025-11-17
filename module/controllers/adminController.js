@@ -1625,6 +1625,7 @@ export const blockGuardianbyAdmin = async (req, res) => {
     });
   }
 };
+
 export const unblockGuardian = async (req, res) => {
   try {
     const token = req.token; // admin ka token
@@ -1757,6 +1758,7 @@ export const blockCaretakerByAdmin = async (req, res) => {
     });
   }
 };
+
 export const unblockCaretaker = async (req, res) => {
   try {
     const token = req.token;
@@ -1815,6 +1817,7 @@ export const unblockCaretaker = async (req, res) => {
     });
   }
 };
+
 export const blockPatientByAdmin = async (req, res) => {
   try {
     const token = req.token;
@@ -1886,6 +1889,7 @@ export const blockPatientByAdmin = async (req, res) => {
     });
   }
 };
+
 export const unblockPatient = async (req, res) => {
   try {
     const token = req.token;
@@ -1944,7 +1948,6 @@ export const unblockPatient = async (req, res) => {
     });
   }
 };
-
 
 export const adminEditCaretakerProfile = async (req, res) => {
   try {
