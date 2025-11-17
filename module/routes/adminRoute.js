@@ -17,9 +17,11 @@ import {
   unblockGuardian,
   blockCaretakerByAdmin,
 unblockCaretaker,
-
+adminEditCaretakerProfile,
 blockPatientByAdmin,
 unblockPatient,
+editGuardianProfile,
+adminEditPatient,
 } from "../controllers/adminController.js";
 
 import { verifyAccessToken } from "../../helpers/jwt.js"; // token verify middleware
@@ -53,5 +55,7 @@ router.post("/block-caretaker-byadmin/:caretakerId", verifyAccessToken, upload.n
 router.post("/unblock-caretaker/:caretakerId", verifyAccessToken, upload.none(), unblockCaretaker);
 router.post("/block-patient-byadmin/:patientId", verifyAccessToken, upload.none(), blockPatientByAdmin);
 router.post("/unblock-patient/:patientId", verifyAccessToken, upload.none(), unblockPatient);
-
+router.post("/admin-edit-caretaker-profile/:caretakerId", verifyAccessToken, upload.single("profilePhoto"), adminEditCaretakerProfile);
+router.post("/edit-guardian-profile/:guardianId", verifyAccessToken, upload.single("profilePhoto"), editGuardianProfile);
+router.post("/admin-edit-patient/:patientId", verifyAccessToken, upload.single("profilePhoto"), adminEditPatient);
 export default router;
