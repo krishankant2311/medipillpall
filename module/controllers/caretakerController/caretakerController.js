@@ -205,16 +205,17 @@ export const addCaretaker = async (req, res) => {
 //   }
 // };
 
+
 export const getAllCaretakersByAdmin = async (req, res) => {
   try {
     const token = req.token;
-    let { page = 1, limit = 10, search = "" } = req.query;
+    let { page = 1, limit = 10, search = "", statusFilter = "all" } = req.query;
 
     page = Number.parseInt(page);
     limit = Number.parseInt(limit);
     const skip = (page - 1) * limit;
 
-    // --- Step 1: Validate Admin ---
+    // --- Validate Admin ---
     const adminUser = await Admin.findById(token._id);
     if (!adminUser || adminUser.status !== "Active") {
       return res.status(403).send({
@@ -225,22 +226,33 @@ export const getAllCaretakersByAdmin = async (req, res) => {
       });
     }
 
-    // --- Step 2: Search & Filter ---
+    // --- Search Regex ---
     const searchRegex = new RegExp(search.trim(), "i");
 
+    // --- Status Filter ---
+    let statusCondition = {};
+    if (statusFilter === "Active") {
+      statusCondition = { status: "Active" };
+    } else if (statusFilter === "Blocked") {
+      statusCondition = { status: "Blocked" };
+    } else {
+      statusCondition = { status: { $nin: ["Pending", "Delete"] } };
+    }
+
+    // --- Final search ---
     const searchFilter = search.trim()
       ? {
-          status: { $nin: ["Pending", "Delete"] }, // <-- updated
+          ...statusCondition,
           $or: [
             { fullName: { $regex: searchRegex } },
             { email: { $regex: searchRegex } },
             { mobileNumber: { $regex: searchRegex } },
           ],
         }
-      : { status: { $nin: ["Pending", "Delete"] } }; // <-- updated
+      : { ...statusCondition };
 
-    // --- Step 3: Fetch Caretakers ---
-    const caretakers = await Caretaker.find(searchFilter)
+    // --- Fetch Caretakers ---
+    const caretakers = await Caretaker.find(searchFilter).select("-password -refreshToken -otp -accessToken")
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 })
@@ -248,18 +260,24 @@ export const getAllCaretakersByAdmin = async (req, res) => {
         path: "patients",
         match: { status: "Active" },
         select: "fullName age diseaseCondition gender mobileNumber createdAt",
+      })
+      .populate({
+        path: "guardianId",
+        match: { status: "Active" },
+        select: "fullName email mobileNumber createdAt",
       });
 
-    // --- Step 4: Count ---
+    // --- Count ---
     const totalCaretakers = await Caretaker.countDocuments(searchFilter);
 
-    // --- Step 5: Add total patient count ---
+    // --- Add guardian + patient count ---
     const caretakersWithCount = caretakers.map((ct) => ({
       ...ct.toObject(),
       totalPatients: ct.patients?.length || 0,
+      totalGuardians: ct.guardianId ? 1 : 0,
     }));
 
-    // --- Step 6: Response ---
+    // --- Response ---
     return res.send({
       statusCode: 200,
       success: true,
@@ -280,6 +298,85 @@ export const getAllCaretakersByAdmin = async (req, res) => {
     });
   }
 };
+
+
+
+//working fine
+// export const getAllCaretakersByAdmin = async (req, res) => {
+//   try {
+//     const token = req.token;
+//     let { page = 1, limit = 10, search = "" } = req.query;
+
+//     page = Number.parseInt(page);
+//     limit = Number.parseInt(limit);
+//     const skip = (page - 1) * limit;
+
+//     // --- Step 1: Validate Admin ---
+//     const adminUser = await Admin.findById(token._id);
+//     if (!adminUser || adminUser.status !== "Active") {
+//       return res.status(403).send({
+//         statusCode: 403,
+//         success: false,
+//         message: "Access denied: Admins only",
+//         result: {},
+//       });
+//     }
+
+//     // --- Step 2: Search & Filter ---
+//     const searchRegex = new RegExp(search.trim(), "i");
+
+//     const searchFilter = search.trim()
+//       ? {
+//           status: { $nin: ["Pending", "Delete"] }, // <-- updated
+//           $or: [
+//             { fullName: { $regex: searchRegex } },
+//             { email: { $regex: searchRegex } },
+//             { mobileNumber: { $regex: searchRegex } },
+//           ],
+//         }
+//       : { status: { $nin: ["Pending", "Delete"] } }; // <-- updated
+
+//     // --- Step 3: Fetch Caretakers ---
+//     const caretakers = await Caretaker.find(searchFilter)
+//       .skip(skip)
+//       .limit(limit)
+//       .sort({ createdAt: -1 })
+//       .populate({
+//         path: "patients",
+//         match: { status: "Active" },
+//         select: "fullName age diseaseCondition gender mobileNumber createdAt",
+//       });
+
+//     // --- Step 4: Count ---
+//     const totalCaretakers = await Caretaker.countDocuments(searchFilter);
+
+//     // --- Step 5: Add total patient count ---
+//     const caretakersWithCount = caretakers.map((ct) => ({
+//       ...ct.toObject(),
+//       totalPatients: ct.patients?.length || 0,
+//     }));
+
+//     // --- Step 6: Response ---
+//     return res.send({
+//       statusCode: 200,
+//       success: true,
+//       message: "All caretakers fetched successfully (Admin)",
+//       result: {
+//         caretakers: caretakersWithCount,
+//         currentPage: page,
+//         totalPage: Math.ceil(totalCaretakers / limit),
+//         totalRecord: totalCaretakers,
+//       },
+//     });
+//   } catch (error) {
+//     return res.send({
+//       statusCode: 500,
+//       success: false,
+//       message: error.message + " ERROR in getAllCaretakersByAdmin API",
+//       result: {},
+//     });
+//   }
+// };
 
 
 

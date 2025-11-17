@@ -992,10 +992,11 @@ export const changePatientLanguage = async (req, res) => {
 };
 
 // import User from "../models/userModel.js"; // jisme admin details store h
+
 export const getAllPatientsByAdmin = async (req, res) => {
   try {
     const token = req.token;
-    let { page = 1, limit = 10, search = "" } = req.query;
+    let { page = 1, limit = 10, search = "", status = "All" } = req.query;
 
     page = Number.parseInt(page);
     limit = Number.parseInt(limit);
@@ -1012,54 +1013,69 @@ export const getAllPatientsByAdmin = async (req, res) => {
       });
     }
 
-    // --- Step 2: Build search filter ---
+    // --- Step 2: Build Filters ---
     const searchRegex = new RegExp(search.trim(), "i");
 
-    const searchFilter = search.trim()
-      ? {
-          status: { $nin: ["Pending", "Delete"] }, // <-- updated
-          $or: [
-            { fullName: { $regex: searchRegex } },
-            { mobileNumber: { $regex: searchRegex } },
-          ],
-        }
-      : {
-          status: { $nin: ["Pending", "Delete"] }, // <-- updated
-        };
+    // Status filter
+    let statusFilter = {};
+    if (status === "Active") {
+      statusFilter.status = "Active";
+    } else if (status === "Blocked") {
+      statusFilter.status = "Blocked";
+    } else {
+      // ALL
+      statusFilter.status = { $nin: ["Pending", "Delete"] };
+    }
+
+    // Search filter
+    let searchFilter = {
+      ...statusFilter,
+    };
+
+    if (search.trim()) {
+      searchFilter.$or = [
+        { fullName: { $regex: searchRegex } },
+        { mobileNumber: { $regex: searchRegex } },
+      ];
+    }
 
     // --- Step 3: Fetch Patients ---
     const patients = await Patient.find(searchFilter)
       .select("-password -refreshToken -otp -accessToken")
       .populate({
         path: "guardianId",
-        match: { status: { $nin: ["Pending", "Delete"] } }, // extra safeguard
+        match: { status: { $nin: ["Pending", "Delete"] } },
         select: "fullName gender email mobileNumber status createdAt",
       })
       .populate({
         path: "caretakerId",
-        match: { status: { $nin: ["Pending", "Delete"] } }, // extra safeguard
+        match: { status: { $nin: ["Pending", "Delete"] } },
         select: "fullName gender email mobileNumber status createdAt",
       })
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 });
 
-    // --- Step 4: Count ---
+    // --- Step 4: Total Patient Count ---
     const totalPatients = await Patient.countDocuments(searchFilter);
-//  const totalGuardians = await Patient.countDocuments({ guardianId: { $ne: null }, status: { $nin: ["Pending", "Delete"] } });
-//  const totalCaretakers = await Patient.countDocuments({ caretakerId: { $ne: null }, status: { $nin: ["Pending", "Delete"] } });
-    // --- Step 5: Response ---
+
+    // --- Step 5: Add guardian & caretaker count for each patient ---
+    const patientsWithCounts = patients.map((p) => ({
+      ...p.toObject(),
+      totalGuardian: p.guardianId ? 1 : 0,
+      totalCaretaker: p.caretakerId ? 1 : 0,
+    }));
+
+    // --- Step 6: Response ---
     return res.send({
       statusCode: 200,
       success: true,
       message: "All patients fetched successfully (Admin)",
       result: {
-        patients,
+        patients: patientsWithCounts,
         currentPage: page,
         totalPage: Math.ceil(totalPatients / limit),
         totalRecord: totalPatients,
-        // totalGuardians,
-        // totalCaretakers,
       },
     });
   } catch (error) {
@@ -1071,6 +1087,86 @@ export const getAllPatientsByAdmin = async (req, res) => {
     });
   }
 };
+
+// export const getAllPatientsByAdmin = async (req, res) => {
+//   try {
+//     const token = req.token;
+//     let { page = 1, limit = 10, search = "" } = req.query;
+
+//     page = Number.parseInt(page);
+//     limit = Number.parseInt(limit);
+//     const skip = (page - 1) * limit;
+
+//     // --- Step 1: Validate Admin ---
+//     const adminUser = await Admin.findById(token._id);
+//     if (!adminUser || adminUser.status !== "Active") {
+//       return res.status(403).send({
+//         statusCode: 403,
+//         success: false,
+//         message: "Access denied: Admins only",
+//         result: {},
+//       });
+//     }
+
+//     // --- Step 2: Build search filter ---
+//     const searchRegex = new RegExp(search.trim(), "i");
+
+//     const searchFilter = search.trim()
+//       ? {
+//           status: { $nin: ["Pending", "Delete"] }, // <-- updated
+//           $or: [
+//             { fullName: { $regex: searchRegex } },
+//             { mobileNumber: { $regex: searchRegex } },
+//           ],
+//         }
+//       : {
+//           status: { $nin: ["Pending", "Delete"] }, // <-- updated
+//         };
+
+//     // --- Step 3: Fetch Patients ---
+//     const patients = await Patient.find(searchFilter)
+//       .select("-password -refreshToken -otp -accessToken")
+//       .populate({
+//         path: "guardianId",
+//         match: { status: { $nin: ["Pending", "Delete"] } }, // extra safeguard
+//         select: "fullName gender email mobileNumber status createdAt",
+//       })
+//       .populate({
+//         path: "caretakerId",
+//         match: { status: { $nin: ["Pending", "Delete"] } }, // extra safeguard
+//         select: "fullName gender email mobileNumber status createdAt",
+//       })
+//       .skip(skip)
+//       .limit(limit)
+//       .sort({ createdAt: -1 });
+
+//     // --- Step 4: Count ---
+//     const totalPatients = await Patient.countDocuments(searchFilter);
+// //  const totalGuardians = await Patient.countDocuments({ guardianId: { $ne: null }, status: { $nin: ["Pending", "Delete"] } });
+// //  const totalCaretakers = await Patient.countDocuments({ caretakerId: { $ne: null }, status: { $nin: ["Pending", "Delete"] } });
+//     // --- Step 5: Response ---
+//     return res.send({
+//       statusCode: 200,
+//       success: true,
+//       message: "All patients fetched successfully (Admin)",
+//       result: {
+//         patients,
+//         currentPage: page,
+//         totalPage: Math.ceil(totalPatients / limit),
+//         totalRecord: totalPatients,
+//         // totalGuardians,
+//         // totalCaretakers,
+//       },
+//     });
+//   } catch (error) {
+//     return res.status(500).send({
+//       statusCode: 500,
+//       success: false,
+//       message: error.message + " ERROR in getAllPatientsByAdmin API",
+//       result: {},
+//     });
+//   }
+// };
 
 // 
 export const resendPatientOTPforSignup = async (req, res) => {

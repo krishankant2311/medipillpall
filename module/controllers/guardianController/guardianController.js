@@ -127,7 +127,7 @@ export const addGuardian = async (req, res) => {
 export const signupGuardian = async (req, res) => {
   try {
     // Step 1: Extract data from request body in one line
-    let { fullName, mobileNumber,gender, email } = req.body;
+    let { fullName, mobileNumber, gender, email } = req.body;
 
     // Step 2: Trim and normalize
     fullName = fullName?.trim()?.toLowerCase();
@@ -313,16 +313,17 @@ export const signupGuardian = async (req, res) => {
 //   }
 // };
 
+
 export const getAllGuardiansByAdmin = async (req, res) => {
   try {
     const token = req.token;
-    let { page = 1, limit = 10, search = "" } = req.query;
+    let { page = 1, limit = 10, search = "", statusFilter = "all" } = req.query;
 
     page = Number.parseInt(page);
     limit = Number.parseInt(limit);
     const skip = (page - 1) * limit;
 
-    // --- Step 1: Validate Admin ---
+    // --- Validate Admin ---
     const adminUser = await Admin.findById(token._id);
     if (!adminUser || adminUser.status !== "Active") {
       return res.status(403).send({
@@ -333,20 +334,40 @@ export const getAllGuardiansByAdmin = async (req, res) => {
       });
     }
 
-    // --- Step 2: Search & Filter ---
+    // --- Search Regex ---
     const searchRegex = new RegExp(search.trim(), "i");
 
+    // ---------------------------
+    //   STATUS BASED FILTER
+    // ---------------------------
+    let statusCondition = {};
+
+    if (statusFilter === "Active") {
+      statusCondition = { status: "Active" };
+    } else if (statusFilter === "Blocked") {
+      statusCondition = { status: "Blocked" };
+    } else {
+      // default: exclude Pending & Delete
+      statusCondition = { status: { $nin: ["Pending", "Delete"] } };
+    }
+
+    // ---------------------------
+    //   FINAL SEARCH FILTER
+    // ---------------------------
     const searchFilter = search.trim()
       ? {
-status: { $nin: ["Pending", "Delete"] },          $or: [
-            { fullName: { $regex: searchRegex } },
-            { email: { $regex: searchRegex } },
-            { mobileNumber: { $regex: searchRegex } },
-          ],
-        }
- : { status: { $nin: ["Pending", "Delete"] } };
-    // --- Step 3: Fetch Guardians ---
-    const guardians = await Guardian.find(searchFilter).select("-password -otp -accessToken -refreshToken")
+        ...statusCondition,
+        $or: [
+          { fullName: { $regex: searchRegex } },
+          { email: { $regex: searchRegex } },
+          { mobileNumber: { $regex: searchRegex } },
+        ],
+      }
+      : { ...statusCondition };
+
+    // --- Fetch Guardians ---
+    const guardians = await Guardian.find(searchFilter)
+      .select("-password -otp -accessToken -refreshToken")
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 })
@@ -354,24 +375,29 @@ status: { $nin: ["Pending", "Delete"] },          $or: [
         path: "patients",
         match: { status: "Active" },
         select: "fullName age diseaseCondition gender mobileNumber createdAt",
+      })
+      .populate({
+        path: "caretakers",
+        match: { status: "Active" },
+        select: "fullName email mobileNumber gender age createdAt",
       });
 
-    // --- Step 4: Count ---
+    // --- Count ---
     const totalGuardians = await Guardian.countDocuments(searchFilter);
 
-    // --- Step 5: Add total patient count ---
-    const guardiansWithCount = guardians.map((guardian) => ({
+    // --- Add counts ---
+    const guardiansWithCounts = guardians.map((guardian) => ({
       ...guardian.toObject(),
       totalPatients: guardian.patients?.length || 0,
+      totalCaretakers: guardian.caretakers?.length || 0,
     }));
 
-    // --- Step 6: Response ---
     return res.send({
       statusCode: 200,
       success: true,
       message: "All guardians fetched successfully (Admin)",
       result: {
-        guardians: guardiansWithCount,
+        guardians: guardiansWithCounts,
         currentPage: page,
         totalPage: Math.ceil(totalGuardians / limit),
         totalRecord: totalGuardians,
@@ -386,6 +412,83 @@ status: { $nin: ["Pending", "Delete"] },          $or: [
     });
   }
 };
+
+
+//working fine
+
+// export const getAllGuardiansByAdmin = async (req, res) => {
+//   try {
+//     const token = req.token;
+//     let { page = 1, limit = 10, search = "" } = req.query;
+
+//     page = Number.parseInt(page);
+//     limit = Number.parseInt(limit);
+//     const skip = (page - 1) * limit;
+
+//     // --- Step 1: Validate Admin ---
+//     const adminUser = await Admin.findById(token._id);
+//     if (!adminUser || adminUser.status !== "Active") {
+//       return res.status(403).send({
+//         statusCode: 403,
+//         success: false,
+//         message: "Access denied: Admins only",
+//         result: {},
+//       });
+//     }
+
+//     // --- Step 2: Search & Filter ---
+//     const searchRegex = new RegExp(search.trim(), "i");
+
+//     const searchFilter = search.trim()
+//       ? {
+// status: { $nin: ["Pending", "Delete"] },          $or: [
+//             { fullName: { $regex: searchRegex } },
+//             { email: { $regex: searchRegex } },
+//             { mobileNumber: { $regex: searchRegex } },
+//           ],
+//         }
+//  : { status: { $nin: ["Pending", "Delete"] } };
+//     // --- Step 3: Fetch Guardians ---
+//     const guardians = await Guardian.find(searchFilter).select("-password -otp -accessToken -refreshToken")
+//       .skip(skip)
+//       .limit(limit)
+//       .sort({ createdAt: -1 })
+//       .populate({
+//         path: "patients",
+//         match: { status: "Active" },
+//         select: "fullName age diseaseCondition gender mobileNumber createdAt",
+//       });
+
+//     // --- Step 4: Count ---
+//     const totalGuardians = await Guardian.countDocuments(searchFilter);
+
+//     // --- Step 5: Add total patient count ---
+//     const guardiansWithCount = guardians.map((guardian) => ({
+//       ...guardian.toObject(),
+//       totalPatients: guardian.patients?.length || 0,
+//     }));
+
+//     // --- Step 6: Response ---
+//     return res.send({
+//       statusCode: 200,
+//       success: true,
+//       message: "All guardians fetched successfully (Admin)",
+//       result: {
+//         guardians: guardiansWithCount,
+//         currentPage: page,
+//         totalPage: Math.ceil(totalGuardians / limit),
+//         totalRecord: totalGuardians,
+//       },
+//     });
+//   } catch (error) {
+//     return res.send({
+//       statusCode: 500,
+//       success: false,
+//       message: error.message + " ERROR in getAllGuardiansByAdmin API",
+//       result: {},
+//     });
+//   }
+// };
 
 
 export const guardianLogin = async (req, res) => {
@@ -683,7 +786,7 @@ export const editGuardianProfile = async (req, res) => {
       }
 
       // Build absolute URL for new photo
-      
+
       const baseUrl = `${req.protocol}://${req.get("host")}`; // e.g. http://localhost:5000
       profilePhotoUrl = `${baseUrl}/uploads/${req.file.filename}`;
 
@@ -694,10 +797,10 @@ export const editGuardianProfile = async (req, res) => {
     guardian.fullName = fullName;
     guardian.email = email;
     guardian.profilePhoto = profilePhotoUrl;
-    guardian.certification=certification;
-    guardian.mobileNumber=mobileNumber;
-    guardian.gender=gender;
-    guardian.age=age;
+    guardian.certification = certification;
+    guardian.mobileNumber = mobileNumber;
+    guardian.gender = gender;
+    guardian.age = age;
 
     await guardian.save();
 
@@ -1033,7 +1136,8 @@ export const addPatient = async (req, res) => {
     // --- Handle DNR Form upload ---
     let dnrForm = "";
     if (req.file) {
-      dnrForm = `/uploads/patients/${req.file.filename}`; // actual uploaded file path
+      const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+      dnrForm = fileUrl;
     }
 
     // --- Generate OTP ---
@@ -1910,7 +2014,7 @@ export const getAllCaregiversByGuardian = async (req, res) => {
 
     const caregivers = await Caregiver.find({
       status: "Active",
-    }).sort({ createdAt: -1 }).select("-accessToken -refreshToken -otp");  ;
+    }).sort({ createdAt: -1 }).select("-accessToken -refreshToken -otp");;
 
     return res.send({
       statusCode: 200,
@@ -1945,7 +2049,7 @@ export const getActivePatientsByGuardian = async (req, res) => {
     const activePatients = await Patient.find({
       guardianId: guardian._id,
       status: "Active",
-    }).sort({ createdAt: -1 }).select("-accessToken -refreshToken -otp");  ;
+    }).sort({ createdAt: -1 }).select("-accessToken -refreshToken -otp");;
 
     return res.send({
       statusCode: 200,
@@ -2063,7 +2167,7 @@ export const resendGuardianOTPforSignup = async (req, res) => {
     // Step 4: Check if OTP cooldown period has passed
     const now = new Date();
     if (guardian.otp?.otpExpiry) {
-      const otpSentTime = new Date(guardian.otp.otpExpiry.getTime() - 5 * 60 * 1000); 
+      const otpSentTime = new Date(guardian.otp.otpExpiry.getTime() - 5 * 60 * 1000);
       // assuming OTP expiry is 5 minutes from generation
       const diffSeconds = (now - otpSentTime) / 1000;
 
@@ -2140,7 +2244,7 @@ export const resendGuardianOTPforLogin = async (req, res) => {
     // Step 4: Check if OTP cooldown period has passed
     const now = new Date();
     if (guardian.otp?.otpExpiry) {
-      const otpSentTime = new Date(guardian.otp.otpExpiry.getTime() - 5 * 60 * 1000); 
+      const otpSentTime = new Date(guardian.otp.otpExpiry.getTime() - 5 * 60 * 1000);
       // assuming OTP expiry is 5 minutes from generation
       const diffSeconds = (now - otpSentTime) / 1000;
 
@@ -2281,7 +2385,7 @@ export const resendGuardianOTPforLogin = async (req, res) => {
 //       caregiver.guardianId.push(guardian._id);
 //       await caregiver.save();
 //     }
- 
+
 
 //     // Step 8: Success response
 //     return res.status(200).json({
@@ -2388,8 +2492,8 @@ export const assignPatientToCaregiver = async (req, res) => {
     }
 
     // ---------------------- Step 6: Update Patient Model ----------------------
-    patient.guardianId = token._id; 
-    patient.caretakerId = caregiver_id; 
+    patient.guardianId = token._id;
+    patient.caretakerId = caregiver_id;
     await patient.save();
 
     // ---------------------- Step 7: Update Guardian Model ----------------------
@@ -2797,12 +2901,12 @@ export const getAllCaretakersByGuardianForPatient = async (req, res) => {
     //   patients: { $in: [patient._id] },
     //   status: "Active",
     // }).select("_id fullName mobileNumber gender language profilePhoto status").sort({ createdAt: -1 });
-const caretakers = await Caregiver.findOne({
-  patients: { $in: [patient._id] },
-  status: "Active",
-})
-  .select("_id fullName mobileNumber gender language profilePhoto status")
-  .sort({ createdAt: -1 });
+    const caretakers = await Caregiver.findOne({
+      patients: { $in: [patient._id] },
+      status: "Active",
+    })
+      .select("_id fullName mobileNumber gender language profilePhoto status")
+      .sort({ createdAt: -1 });
     // ✅ Step 4: Response
     return res.send({
       statusCode: 200,

@@ -1944,3 +1944,274 @@ export const unblockPatient = async (req, res) => {
     });
   }
 };
+
+
+export const adminEditCaretakerProfile = async (req, res) => {
+  try {
+    const token = req.token; // admin token
+    const { caretakerId } = req.params;
+    let { fullName, email, certification, mobileNumber, gender, age } = req.body;
+
+    fullName = fullName?.trim();
+    email = email?.trim()?.toLowerCase();
+
+    // --- Validate Admin Token ---
+    if (!token || !token._id || token.role !== "Admin") {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Admin token required",
+        result: {},
+      });
+    }
+ const admin = await Admin.findOne({ _id: token._id, status: "Active" });
+    if (!admin) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Admin not found",
+        result: {},
+      });
+    }
+    // --- Validations ---
+    if (!fullName) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Full name is required",
+        result: {},
+      });
+    }
+
+    if (!email) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Email is required",
+        result: {},
+      });
+    }
+
+    // --- Step 1: Find Caretaker ---
+    const caretaker = await Caretaker.findById(caretakerId);
+    if (!caretaker) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Caretaker not found",
+        result: {},
+      });
+    }
+
+    // --- Step 2: Handle Profile Photo Upload (if any) ---
+    let profilePhotoUrl = caretaker.profilePhoto;
+
+    if (req.file) {
+      // delete old
+      if (caretaker.profilePhoto) {
+        const oldPath = path.join(
+          "uploads/profilePhotos",
+          path.basename(caretaker.profilePhoto)
+        );
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
+
+      const baseUrl = `${req.protocol}://${req.get("host")}`;
+      profilePhotoUrl = `${baseUrl}/uploads/${req.file.filename}`;
+    }
+
+    // --- Step 3: Update Fields ---
+    caretaker.fullName = fullName;
+    caretaker.email = email;
+    caretaker.profilePhoto = profilePhotoUrl;
+    caretaker.certification = certification;
+    caretaker.mobileNumber = mobileNumber;
+    caretaker.gender = gender;
+    caretaker.age = age;
+
+    await caretaker.save();
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Caretaker profile updated successfully by Admin",
+      result: caretaker,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " Error in adminEditCaretakerProfile API",
+      result: {},
+    });
+  }
+};
+
+export const editGuardianProfile = async (req, res) => {
+  try {
+    const token = req.token;
+    let { fullName, email, certification, mobileNumber, gender, age } = req.body;
+ const {guardianId} =  req.params;
+    fullName = fullName?.trim();
+    email = email?.trim()?.toLowerCase();
+if (!guardianId) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "guardianId is required",
+        result: {},
+      });
+    }
+    // --- Validate Admin Token ---
+    if (!token || !token._id || token.role !== "Admin") {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Admin token required",
+        result: {},
+      });
+    }
+    const admin = await Admin.findOne({ _id: token._id, status: "Active" });
+    if (!admin) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Admin not found",
+        result: {},
+      });
+    }
+
+    // --- Validations ---
+    if (!fullName) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Full name is required",
+        result: {},
+      });
+    }
+
+    if (!email) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Email is required",
+        result: {},
+      });
+    }
+
+    // --- Step 1: Find Guardian ---
+    const guardian = await Guardian.findById(token._id);
+    if (!guardian) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Guardian not found",
+        result: {},
+      });
+    }
+
+    // --- Step 2: Handle Profile Photo Upload (if any) ---
+    let profilePhotoUrl = guardian.profilePhoto; // keep old one if not updated
+
+    if (req.file) {
+      // Delete old photo if exists
+      if (guardian.profilePhoto) {
+        const oldPath = path.join(
+          "uploads/profilePhotos",
+          path.basename(guardian.profilePhoto)
+        );
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
+
+      // Build absolute URL for new photo
+      
+      const baseUrl = `${req.protocol}://${req.get("host")}`; // e.g. http://localhost:5000
+      profilePhotoUrl = `${baseUrl}/uploads/${req.file.filename}`;
+
+      // profilePhotoUrl = `${baseUrl}/uploads/profilePhotos/${req.file.filename}`;
+    }
+
+    // --- Step 3: Update Guardian Info ---
+    guardian.fullName = fullName;
+    guardian.email = email;
+    guardian.profilePhoto = profilePhotoUrl;
+    guardian.certification=certification;
+    guardian.mobileNumber=mobileNumber;
+    guardian.gender=gender;
+    guardian.age=age;
+
+    await guardian.save();
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Guardian profile updated successfully",
+      result: guardian,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " Error in editGuardianProfile API",
+      result: {},
+    });
+  }
+};
+
+export const adminEditPatient = async (req, res) => {
+  try {
+    const token = req.token; // admin token
+    const { patientId } = req.params;
+    const { fullName, age, mobileNumber, gender } = req.body;
+
+    // --- Validate Admin Token ---
+    if (!token || !token._id || token.role !== "Admin") {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Admin token required",
+        result: {},
+      });
+    }
+
+    // --- Find Patient ---
+    const patient = await Patient.findOne({
+      _id: patientId,
+      status: "Active",
+    });
+
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found",
+        result: {},
+      });
+    }
+
+    // --- Update Details ---
+    if (fullName) patient.fullName = fullName;
+    if (mobileNumber) patient.mobileNumber = mobileNumber;
+    if (age) patient.age = age;
+    if (gender) patient.gender = gender;
+
+    await patient.save();
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Patient details updated successfully by Admin",
+      result: patient,
+    });
+
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in adminEditPatient API",
+      result: {},
+    });
+  }
+};
+
