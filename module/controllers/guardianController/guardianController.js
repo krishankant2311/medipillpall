@@ -317,7 +317,7 @@ export const signupGuardian = async (req, res) => {
 export const getAllGuardiansByAdmin = async (req, res) => {
   try {
     const token = req.token;
-    let { page = 1, limit = 10, search = "", statusFilter = "all" } = req.query;
+    let { page = 1, limit = 10, search = "", statusFilter = "All" } = req.query;
 
     page = Number.parseInt(page);
     limit = Number.parseInt(limit);

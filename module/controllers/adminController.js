@@ -1956,7 +1956,7 @@ export const adminEditCaretakerProfile = async (req, res) => {
     email = email?.trim()?.toLowerCase();
 
     // --- Validate Admin Token ---
-    if (!token || !token._id || token.role !== "Admin") {
+    if (!token || !token._id) {
       return res.send({
         statusCode: 401,
         success: false,
@@ -1964,7 +1964,7 @@ export const adminEditCaretakerProfile = async (req, res) => {
         result: {},
       });
     }
- const admin = await Admin.findOne({ _id: token._id, status: "Active" });
+ const admin = await Admin.findOne({ _id:token._id, status: "Active" });
     if (!admin) {
       return res.send({
         statusCode: 404,
@@ -2063,7 +2063,7 @@ if (!guardianId) {
       });
     }
     // --- Validate Admin Token ---
-    if (!token || !token._id || token.role !== "Admin") {
+    if (!token || !token._id) {
       return res.send({
         statusCode: 401,
         success: false,
@@ -2166,7 +2166,7 @@ export const adminEditPatient = async (req, res) => {
     const { fullName, age, mobileNumber, gender } = req.body;
 
     // --- Validate Admin Token ---
-    if (!token || !token._id || token.role !== "Admin") {
+    if (!token || !token._id ) {
       return res.send({
         statusCode: 401,
         success: false,
