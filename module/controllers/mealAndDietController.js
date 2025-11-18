@@ -566,7 +566,7 @@ export const editMealAndDietByCaretaker = async (req, res) => {
     if (!caretaker) {
       return res.status(401).json({
         success: false,
-        message: "Invalid caretaker"
+        message: "Invalid caregiver"
       });
     }
 
@@ -606,6 +606,18 @@ export const editMealAndDietByCaretaker = async (req, res) => {
           ? JSON.parse(dailyMeals)
           : dailyMeals;
     }
+    // if(mealPhotos.length === 0 && type === "Meal"){
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "At least one meal photo is required for Meal type"
+    //   });
+    // }
+    if(mealPhotos.length > 10 && type === "Meal"){
+      return res.status(400).json({
+        success: false,
+        message: "You can upload a maximum of 10 meal photos"
+      });
+    } 
 
     // 🧩 Update data
     existing.type = type ?? existing.type;
