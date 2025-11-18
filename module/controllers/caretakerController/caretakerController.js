@@ -2732,7 +2732,7 @@ export const getPatientBodyTempByCaretaker = async (req, res) => {
   result: record
     .map((r) => ({
       _id: r._id,
-      ...r.temperature,
+      ...r.bodyTemp,          // ✔ Correct field name
       createdAt: r.createdAt,
     }))
     .filter((t) => t.day || t.temp || t.time || t.comments),
@@ -2806,18 +2806,19 @@ export const getPatientBodyWeightByCaretaker = async (req, res) => {
         result: [],
       });
 
-   return res.json({
+ return res.json({
   success: true,
   message: "Weight fetched successfully",
   filterApplied: dateFilter,
   result: record
     .map((r) => ({
       _id: r._id,
-      ...r.weightData,
+      ...r.bodyWeight,        // ✔ Correct field name
       createdAt: r.createdAt,
     }))
-    .filter((w) => w.day || w.weight || w.comments),
+    .filter((w) => w.day || w.weight || w.comments), // ✔ Empty objects removed
 });
+
 
   } catch (err) {
     console.error("Error in getPatientBodyWeightByCaretaker:", err);
