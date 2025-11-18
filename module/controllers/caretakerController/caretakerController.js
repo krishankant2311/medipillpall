@@ -2490,6 +2490,13 @@ export const getAllMedicationRemindersByCaretakerForPatient = async (req, res) =
 //   }
 // };
 
+const hasValidData = (obj) => {
+  if (!obj) return false;
+  return Object.values(obj).some(
+    (v) => v !== "" && v !== null && v !== undefined
+  );
+};
+
 // -------------------- GET BLOOD PRESSURE BY CARETAKER --------------------
 export const getPatientBloodPressureByCaretaker = async (req, res) => {
   try {
@@ -2552,16 +2559,21 @@ export const getPatientBloodPressureByCaretaker = async (req, res) => {
       });
     }
 
-    return res.json({
-      success: true,
-      message: "Blood Pressure fetched successfully",
-      filterApplied: dateFilter,
-      result: record.map((r) => ({
-        _id: r._id,                 // 🔥 Added ID here
-        ...r.bloodPressure,
-        createdAt: r.createdAt,
-      })),
-    });
+  return res.json({
+  success: true,
+  message: "Blood Pressure fetched successfully",
+  filterApplied: dateFilter,
+  result: record
+    .map((r) => ({
+      _id: r._id,                 // 🔥 Added ID
+      ...r.bloodPressure,
+      createdAt: r.createdAt,
+    }))
+     .filter((bp) => {
+      return bp.day || bp.amBP || bp.pmBP || bp.comments;
+    }), // 🔥 Removes empty BP objects
+});
+
   } catch (err) {
     console.error("Error in getPatientBloodPressureByCaretaker:", err);
     return res.status(500).json({
@@ -2631,15 +2643,19 @@ export const getPatientBloodSugarByCaretaker = async (req, res) => {
         result: [],
       });
 
-    return res.json({
-      success: true,
-      message: "Blood Sugar fetched successfully",
-      result: record.map((r) => ({
-        _id: r._id,                 // 🔥 Added ID here
-        ...r.bloodSugar,
-        createdAt: r.createdAt,
-      })),
-    });
+  return res.json({
+  success: true,
+  message: "Blood Sugar fetched successfully",
+  filterApplied: dateFilter,
+  result: record
+    .map((r) => ({
+      _id: r._id,
+      ...r.bloodSugar,
+      createdAt: r.createdAt,
+    }))
+    .filter((s) => s.day || s.amSugar || s.pmSugar || s.comments),
+});
+
   } catch (err) {
     console.error("Error in getPatientBloodSugarByCaretaker:", err);
     return res.status(500).json({
@@ -2649,64 +2665,6 @@ export const getPatientBloodSugarByCaretaker = async (req, res) => {
     });
   }
 };
-
-// export const getPatientBloodSugarByCaretaker = async (req, res) => {
-//   try {
-//     const token = req.token;
-//     const { patientId } = req.params;
-
-//     const caretaker = await Caretaker.findOne({
-//       _id: token._id,
-//       status: "Active",
-//     });
-//     if (!caretaker)
-//       return res.status(401).json({
-//         success: false,
-//         message: "Invalid or inactive caretaker",
-//       });
-
-//     const patient = await Patient.findOne({
-//       _id: patientId,
-//       status: "Active",
-//     });
-//     if (!patient)
-//       return res.status(404).json({
-//         success: false,
-//         message: "Patient not found or inactive",
-//       });
-
-//     const record = await PatientRecord.find({
-//       patient_id: patientId,
-//     })
-//       .select("bloodSugar createdAt")
-//       .sort({ createdAt: -1 });
-
-//     if (!record || !record.length || !record[0].bloodSugar)
-//       return res.json({
-//         success: true,
-//         message: "No blood sugar record found",
-//         result: {},
-//       });
-
-//     return res.json({
-//       success: true,
-//       message: "Blood Sugar fetched successfully",
-//       result: record.map((r) => ({
-//         ...r.bloodSugar,
-//         createdAt: r.createdAt,
-//       })),
-//     });
-//   } catch (err) {
-//     console.error("Error in getPatientBloodSugarByCaretaker:", err);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Internal server error",
-//       error: err.message,
-//     });
-//   }
-// };
-
-// -------------------- GET BODY TEMPERATURE BY CARETAKER --------------------
 
 
 export const getPatientBodyTempByCaretaker = async (req, res) => {
@@ -2768,13 +2726,18 @@ export const getPatientBodyTempByCaretaker = async (req, res) => {
       });
 
     return res.json({
-      success: true,
-      message: "Body Temperature fetched successfully",
-      result: record.map((r) => ({
-        ...r.bodyTemp,
-        createdAt: r.createdAt,
-      })),
-    });
+  success: true,
+  message: "Temperature fetched successfully",
+  filterApplied: dateFilter,
+  result: record
+    .map((r) => ({
+      _id: r._id,
+      ...r.temperature,
+      createdAt: r.createdAt,
+    }))
+    .filter((t) => t.day || t.temp || t.time || t.comments),
+});
+
   } catch (err) {
     console.error("Error in getPatientBodyTempByCaretaker:", err);
     return res.status(500).json({
@@ -2784,64 +2747,6 @@ export const getPatientBodyTempByCaretaker = async (req, res) => {
     });
   }
 };
-
-// export const getPatientBodyTempByCaretaker = async (req, res) => {
-//   try {
-//     const token = req.token;
-//     const { patientId } = req.params;
-
-//     const caretaker = await Caretaker.findOne({
-//       _id: token._id,
-//       status: "Active",
-//     });
-//     if (!caretaker)
-//       return res.status(401).json({
-//         success: false,
-//         message: "Invalid or inactive caretaker",
-//       });
-
-//     const patient = await Patient.findOne({
-//       _id: patientId,
-//       status: "Active",
-//     });
-//     if (!patient)
-//       return res.status(404).json({
-//         success: false,
-//         message: "Patient not found or inactive",
-//       });
-
-//     const record = await PatientRecord.find({
-//       patient_id: patientId,
-//     })
-//       .select("bodyTemp createdAt")
-//       .sort({ createdAt: -1 });
-
-//     if (!record || !record.length || !record[0].bodyTemp)
-//       return res.json({
-//         success: true,
-//         message: "No body temperature record found",
-//         result: {},
-//       });
-
-//     return res.json({
-//       success: true,
-//       message: "Body Temperature fetched successfully",
-//       result: record.map((r) => ({
-//         ...r.bodyTemp,
-//         createdAt: r.createdAt,
-//       })),
-//     });
-//   } catch (err) {
-//     console.error("Error in getPatientBodyTempByCaretaker:", err);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Internal server error",
-//       error: err.message,
-//     });
-//   }
-// };
-
-// -------------------- GET BODY WEIGHT BY CARETAKER --------------------
 
 export const getPatientBodyWeightByCaretaker = async (req, res) => {
   try {
@@ -2901,15 +2806,19 @@ export const getPatientBodyWeightByCaretaker = async (req, res) => {
         result: [],
       });
 
-    return res.json({
-      success: true,
-      message: "Body Weight fetched successfully",
-      result: record.map((r) => ({
-          _id: r._id,                 // 🔥 Added ID here
-        ...r.bodyWeight,
-        createdAt: r.createdAt,
-      })),
-    });
+   return res.json({
+  success: true,
+  message: "Weight fetched successfully",
+  filterApplied: dateFilter,
+  result: record
+    .map((r) => ({
+      _id: r._id,
+      ...r.weightData,
+      createdAt: r.createdAt,
+    }))
+    .filter((w) => w.day || w.weight || w.comments),
+});
+
   } catch (err) {
     console.error("Error in getPatientBodyWeightByCaretaker:", err);
     return res.status(500).json({
@@ -2920,63 +2829,6 @@ export const getPatientBodyWeightByCaretaker = async (req, res) => {
   }
 };
 
-// export const getPatientBodyWeightByCaretaker = async (req, res) => {
-//   try {
-//     const token = req.token;
-//     const { patientId } = req.params;
-
-//     const caretaker = await Caretaker.findOne({
-//       _id: token._id,
-//       status: "Active",
-//     });
-//     if (!caretaker)
-//       return res.status(401).json({
-//         success: false,
-//         message: "Invalid or inactive caretaker",
-//       });
-
-//     const patient = await Patient.findOne({
-//       _id: patientId,
-//       status: "Active",
-//     });
-//     if (!patient)
-//       return res.status(404).json({
-//         success: false,
-//         message: "Patient not found or inactive",
-//       });
-
-//     const record = await PatientRecord.find({
-//       patient_id: patientId,
-//     })
-//       .select("bodyWeight createdAt")
-//       .sort({ createdAt: -1 });
-
-//     if (!record || !record.length || !record[0].bodyWeight)
-//       return res.json({
-//         success: true,
-//         message: "No body weight record found",
-//         result: {},
-//       });
-
-//     return res.json({
-//       success: true,
-//       message: "Body Weight fetched successfully",
-//       result: record.map((r) => ({
-//         ...r.bodyWeight,
-//         createdAt: r.createdAt,
-//       })),
-//     });
-//   } catch (err) {
-//     console.error("Error in getPatientBodyWeightByCaretaker:", err);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Internal server error",
-//       error: err.message,
-//     });
-//   }
-// };
-
-// -------------------- GET HEART RATE BY CARETAKER --------------------
 
 export const getPatientHeartRateByCaretaker = async (req, res) => {
   try {
@@ -3036,15 +2888,21 @@ export const getPatientHeartRateByCaretaker = async (req, res) => {
         result: [],
       });
 
-    return res.json({
-      success: true,
-      message: "Heart Rate fetched successfully",
-      result: record.map((r) => ({
-        _id: r._id,                 // 🔥 Added ID here
-        ...r.heartRate,
-        createdAt: r.createdAt,
-      })),
-    });
+   return res.json({
+  success: true,
+  message: "Heart Rate fetched successfully",
+  filterApplied: dateFilter,
+  result: record
+    .map((r) => ({
+      _id: r._id,                     // ✔ ID include
+      ...r.heartRate,                 // ✔ Heart rate object
+      createdAt: r.createdAt,         // ✔ Timestamp
+    }))
+    .filter((h) =>
+      h.day || h.heartRate || h.time || h.comments
+    ),                                // ✔ Empty entries removed
+});
+
   } catch (err) {
     console.error("Error in getPatientHeartRateByCaretaker:", err);
     return res.status(500).json({
@@ -3054,62 +2912,6 @@ export const getPatientHeartRateByCaretaker = async (req, res) => {
     });
   }
 };
-
-// export const getPatientHeartRateByCaretaker = async (req, res) => {
-//   try {
-//     const token = req.token;
-//     const { patientId } = req.params;
-
-//     const caretaker = await Caretaker.findOne({
-//       _id: token._id,
-//       status: "Active",
-//     });
-//     if (!caretaker)
-//       return res.status(401).json({
-//         success: false,
-//         message: "Invalid or inactive caretaker",
-//       });
-
-//     const patient = await Patient.findOne({
-//       _id: patientId,
-//       status: "Active",
-//     });
-//     if (!patient)
-//       return res.status(404).json({
-//         success: false,
-//         message: "Patient not found or inactive",
-//       });
-
-//     const record = await PatientRecord.find({
-//       patient_id: patientId,
-//     })
-//       .select("heartRate createdAt")
-//       .sort({ createdAt: -1 });
-
-//     if (!record || !record.length || !record[0].heartRate)
-//       return res.json({
-//         success: true,
-//         message: "No heart rate record found",
-//         result: {},
-//       });
-
-//     return res.json({
-//       success: true,
-//       message: "Heart Rate fetched successfully",
-//       result: record.map((r) => ({
-//         ...r.heartRate,
-//         createdAt: r.createdAt,
-//       })),
-//     });
-//   } catch (err) {
-//     console.error("Error in getPatientHeartRateByCaretaker:", err);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Internal server error",
-//       error: err.message,
-//     });
-//   }
-// };
 
 export const getPatientMedicalReportByCaretaker = async (req, res) => {
   try {
