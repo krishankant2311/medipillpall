@@ -20,6 +20,7 @@ export const addMealAndDiet = async (req, res) => {
       planName,
       startDate,
       endDate,
+      calories,
       instructions,
       dailyMeals
     } = req.body;
@@ -90,6 +91,7 @@ export const addMealAndDiet = async (req, res) => {
       endDate: endDate || null,
       instructions: instructions || "",
       dailyMeals: dailyMealsData,
+      calories: calories || "",
       mealPhoto: type === "Meal" ? mealPhotos : [],
       attachedDoc
     };

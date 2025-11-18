@@ -115,6 +115,10 @@ const mealAndDietSchema = new mongoose.Schema({
       }
     }
   ],
+  calories: {
+    type: String,
+    default: "",
+  },
 
   attachedDoc: {
     type: String,
