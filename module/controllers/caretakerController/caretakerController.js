@@ -91,7 +91,7 @@ export const addCaretaker = async (req, res) => {
       return res.send({
         statusCode: 400,
         success: false,
-        message: "Caretaker already exists",
+        message: "Caregiver already exists",
         result: {},
       });
     }
@@ -124,7 +124,7 @@ export const addCaretaker = async (req, res) => {
     return res.status(200).json({
       statusCode: 200,
       success: true,
-      message: "Caretaker added successfully",
+      message: "Caregiver added successfully",
       result: newCaretaker,
     });
   } catch (error) {
@@ -281,7 +281,7 @@ export const getAllCaretakersByAdmin = async (req, res) => {
     return res.send({
       statusCode: 200,
       success: true,
-      message: "All caretakers fetched successfully (Admin)",
+      message: "All Caregivers fetched successfully (Admin)",
       result: {
         caretakers: caretakersWithCount,
         currentPage: page,
@@ -400,7 +400,7 @@ export const caretakerLogin = async (req, res) => {
       return res.send({
         statusCode: 400,
         success: false,
-        message: "caretaker not found",
+        message: "Caregiver not found",
         result: {},
       });
     }
@@ -436,7 +436,7 @@ export const caretakerLogin = async (req, res) => {
     return res.send({
       statusCode: 500,
       success: false,
-      message: error.message + " Error in caretaker login API",
+      message: error.message + " Error in Caregiver login API",
       result: {},
     });
   }
@@ -461,7 +461,7 @@ export const verifyCaretakerOTP = async (req, res) => {
       return res.status(404).json({
         statusCode: 404,
         success: false,
-        message: "Caretaker not found",
+        message: "Caregiver not found",
         result: {},
       });
     }
@@ -541,7 +541,7 @@ export const caretakerProfile = async (req, res) => {
       return res.send({
         statusCode: 404,
         success: false,
-        message: "Caretaker not found",
+        message: "Caregiver not found",
         result: {},
       });
     }
@@ -549,7 +549,7 @@ export const caretakerProfile = async (req, res) => {
     return res.send({
       statusCode: 200,
       success: true,
-      message: "Caretaker profile fetched successfully",
+      message: "Caregiver profile fetched successfully",
       result: caretaker,
     });
   } catch (error) {
@@ -572,7 +572,7 @@ export const caretakerLogout = async (req, res) => {
       return res.send({
         statusCode: 404,
         success: false,
-        message: "Caretaker not found",
+        message: "Caregiver not found",
         result: {},
       });
     }
@@ -583,7 +583,7 @@ export const caretakerLogout = async (req, res) => {
     return res.send({
       statusCode: 200,
       success: true,
-      message: "Caretaker logged out successfully",
+      message: "Caregiver logged out successfully",
       result: {},
     });
   } catch (error) {
@@ -673,7 +673,7 @@ export const signupCaretaker = async (req, res) => {
         return res.status(400).json({
           statusCode: 400,
           success: false,
-          message: "Caretaker already exists",
+          message: "Caregiver already exists",
           result: {},
         });
       }
@@ -725,7 +725,7 @@ export const signupCaretaker = async (req, res) => {
 //       return res.send({
 //         statusCode: 404,
 //         success: false,
-//         message: "Caretaker not found",
+//         message: "Caregiver not found",
 //         result: {},
 //       });
 //     }
@@ -787,7 +787,7 @@ export const resendCaretakerOTPforSignup = async (req, res) => {
       return res.status(404).json({
         statusCode: 404,
         success: false,
-        message: "Caretaker not found",
+        message: "Caregiver not found",
         result: {},
       });
     }
@@ -797,7 +797,7 @@ export const resendCaretakerOTPforSignup = async (req, res) => {
       return res.status(400).json({
         statusCode: 400,
         success: false,
-        message: "Caretaker already verified. Please login instead.",
+        message: "Caregiver already verified. Please login instead.",
         result: {},
       });
     }
@@ -806,7 +806,7 @@ export const resendCaretakerOTPforSignup = async (req, res) => {
       return res.status(400).json({
         statusCode: 400,
         success: false,
-        message: "Caretaker has been deleted",
+        message: "Caregiver has been deleted",
         result: {},
       });
     }
@@ -846,7 +846,7 @@ export const resendCaretakerOTPforSignup = async (req, res) => {
     return res.status(500).json({
       statusCode: 500,
       success: false,
-      message: error.message + " Error in resendCaretakerOTPforSignup API",
+      message: error.message + " Error in resend Caregiver OTP forSignup API",
       result: {},
     });
   }
@@ -876,7 +876,7 @@ export const resendCaretakerOTPforLogin = async (req, res) => {
       return res.status(404).json({
         statusCode: 404,
         success: false,
-        message: "Caretaker not found",
+        message: "Caregiver not found",
         result: {},
       });
     }
@@ -886,7 +886,7 @@ export const resendCaretakerOTPforLogin = async (req, res) => {
       return res.status(400).json({
         statusCode: 400,
         success: false,
-        message: "Caretaker is not active. Please signup first.",
+        message: "Caregiver is not active. Please signup first.",
         result: {},
       });
     }
@@ -946,7 +946,7 @@ export const getAllMedicationsByCaretaker = async (req, res) => {
       return res.status(404).json({
         statusCode: 404,
         success: false,
-        message: "Caretaker not found or inactive",
+        message: "Caregiver not found or inactive",
         result: {},
       });
     }
@@ -979,7 +979,7 @@ export const getAllMedicationsByCaretaker = async (req, res) => {
       return res.status(403).json({
         statusCode: 403,
         success: false,
-        message: "Caretaker not authorized to view this patient's data",
+        message: "Caregiver not authorized to view this patient's data",
         result: {},
       });
     }
@@ -1028,7 +1028,7 @@ export const getPatientPersonalContactByCaretaker = async (req, res) => {
       return res.status(404).json({
         statusCode: 404,
         success: false,
-        message: "Caretaker not found or inactive",
+        message: "Caregiver not found or inactive",
         result: {},
       });
     }
@@ -1111,7 +1111,7 @@ export const getPatientPersonalContactByCaretaker = async (req, res) => {
 //       return res.status(404).json({
 //         statusCode: 404,
 //         success: false,
-//         message: "Caretaker not found or inactive",
+//         message: "Caregiver not found or inactive",
 //         result: {},
 //       });
 //     }
@@ -1180,7 +1180,7 @@ export const getAllPatientsOfCaretaker = async (req, res) => {
       return res.status(404).json({
         statusCode: 404,
         success: false,
-        message: "Caretaker not found or inactive",
+        message: "Caregiver not found or inactive",
         result: {},
       });
     }
@@ -1284,7 +1284,7 @@ export const getAllPatientsOfCaretaker = async (req, res) => {
 //       return res.status(404).json({
 //         statusCode: 404,
 //         success: false,
-//         message: "Caretaker not found or inactive",
+//         message: "Caregiver not found or inactive",
 //         result: {},
 //       });
 //     }
@@ -1356,7 +1356,7 @@ export const getActiveMedicationsByPatient = async (req, res) => {
       return res.status(404).json({
         statusCode: 404,
         success: false,
-        message: "Caretaker not found or inactive",
+        message: "Caregiver not found or inactive",
         result: {},
       });
     }
@@ -1392,7 +1392,7 @@ export const getActiveMedicationsByPatient = async (req, res) => {
       return res.status(403).json({
         statusCode: 403,
         success: false,
-        message: "Caretaker not authorized to view this patient's medications",
+        message: "Caregiver not authorized to view this patient's medications",
         result: {},
       });
     }
@@ -1460,7 +1460,7 @@ export const getActiveMedicationsByPatient = async (req, res) => {
 //       return res.status(404).json({
 //         statusCode: 404,
 //         success: false,
-//         message: "Caretaker not found or inactive",
+//         message: "Caregiver not found or inactive",
 //         result: {},
 //       });
 //     }
@@ -1545,7 +1545,7 @@ export const getPatientByCaretaker = async (req, res) => {
       return res.status(404).json({
         statusCode: 404,
         success: false,
-        message: "Caretaker not found or inactive",
+        message: "Caregiver not found or inactive",
         result: {},
       });
     }
@@ -1669,7 +1669,7 @@ export const getPatientByCaretaker = async (req, res) => {
 //       return res.status(404).json({
 //         statusCode: 404,
 //         success: false,
-//         message: "Caretaker not found or inactive",
+//         message: "Caregiver not found or inactive",
 //         result: {},
 //       });
 //     }
@@ -1739,7 +1739,7 @@ export const getAllPatientTasksByCaretaker = async (req, res) => {
       return res.status(404).json({
         statusCode: 404,
         success: false,
-        message: "Caretaker not found or inactive",
+        message: "Caregiver not found or inactive",
         result: {},
       });
     }
@@ -1808,7 +1808,7 @@ export const getSinglePatientTaskByCaretaker = async (req, res) => {
       return res.status(404).json({
         statusCode: 404,
         success: false,
-        message: "Caretaker not found or inactive",
+        message: "Caregiver not found or inactive",
         result: {},
       });
     }
@@ -1880,7 +1880,7 @@ export const getPatientRecordByCaretaker = async (req, res) => {
       return res.status(404).json({
         statusCode: 404,
         success: false,
-        message: "Caretaker not found or inactive",
+        message: "Caregiver not found or inactive",
         result: {},
       });
     }
@@ -2242,7 +2242,7 @@ export const getMedicationsByCaretakerForPatient = async (req, res) => {
       return res.send({
         statusCode: 404,
         success: false,
-        message: "Caretaker not found or inactive",
+        message: "Caregiver not found or inactive",
         result: {},
       });
     }
@@ -2307,7 +2307,7 @@ export const getDiscontinuedMedicationsByCaretakerForPatient = async (req, res) 
       return res.send({
         statusCode: 404,
         success: false,
-        message: "Caretaker not found or inactive",
+        message: "Caregiver not found or inactive",
         result: {},
       });
     }
@@ -2373,7 +2373,7 @@ export const getAllMedicationRemindersByCaretakerForPatient = async (req, res) =
       return res.send({
         statusCode: 404,
         success: false,
-        message: "Caretaker not found or inactive",
+        message: "Caregiver not found or inactive",
         result: {},
       });
     }
@@ -2924,7 +2924,7 @@ export const getPatientMedicalReportByCaretaker = async (req, res) => {
     if (!caretaker) {
       return res.status(404).json({
         success: false,
-        message: "Caretaker not found or inactive",
+        message: "Caregiver not found or inactive",
       });
     }
 
@@ -2974,7 +2974,7 @@ export const getPatientPrescriptionByCaretaker = async (req, res) => {
     if (!caretaker) {
       return res.status(404).json({
         success: false,
-        message: "Caretaker not found or inactive",
+        message: "Caregiver not found or inactive",
       });
     }
 
@@ -3919,7 +3919,7 @@ export const getTermsAndConditionsByCaretaker = async (req, res) => {
     if (!caretaker) {
       return res.status(401).json({
         status: false,
-        message: "Invalid caretaker or inactive status.",
+        message: "Invalid caregiver or inactive status.",
       });
     }
 
@@ -3963,7 +3963,7 @@ export const getPrivacyPolicyByCaretaker = async (req, res) => {
     if (!caretaker) {
       return res.status(401).json({
         status: false,
-        message: "Invalid caretaker or inactive status.",
+        message: "Invalid caregiver or inactive status.",
       });
     }
 
@@ -4007,7 +4007,7 @@ export const getFaqByCaretaker = async (req, res) => {
     if (!caretaker) {
       return res.status(401).json({
         status: false,
-        message: "Invalid caretaker or inactive status.",
+        message: "Invalid caregiver or inactive status.",
       });
     }
 
@@ -4071,7 +4071,7 @@ export const editCaretakerProfile = async (req, res) => {
       return res.send({
         statusCode: 404,
         success: false,
-        message: "Caretaker not found",
+        message: "Caregiver not found",
         result: {},
       });
     }
@@ -4110,7 +4110,7 @@ export const editCaretakerProfile = async (req, res) => {
     return res.send({
       statusCode: 200,
       success: true,
-      message: "Caretaker profile updated successfully",
+      message: "Caregiver profile updated successfully",
       result: caretaker,
     });
   } catch (error) {
@@ -4138,7 +4138,7 @@ export const getMedicalHistoryByCaretaker = async (req, res) => {
       return res.send({
         statusCode: 401,
         success: false,
-        message: "Invalid caretaker or inactive status.",
+        message: "Invalid Caregiver or inactive status.",
         result: {},
       });
     }
@@ -4154,7 +4154,7 @@ export const getMedicalHistoryByCaretaker = async (req, res) => {
       return res.send({
         statusCode: 404,
         success: false,
-        message: "Patient not found or not assigned to this caretaker.",
+        message: "Patient not found or not assigned to this Caregiver.",
         result: {},
       });
     }
@@ -4205,7 +4205,7 @@ export const getPatientMealByCaretaker = async (req, res) => {
       return res.send({
         statusCode: 401,
         success: false,
-        message: "Invalid caretaker or inactive status.",
+        message: "Invalid Caregiver or inactive status.",
         result: {},
       });
     }
@@ -4221,7 +4221,7 @@ export const getPatientMealByCaretaker = async (req, res) => {
       return res.send({
         statusCode: 404,
         success: false,
-        message: "Patient not found or not assigned to this caretaker.",
+        message: "Patient not found or not assigned to this Caregiver.",
         result: {},
       });
     }
@@ -4271,7 +4271,7 @@ export const getPatientDietByCaretaker = async (req, res) => {
       return res.send({
         statusCode: 401,
         success: false,
-        message: "Invalid caretaker or inactive status.",
+        message: "Invalid caregiver or inactive status.",
         result: {},
       });
     }
@@ -4336,7 +4336,7 @@ export const getPatientDailyRoutineByCaretaker = async (req, res) => {
       return res.send({
         statusCode: 401,
         success: false,
-        message: "Invalid caretaker or inactive status.",
+        message: "Invalid caregiver or inactive status.",
         result: {},
       });
     }
@@ -4352,7 +4352,7 @@ export const getPatientDailyRoutineByCaretaker = async (req, res) => {
       return res.send({
         statusCode: 404,
         success: false,
-        message: "Patient not found or not assigned to this caretaker.",
+        message: "Patient not found or not assigned to this Caregiver.",
         result: {},
       });
     }
@@ -4403,7 +4403,7 @@ export const getAppLanguageByCaretaker = async (req, res) => {
       return res.send({
         statusCode: 401,
         success: false,
-        message: "Invalid caretaker or inactive status.",
+        message: "Invalid caregiver or inactive status.",
         result: {},
       });
     }
@@ -4413,7 +4413,7 @@ export const getAppLanguageByCaretaker = async (req, res) => {
       return res.send({
         statusCode: 404,
         success: false,
-        message: "App language not set for this caretaker.",
+        message: "App language not set for this Caregiver.",
         result: {},
       });
     }
@@ -4461,7 +4461,7 @@ export const changeAppLanguageByCaretaker = async (req, res) => {
       return res.send({
         statusCode: 401,
         success: false,
-        message: "Invalid caretaker or inactive status.",
+        message: "Invalid caregiver or inactive status.",
         result: {},
       });
     }
@@ -4497,7 +4497,7 @@ export const addPatientCareNotesByCaretaker = async (req, res) => {
       return res.send({
         statusCode: 400,
         success: false,
-        message: "Caretaker token required",
+        message: "Caregiver token required",
         result: {},
       });
     }
@@ -4508,7 +4508,7 @@ export const addPatientCareNotesByCaretaker = async (req, res) => {
       return res.send({
         statusCode: 404,
         success: false,
-        message: "Caretaker not found or inactive",
+        message: "Caregiver not found or inactive",
         result: {},
       });
     }
@@ -4523,7 +4523,7 @@ export const addPatientCareNotesByCaretaker = async (req, res) => {
       return res.send({
         statusCode: 404,
         success: false,
-        message: "Patient not found or not assigned to this caretaker",
+        message: "Patient not found or not assigned to this Caregiver",
         result: {},
       });
     }
@@ -4572,7 +4572,7 @@ export const getCareNotesByCaretaker = async (req, res) => {
       return res.status(404).json({
         statusCode: 404,
         success: false,
-        message: "Caretaker not found or inactive",
+        message: "Caregiver not found or inactive",
         result: {},
       });
     }
@@ -4649,7 +4649,7 @@ export const editPatientBloodPressureByCaretaker = async (req, res) => {
       return res.status(401).json({
         statusCode: 401,
         success: false,
-        message: "Invalid caretaker token",
+        message: "Invalid caregiver token",
         result: {},
       });
     }
@@ -4712,7 +4712,7 @@ export const editPatientBodyTempByCaretaker = async (req, res) => {
       return res.status(401).json({
         statusCode: 401,
         success: false,
-        message: "Invalid caretaker token",
+        message: "Invalid caregiver token",
         result: {},
       });
     }
@@ -4775,7 +4775,7 @@ export const editPatientHeartRateByCaretaker = async (req, res) => {
       return res.status(401).json({
         statusCode: 401,
         success: false,
-        message: "Invalid caretaker token",
+        message: "Invalid caregiver token",
         result: {},
       });
     }
@@ -4839,7 +4839,7 @@ export const editPatientBodyWeightByCaretaker = async (req, res) => {
       return res.status(401).json({
         statusCode: 401,
         success: false,
-        message: "Invalid caretaker token",
+        message: "Invalid caregiver token",
         result: {},
       });
     }
@@ -4899,7 +4899,7 @@ export const editPatientBloodSugarByCaretaker = async (req, res) => {
       return res.status(401).json({
         statusCode: 401,
         success: false,
-        message: "Invalid caretaker token",
+        message: "Invalid caregiver token",
         result: {},
       });
     }
@@ -4966,7 +4966,7 @@ export const getAllCareNotesByCaretaker = async (req, res) => {
       return res.status(401).json({
         statusCode: 401,
         success: false,
-        message: "Invalid or inactive caretaker",
+        message: "Invalid or inactive Caregiver",
         result: {},
       });
     }
@@ -4976,7 +4976,7 @@ export const getAllCareNotesByCaretaker = async (req, res) => {
       return res.status(404).json({
         statusCode: 404,
         success: false,
-        message: "No patients assigned to this caretaker",
+        message: "No patients assigned to this Caregiver",
         result: [],
       });
     }
@@ -5057,14 +5057,14 @@ export const deleteCaretakerByAdmin = async (req, res) => {
       return res.send({
         statusCode: 404,
         success: false,
-        message: "Caretaker not found",
+        message: "Caregiver not found",
       });
     }
 
     return res.send({
       statusCode: 200,
       success: true,
-      message: "Caretaker deleted successfully (status updated)",
+      message: "Caregiver deleted successfully (status updated)",
       result: updatedCaretaker,
     });
   } catch (error) {
