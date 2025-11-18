@@ -242,13 +242,13 @@ export const getAllCaretakersByAdmin = async (req, res) => {
     // --- Final search ---
     const searchFilter = search.trim()
       ? {
-          ...statusCondition,
-          $or: [
-            { fullName: { $regex: searchRegex } },
-            { email: { $regex: searchRegex } },
-            { mobileNumber: { $regex: searchRegex } },
-          ],
-        }
+        ...statusCondition,
+        $or: [
+          { fullName: { $regex: searchRegex } },
+          { email: { $regex: searchRegex } },
+          { mobileNumber: { $regex: searchRegex } },
+        ],
+      }
       : { ...statusCondition };
 
     // --- Fetch Caretakers ---
@@ -1595,7 +1595,7 @@ export const getPatientByCaretaker = async (req, res) => {
       });
     }
 
-     let doctorInfo = null;
+    let doctorInfo = null;
     const doctor = await HealthcareProvider.findOne({
       patient_id: patient._id,
       status: "Active",
@@ -1605,49 +1605,49 @@ export const getPatientByCaretaker = async (req, res) => {
 
 
     // 🧩 Step 6: Fetch emergency contact details (if any)
-   const emergency = await PersonalContact.findOne({ 
-  patient_id: patient_id,
-  status: "Active",
-}).select("contactName phoneNo relationship");
+    const emergency = await PersonalContact.findOne({
+      patient_id: patient_id,
+      status: "Active",
+    }).select("contactName phoneNo relationship");
 
     return res.status(200).json({
-  success: true,
-  message: "Patient fetched successfully",
-  data: {
-    patientDetails: {
-      name: patient.fullName,
-      gender: patient.gender,
-      dob: patient.dob,
-      bloodGroup: patient.bloodGroup,
-    },
- doctorInfo: doctorInfo
+      success: true,
+      message: "Patient fetched successfully",
+      data: {
+        patientDetails: {
+          name: patient.fullName,
+          gender: patient.gender,
+          dob: patient.dob,
+          bloodGroup: patient.bloodGroup,
+        },
+        doctorInfo: doctorInfo
           ? {
-              id: doctorInfo._id,
-              name: doctorInfo.doctorName,
-              department: doctorInfo.department,
-              specialization: doctorInfo.speciality,
-              contact: doctorInfo.phone,
-              hostname: doctorInfo.hospitalOrClinic,
-              hospitalPhone: doctorInfo.hospitalPhone,
-              email: doctorInfo.email,
-            }
-          : null,
-          
-    emergencyDetails: {
-      contact: emergency
-        ? {
-            name: emergency.contactName,
-            phone: emergency.phoneNo,
-            relation: emergency.relationship,
+            id: doctorInfo._id,
+            name: doctorInfo.doctorName,
+            department: doctorInfo.department,
+            specialization: doctorInfo.speciality,
+            contact: doctorInfo.phone,
+            hostname: doctorInfo.hospitalOrClinic,
+            hospitalPhone: doctorInfo.hospitalPhone,
+            email: doctorInfo.email,
           }
-        : null,
-      dnrForm: patient.dnrForm || null,
-    },
-  },
-});
+          : null,
+
+        emergencyDetails: {
+          contact: emergency
+            ? {
+              name: emergency.contactName,
+              phone: emergency.phoneNo,
+              relation: emergency.relationship,
+            }
+            : null,
+          dnrForm: patient.dnrForm || null,
+        },
+      },
+    });
 
     // 🧩 Step 8: Return response
-  
+
   } catch (error) {
     return res.status(500).json({
       statusCode: 500,
@@ -2541,7 +2541,7 @@ export const getPatientBloodPressureByCaretaker = async (req, res) => {
       patient_id: patientId,
       ...dateFilter,
     })
-      .select("bloodPressure createdAt")
+      .select("bloodPressure createdAt _id")
       .sort({ createdAt: -1 });
 
     if (!record || !record.length || !record[0].bloodPressure) {
@@ -2557,6 +2557,7 @@ export const getPatientBloodPressureByCaretaker = async (req, res) => {
       message: "Blood Pressure fetched successfully",
       filterApplied: dateFilter,
       result: record.map((r) => ({
+        _id: r._id,                 // 🔥 Added ID here
         ...r.bloodPressure,
         createdAt: r.createdAt,
       })),
@@ -2620,7 +2621,7 @@ export const getPatientBloodSugarByCaretaker = async (req, res) => {
       patient_id: patientId,
       ...dateFilter,
     })
-      .select("bloodSugar createdAt")
+      .select("bloodSugar createdAt _id")
       .sort({ createdAt: -1 });
 
     if (!record || !record.length || !record[0].bloodSugar)
@@ -2634,6 +2635,7 @@ export const getPatientBloodSugarByCaretaker = async (req, res) => {
       success: true,
       message: "Blood Sugar fetched successfully",
       result: record.map((r) => ({
+        _id: r._id,                 // 🔥 Added ID here
         ...r.bloodSugar,
         createdAt: r.createdAt,
       })),
@@ -2755,7 +2757,7 @@ export const getPatientBodyTempByCaretaker = async (req, res) => {
       patient_id: patientId,
       ...dateFilter,
     })
-      .select("bodyTemp createdAt")
+      .select("bodyTemp createdAt _id")
       .sort({ createdAt: -1 });
 
     if (!record || !record.length || !record[0].bodyTemp)
@@ -2889,7 +2891,7 @@ export const getPatientBodyWeightByCaretaker = async (req, res) => {
       patient_id: patientId,
       ...dateFilter,
     })
-      .select("bodyWeight createdAt")
+      .select("bodyWeight createdAt _id")
       .sort({ createdAt: -1 });
 
     if (!record || !record.length || !record[0].bodyWeight)
@@ -2903,6 +2905,7 @@ export const getPatientBodyWeightByCaretaker = async (req, res) => {
       success: true,
       message: "Body Weight fetched successfully",
       result: record.map((r) => ({
+          _id: r._id,                 // 🔥 Added ID here
         ...r.bodyWeight,
         createdAt: r.createdAt,
       })),
@@ -3023,7 +3026,7 @@ export const getPatientHeartRateByCaretaker = async (req, res) => {
       patient_id: patientId,
       ...dateFilter,
     })
-      .select("heartRate createdAt")
+      .select("heartRate createdAt _id")
       .sort({ createdAt: -1 });
 
     if (!record || !record.length || !record[0].heartRate)
@@ -3037,6 +3040,7 @@ export const getPatientHeartRateByCaretaker = async (req, res) => {
       success: true,
       message: "Heart Rate fetched successfully",
       result: record.map((r) => ({
+        _id: r._id,                 // 🔥 Added ID here
         ...r.heartRate,
         createdAt: r.createdAt,
       })),
