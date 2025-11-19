@@ -44,7 +44,7 @@ import { addCaretaker,
   editPatientHeartRateByCaretaker,
   editPatientBodyWeightByCaretaker,
   editPatientBloodSugarByCaretaker,
-  getAllCareNotesByCaretaker,deleteCaretakerByAdmin,
+  getAllCareNotesByCaretaker,deleteCaretakerByAdmin,getAllDailyCare,
   addReminderByCaretaker,editCaretakerProfile,getMedicalHistoryByCaretaker,
   getTermsAndConditionsByCaretaker,getPrivacyPolicyByCaretaker,getFaqByCaretaker,
   addPatientMealByCaretaker,addPatientDietByCaretaker,getPatientDietByCaretaker,getPatientMealByCaretaker,
@@ -181,5 +181,7 @@ router.post("/edit-patient-blood-sugar-by-caretaker/:recordId", verifyAccessToke
 router.get("/get-all-carenotes-by-caretaker", verifyAccessToken, getAllCareNotesByCaretaker);
 
 router.post("/delete-caretaker-byadmin/:caretakerId", verifyAccessToken, deleteCaretakerByAdmin);
+
+router.get("/get-all-daily-care/:patientId", verifyAccessToken, getAllDailyCare);
 
 export default router;

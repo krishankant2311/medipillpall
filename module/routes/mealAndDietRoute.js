@@ -1,5 +1,5 @@
 import express from "express";
-import { addMealAndDiet,getAllMealAndDiet,
+import { addMealAndDiet,getAllMealAndDiet,addMealAndDietByPatient,
     editMealAndDietByCaretaker, deleteMealAndDiet } from "../controllers/mealAndDietController.js";
 import {verifyAccessToken} from "../../helpers/jwt.js";
 import upload from "../../config/multer.js"; // 🔹 yahi tera existing multer import hoga
@@ -14,5 +14,6 @@ router.get("/getAllMealAndDiet/:patientId", verifyAccessToken, getAllMealAndDiet
 router.post("/deleteMealAndDiet/:id", verifyAccessToken, deleteMealAndDiet);
 // 🥗 Route: Edit Meal / Diet by Caretaker
 router.post("/editMealAndDietByCaretaker/:mealId", verifyAccessToken,upload.array("mealPhoto", 10), editMealAndDietByCaretaker);
-
+// 🥗 Route: Add Meal / Diet by Patient
+router.post("/addMealAndDietByPatient", verifyAccessToken,upload.array("mealPhoto", 10), addMealAndDietByPatient);
 export default router;
