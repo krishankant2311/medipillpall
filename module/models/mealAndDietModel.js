@@ -31,7 +31,11 @@ const mealAndDietSchema = new mongoose.Schema({
     enum: ["Breakfast", "Lunch", "Snack", "Dinner"],
     default: ""
   },
-
+taskStatus: {
+    type: String,
+    enum: ["Completed", "Pending","Skipped"],
+    default: "Pending"
+  },
   scheduleTime: {
     type: String,
     default: ""
@@ -64,8 +68,8 @@ const mealAndDietSchema = new mongoose.Schema({
 
   status: {
     type: String,
-    enum: ["Completed", "Pending"],
-    default: "Completed"
+    enum: ["Active", "Pending","Taken"],
+    default: "Active"
   },
 
   date: {

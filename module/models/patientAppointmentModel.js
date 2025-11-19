@@ -18,7 +18,11 @@ const appointmentSchema = new mongoose.Schema(
       default: "",
       trim: true,
     },
-
+ taskStatus: {
+      type: String,
+      enum: ["Pending", "Completed", "Cancelled"],
+      default: "Pending",
+    },
     date: {
       type: Date,
       default: Date.now,

@@ -27,6 +27,11 @@ const activitySchema = new mongoose.Schema(
       ],
       required: true,
     },
+    taskStatus: {
+      type: String,
+      enum: ["Completed", "Pending"],
+      default: "Pending",
+    },
     duration: {
       type: String,
       def:""// Minutes
@@ -42,7 +47,7 @@ const activitySchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ["Active", "Pending","Delete"],
-      default: "Pending",
+      default: "Active",
     },
   },
   { timestamps: true }

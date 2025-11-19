@@ -20,6 +20,11 @@ const visitorSchema = new mongoose.Schema(
       type: String,
       default: "For personal reason",
     },
+    taskStatus: {
+      type: String,
+      enum: ["Pending", "Completed", "Skipped"],
+      default: "Pending",
+    },
     visitDate: {
       type: Date,
       default: Date.now,
@@ -37,11 +42,11 @@ const visitorSchema = new mongoose.Schema(
       enum: ["Active", "Deleted"],
       default: "Active",
     },
-    taskStatus: {
-      type: String,
-      enum: ["Pending", "Completed","Skipped"],
-      default: "Pending",
-    },
+    // taskStatus: {
+    //   type: String,
+    //   enum: ["Pending", "Completed","Skipped"],
+    //   default: "Pending",
+    // },
   },
   { timestamps: true }
 );

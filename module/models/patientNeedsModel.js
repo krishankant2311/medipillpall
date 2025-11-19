@@ -34,7 +34,11 @@ const needsSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Caretaker",
     },
-
+taskStatus: {
+      type: String,
+      enum: ["Pending", "Completed", "Skipped"],
+      default: "Pending",
+    },
     status: {
       type: String,
       enum: ["Active", "Deleted"],
