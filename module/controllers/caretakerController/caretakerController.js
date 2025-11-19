@@ -5082,6 +5082,121 @@ export const deleteCaretakerByAdmin = async (req, res) => {
 };
 
 
+// export const getAllDailyCare = async (req, res) => {
+//   try {
+//     const { patientId } = req.params;
+//     const { date } = req.query;
+
+//     const today = date ? new Date(date) : new Date();
+
+//     const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+//     const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+
+//     // -------------------------
+//     // 1️⃣   Visitors
+//     // -------------------------
+//     const visitors = await Visitor.find({
+//       patientId,
+//       visitDate: { $gte: startOfDay, $lte: endOfDay },
+//       status: "Active",
+//     }).lean();
+
+//     // -------------------------
+//     // 2️⃣   Meals (Breakfast / Lunch / Dinner)
+//     // -------------------------
+//     const meals = await MealsAndDiet.find({
+//       patientId,
+//       date: { $gte: startOfDay, $lte: endOfDay },
+//       // status: "Active",
+//     }).lean();
+
+//     // -------------------------
+//     // 3️⃣ Activities (Morning Hygiene, Exercise, etc.)
+//     // -------------------------
+//     const activities = await Activity.find({
+//       patientId,
+// createdAt: { $gte: startOfDay, $lte: endOfDay },
+//       // status: "Active",
+//     }).lean();
+
+//     // -------------------------
+//     // 4️⃣ Appointments
+//     // -------------------------
+//     const appointments = await Appointment.find({
+//       patientId,
+//       date: { $gte: startOfDay, $lte: endOfDay },
+//       status: "Active",
+//     }).lean();
+
+//     // -------------------------
+//     // 5️⃣ Needs
+//     // -------------------------
+//     const needs = await Needs.find({
+//       patientId,
+//       date: { $gte: startOfDay, $lte: endOfDay },
+//       status: "Active",
+//     }).lean();
+
+
+//     // -------------------------------------------------------
+//     // 🟦  Build Daily Care Structure (Like Screenshot)
+//     // -------------------------------------------------------
+
+//     const responseData = {
+//       date: startOfDay,
+
+//       visitors: visitors.map(v => ({
+//         id: v._id,
+//         name: v.name,
+//         relation: v.relation,
+//         duration: v.duration,
+//         reason: v.reason,
+//         time: new Date(v.visitDate).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+//       })),
+
+//       appointments: appointments.map(a => ({
+//         id: a._id,
+//         title: a.title,
+//         time: a.time,
+//         reason: a.reason
+//       })),
+
+//       needs: needs.map(n => ({
+//         id: n._id,
+//         title: n.title,
+//         time: n.time,
+//         description: n.description
+//       })),
+
+//      meals: {
+//   breakfast: meals.filter(m => m.mealType === "Breakfast"),
+//   lunch: meals.filter(m => m.mealType === "Lunch"),
+//   dinner: meals.filter(m => m.mealType === "Dinner"),
+// },
+
+// activities: {
+//   morningHygiene: activities.filter(a => a.activityType === "Morning Hygiene"),
+//   exercise: activities.filter(a => a.activityType === "Exercise"),
+//   others: activities.filter(a => a.activityType === "Other")
+// }
+//     };
+
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Daily care data fetched successfully",
+//       data: responseData,
+//     });
+
+//   } catch (error) {
+//     console.log("getAllDailyCare Error:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error",
+//     });
+//   }
+// };
+
 export const getAllDailyCare = async (req, res) => {
   try {
     const { patientId } = req.params;
@@ -5092,45 +5207,29 @@ export const getAllDailyCare = async (req, res) => {
     const startOfDay = new Date(today.setHours(0, 0, 0, 0));
     const endOfDay = new Date(today.setHours(23, 59, 59, 999));
 
-    // -------------------------
-    // 1️⃣   Visitors
-    // -------------------------
+    // ---------------- Fetch All ----------------
     const visitors = await Visitor.find({
       patientId,
       visitDate: { $gte: startOfDay, $lte: endOfDay },
       status: "Active",
     }).lean();
 
-    // -------------------------
-    // 2️⃣   Meals (Breakfast / Lunch / Dinner)
-    // -------------------------
     const meals = await MealsAndDiet.find({
       patientId,
       date: { $gte: startOfDay, $lte: endOfDay },
-      // status: "Active",
     }).lean();
 
-    // -------------------------
-    // 3️⃣ Activities (Morning Hygiene, Exercise, etc.)
-    // -------------------------
     const activities = await Activity.find({
       patientId,
-createdAt: { $gte: startOfDay, $lte: endOfDay },
-      // status: "Active",
+      createdAt: { $gte: startOfDay, $lte: endOfDay },
     }).lean();
 
-    // -------------------------
-    // 4️⃣ Appointments
-    // -------------------------
     const appointments = await Appointment.find({
       patientId,
       date: { $gte: startOfDay, $lte: endOfDay },
       status: "Active",
     }).lean();
 
-    // -------------------------
-    // 5️⃣ Needs
-    // -------------------------
     const needs = await Needs.find({
       patientId,
       date: { $gte: startOfDay, $lte: endOfDay },
@@ -5139,49 +5238,122 @@ createdAt: { $gte: startOfDay, $lte: endOfDay },
 
 
     // -------------------------------------------------------
-    // 🟦  Build Daily Care Structure (Like Screenshot)
+    // 🟦 Build Response with taskStatus added globally
     // -------------------------------------------------------
 
     const responseData = {
       date: startOfDay,
 
+      // ---------------- Visitors ----------------
       visitors: visitors.map(v => ({
         id: v._id,
         name: v.name,
         relation: v.relation,
         duration: v.duration,
         reason: v.reason,
-        time: new Date(v.visitDate).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+        taskStatus: v.taskStatus || "Pending",
+        time: new Date(v.visitDate).toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
       })),
 
+      // ---------------- Appointments ----------------
       appointments: appointments.map(a => ({
         id: a._id,
         title: a.title,
         time: a.time,
-        reason: a.reason
+        reason: a.reason,
+        taskStatus: a.taskStatus || "Pending",
       })),
 
+      // ---------------- Needs ----------------
       needs: needs.map(n => ({
         id: n._id,
         title: n.title,
         time: n.time,
-        description: n.description
+        description: n.description,
+        taskStatus: n.taskStatus || "Pending",
       })),
 
-     meals: {
-  breakfast: meals.filter(m => m.mealType === "Breakfast"),
-  lunch: meals.filter(m => m.mealType === "Lunch"),
-  dinner: meals.filter(m => m.mealType === "Dinner"),
-},
+      // ---------------- Meals ----------------
+      meals: {
+        breakfast: meals
+          .filter(m => m.mealType === "Breakfast")
+          .map(m => ({
+            ...m,
+            taskStatus: m.taskStatus || "Pending",
+          })),
 
-activities: {
-  morningHygiene: activities.filter(a => a.activityType === "Morning Hygiene"),
-  exercise: activities.filter(a => a.activityType === "Exercise"),
-  others: activities.filter(a => a.activityType === "Other")
-}
+        lunch: meals
+          .filter(m => m.mealType === "Lunch")
+          .map(m => ({
+            ...m,
+            taskStatus: m.taskStatus || "Pending",
+          })),
+
+        dinner: meals
+          .filter(m => m.mealType === "Dinner")
+          .map(m => ({
+            ...m,
+            taskStatus: m.taskStatus || "Pending",
+          })),
+      },
+
+      // ---------------- Activities ----------------
+      activities: {
+        morningHygiene: activities
+          .filter(a => a.activityType === "Morning Hygiene")
+          .map(a => ({
+            id: a._id,
+            title: a.title,
+            activityType: a.activityType,
+            duration: a.duration,
+            details: a.details || "",
+            status: a.status,
+            taskStatus: a.taskStatus || "Pending",
+            time: new Date(a.createdAt).toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          })),
+
+        exercise: activities
+          .filter(a => a.activityType === "Exercise")
+          .map(a => ({
+            id: a._id,
+            title: a.title,
+            activityType: a.activityType,
+            duration: a.duration,
+            details: a.details || "",
+            status: a.status,
+            taskStatus: a.taskStatus || "Pending",
+            time: new Date(a.createdAt).toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          })),
+
+        others: activities
+          .filter(a => a.activityType === "Other")
+          .map(a => ({
+            id: a._id,
+            title: a.title,
+            activityType: a.activityType,
+            duration: a.duration,
+            details: a.details || "",
+            status: a.status,
+            taskStatus: a.taskStatus || "Pending",
+            time: new Date(a.createdAt).toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          })),
+      },
     };
 
 
+    // ---------------- Final Response ----------------
     return res.status(200).json({
       success: true,
       message: "Daily care data fetched successfully",
@@ -5196,4 +5368,5 @@ activities: {
     });
   }
 };
+
 
