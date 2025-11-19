@@ -722,7 +722,7 @@ export const addMealAndDietByPatient = async (req, res) => {
       remarks: remarks || "",
       instructions: instructions || "",
       calories: calories || "",
-      status: "Completed",          // patient adds = completed
+      status: "",          // patient adds = completed
       date: new Date(),             // current day
       mealPhoto: type === "Meal" ? mealPhotos : [],
       attachedDoc
