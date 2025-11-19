@@ -1,7 +1,7 @@
 import Visitor from "../models/patientVisitorsModel.js";
 import Patient from "../models/patientModel.js";
 import Admin from "../models/adminModel.js";
-// ✅ Add Visitor
+
 // ✅ Add Visitor
 export const addVisitor = async (req, res) => {
   try {
@@ -48,7 +48,7 @@ if (!name) {
 
     const newVisitor = new Visitor({
       patientId: patient._id,
-      caretakerId,
+      // caretakerId,
       name,
       duration,
       reason,
@@ -71,7 +71,6 @@ if (!name) {
     });
   }
 };
-
 
 // ✅ Edit Visitor
 export const editVisitor = async (req, res) => {

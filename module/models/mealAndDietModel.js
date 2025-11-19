@@ -5,7 +5,7 @@ const mealAndDietSchema = new mongoose.Schema({
   caretakerId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Caretaker",
-    required: true
+    // required: true
   },
 
   patientId: {

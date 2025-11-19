@@ -19,6 +19,11 @@ import PrivacyPolicy from "../../models/privacyPolicyModel.js";
 import MedicalHistory from "../../models/medicalHistoryModel.js";
 import CareNote from "../../models/guardiansModel/careModel.js";
 import HealthcareProvider from "../../models/healthcareProviderModel.js";
+import Visitor from "../../models/patientVisitorsModel.js";
+import MealsAndDiet from "../../models/mealAndDietModel.js";
+import Activity from "../../models/patientActivityModel.js";
+import Appointment from "../../models/patientAppointmentModel.js";
+import Needs from "../../models/patientNeedsModel.js";
 
 export const addCaretaker = async (req, res) => {
   try {
@@ -5077,4 +5082,118 @@ export const deleteCaretakerByAdmin = async (req, res) => {
 };
 
 
+export const getAllDailyCare = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    const { date } = req.query;
+
+    const today = date ? new Date(date) : new Date();
+
+    const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+
+    // -------------------------
+    // 1️⃣   Visitors
+    // -------------------------
+    const visitors = await Visitor.find({
+      patientId,
+      visitDate: { $gte: startOfDay, $lte: endOfDay },
+      status: "Active",
+    }).lean();
+
+    // -------------------------
+    // 2️⃣   Meals (Breakfast / Lunch / Dinner)
+    // -------------------------
+    const meals = await MealsAndDiet.find({
+      patientId,
+      date: { $gte: startOfDay, $lte: endOfDay },
+      // status: "Active",
+    }).lean();
+
+    // -------------------------
+    // 3️⃣ Activities (Morning Hygiene, Exercise, etc.)
+    // -------------------------
+    const activities = await Activity.find({
+      patientId,
+createdAt: { $gte: startOfDay, $lte: endOfDay },
+      // status: "Active",
+    }).lean();
+
+    // -------------------------
+    // 4️⃣ Appointments
+    // -------------------------
+    const appointments = await Appointment.find({
+      patientId,
+      date: { $gte: startOfDay, $lte: endOfDay },
+      status: "Active",
+    }).lean();
+
+    // -------------------------
+    // 5️⃣ Needs
+    // -------------------------
+    const needs = await Needs.find({
+      patientId,
+      date: { $gte: startOfDay, $lte: endOfDay },
+      status: "Active",
+    }).lean();
+
+
+    // -------------------------------------------------------
+    // 🟦  Build Daily Care Structure (Like Screenshot)
+    // -------------------------------------------------------
+
+    const responseData = {
+      date: startOfDay,
+
+      visitors: visitors.map(v => ({
+        id: v._id,
+        name: v.name,
+        relation: v.relation,
+        duration: v.duration,
+        reason: v.reason,
+        time: new Date(v.visitDate).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+      })),
+
+      appointments: appointments.map(a => ({
+        id: a._id,
+        title: a.title,
+        time: a.time,
+        reason: a.reason
+      })),
+
+      needs: needs.map(n => ({
+        id: n._id,
+        title: n.title,
+        time: n.time,
+        description: n.description
+      })),
+
+     meals: {
+  breakfast: meals.filter(m => m.mealType === "Breakfast"),
+  lunch: meals.filter(m => m.mealType === "Lunch"),
+  dinner: meals.filter(m => m.mealType === "Dinner"),
+},
+
+activities: {
+  morningHygiene: activities.filter(a => a.activityType === "Morning Hygiene"),
+  exercise: activities.filter(a => a.activityType === "Exercise"),
+  others: activities.filter(a => a.activityType === "Other")
+}
+    };
+
+
+    return res.status(200).json({
+      success: true,
+      message: "Daily care data fetched successfully",
+      data: responseData,
+    });
+
+  } catch (error) {
+    console.log("getAllDailyCare Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
 

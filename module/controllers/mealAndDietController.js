@@ -652,3 +652,102 @@ export const editMealAndDietByCaretaker = async (req, res) => {
     });
   }
 };
+
+
+export const addMealAndDietByPatient = async (req, res) => {
+  try {
+    // 🔐 Patient Token
+    const token = req.token;
+    const patientId = token._id;
+
+    const {
+      type,                  // "Meal" / "Diet"
+      mealType,              // Breakfast / Lunch / Dinner
+      scheduleTime,
+      foodType,
+      portionSize,
+      specialDietFollowed,
+      remarks,
+      calories,
+      instructions
+    } = req.body;
+
+    // ---------------------------
+    // 1️⃣  Validate Patient
+    // ---------------------------
+    const patient = await Patient.findOne({
+      _id: patientId,
+      status: "Active"
+    });
+
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient not found"
+      });
+    }
+
+    // ---------------------------
+    // 2️⃣ Build Base URL
+    // ---------------------------
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+
+    // ---------------------------
+    // 3️⃣ Multiple Meal Photos
+    // ---------------------------
+    let mealPhotos = [];
+    if (req.files && req.files.length > 0) {
+      mealPhotos = req.files.map((file) => `${baseUrl}/uploads/${file.filename}`);
+    }
+
+    // ---------------------------
+    // 4️⃣ Diet Doc (optional)
+    // ---------------------------
+    const attachedDoc =
+      req.file && type === "Diet"
+        ? `${baseUrl}/uploads/dietDocs/${req.file.filename}`
+        : "";
+
+    // ---------------------------
+    // 5️⃣ Data Prepare
+    // ---------------------------
+    const data = {
+      patientId,
+      type: type || "Meal",
+      mealType: mealType || "",
+      scheduleTime: scheduleTime || "",
+      foodType: foodType || "",
+      portionSize: portionSize || "",
+      specialDietFollowed: specialDietFollowed || "",
+      remarks: remarks || "",
+      instructions: instructions || "",
+      calories: calories || "",
+      status: "Completed",          // patient adds = completed
+      date: new Date(),             // current day
+      mealPhoto: type === "Meal" ? mealPhotos : [],
+      attachedDoc
+    };
+
+    // ---------------------------
+    // 6️⃣ Save Document
+    // ---------------------------
+    const newEntry = new MealAndDiet(data);
+    await newEntry.save();
+
+    // ---------------------------
+    // 7️⃣ Response
+    // ---------------------------
+    return res.status(200).json({
+      success: true,
+      message: `${type || "Meal"} added successfully`,
+      result: newEntry
+    });
+
+  } catch (error) {
+    console.error("Add Meal/Diet Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};

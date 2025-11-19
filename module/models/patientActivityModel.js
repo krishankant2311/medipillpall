@@ -24,7 +24,11 @@ const activitySchema = new mongoose.Schema(
     },
     duration: {
       type: String,
-      required: true, // Minutes
+      def:""// Minutes
+    },
+    date: {
+      type: Date,
+      default: Date.now,
     },
     details: {
       type: String,

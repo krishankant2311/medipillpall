@@ -364,8 +364,11 @@ export const verifyPatientOTP = async (req, res) => {
     // ✅ Step 4: OTP verified → generate tokens (without changing isVerified)
     const accessToken = generateAccessToken({ _id: patient._id, mobileNumber });
     const refreshToken = generateRefreshToken({ _id: patient._id, mobileNumber });
+ console.log("accessToken",accessToken);
 
     // OTP clear after successful verification
+    patient.accessToken = accessToken;
+    patient.refreshToken = refreshToken;
     patient.otp = {};
     patient.status = "Active"; // Status change to Active after OTP verification
     await patient.save();
