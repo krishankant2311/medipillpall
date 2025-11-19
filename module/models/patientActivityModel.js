@@ -10,6 +10,10 @@ const activitySchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Caretaker",
     },
+    title: { 
+      type: String, 
+      default: "" 
+    },
     activityType: {
       type: String,
       enum: [
