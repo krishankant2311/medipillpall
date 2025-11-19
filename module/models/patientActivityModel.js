@@ -18,7 +18,8 @@ const activitySchema = new mongoose.Schema(
         "Puzzle & Memory Skills",
         "Reading Books",
         "Prayer Music",
-        "Crafts & Coloring"
+        "Crafts & Coloring",
+        "Morning Hygiene",
       ],
       required: true,
     },
