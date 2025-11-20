@@ -39,6 +39,11 @@ import { addCaretaker,
   addPatientCareNotesByCaretaker,
   changeAppLanguageByCaretaker,
   getCareNotesByCaretaker,
+  updateActivityTaskStatus,
+  updateMealAndDietTaskStatus,
+  updateNeedsTaskStatus,
+  updateAppointmentTaskStatus,
+  updateVisitorTaskStatus,
   editPatientBloodPressureByCaretaker,
   editPatientBodyTempByCaretaker,
   editPatientHeartRateByCaretaker,
@@ -183,5 +188,12 @@ router.get("/get-all-carenotes-by-caretaker", verifyAccessToken, getAllCareNotes
 router.post("/delete-caretaker-byadmin/:caretakerId", verifyAccessToken, deleteCaretakerByAdmin);
 
 router.get("/get-all-daily-care/:patientId", verifyAccessToken, getAllDailyCare);
+
+router.post("/change-needs-task-status-by-caretaker/:needsId", verifyAccessToken, upload.none(), updateNeedsTaskStatus );
+router.post("/change-appointment-task-status-by-caretaker/:appointmentId", verifyAccessToken, upload.none(),updateAppointmentTaskStatus );
+router.post("/change-visitors-task-status-by-caretaker/:visitorId", verifyAccessToken, upload.none(), updateVisitorTaskStatus);
+router.post("/change-meal-and-diet-task-status-by-caretaker/:mealId", verifyAccessToken, upload.none(), updateMealAndDietTaskStatus);
+router.post("/change-activity-task-status-by-caretaker/:activityId", verifyAccessToken, upload.none(), updateActivityTaskStatus);
+
 
 export default router;

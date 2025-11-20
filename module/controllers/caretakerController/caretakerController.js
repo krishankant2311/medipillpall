@@ -5369,4 +5369,383 @@ export const getAllDailyCare = async (req, res) => {
   }
 };
 
+export const updateVisitorTaskStatus = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+    const {  taskStatus } = req.body;
+const { visitorId } = req.params;
+    // ---------------------------------------
+    // 1️⃣ Validate caretaker 
+    // ---------------------------------------
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+
+    if (!caretaker) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized - caretaker not found",
+      });
+    }
+
+    // ---------------------------------------
+    // 2️⃣ Validate Inputs
+    // ---------------------------------------
+    if (!taskStatus) {
+      return res.status(400).json({
+        success: false,
+        message: "taskStatus are required",
+      });
+    }
+
+    const allowed = ["Pending", "Completed", "Skipped"];
+    if (!allowed.includes(taskStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid taskStatus",
+      });
+    }
+
+    // ---------------------------------------
+    // 3️⃣ Find Visitor
+    // ---------------------------------------
+    const visitor = await Visitor.findById(visitorId);
+
+    if (!visitor) {
+      return res.status(404).json({
+        success: false,
+        message: "Visitor record not found",
+      });
+    }
+
+    // ---------------------------------------
+    // 4️⃣ Update Status
+    // ---------------------------------------
+    visitor.taskStatus = taskStatus;
+    visitor.statusUpdatedAt = new Date();
+    visitor.updatedBy = caretaker._id;
+
+    await visitor.save();
+
+    // ---------------------------------------
+    // 5️⃣ Return Clean Response
+    // ---------------------------------------
+    return res.status(200).json({
+      success: true,
+      message: "Visitor task status updated successfully",
+      data: {
+        id: visitor._id,
+        patientId: visitor.patientId,
+        name: visitor.name,
+        relation: visitor.relation,
+        time: visitor.visitDate,
+        taskStatus: visitor.taskStatus,
+        updatedBy: caretaker._id,
+      },
+    });
+
+  } catch (error) {
+    console.log("updateVisitorTaskStatus Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const updateAppointmentTaskStatus = async (req, res) => {
+  try {
+    const token = req.token;
+    const {  taskStatus } = req.body;
+const { appointmentId } = req.params;
+    // 1️⃣ Validate caretaker
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+    if (!caretaker) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized - caretaker not found",
+      });
+    }
+
+    // 2️⃣ Validate Inputs
+    if (!taskStatus) {
+      return res.status(400).json({
+        success: false,
+        message: "taskStatus are required",
+      });
+    }
+
+    const allowed = ["Pending", "Completed", "Skipped"];
+    if (!allowed.includes(taskStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid taskStatus",
+      });
+    }
+
+    // 3️⃣ Find Appointment
+    const appointment = await Appointment.findById(appointmentId);
+
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        message: "Appointment record not found",
+      });
+    }
+
+    // 4️⃣ Update
+    appointment.taskStatus = taskStatus;
+    appointment.statusUpdatedAt = new Date();
+    appointment.updatedBy = caretaker._id;
+    await appointment.save();
+
+    // 5️⃣ Response
+    return res.status(200).json({
+      success: true,
+      message: "Appointment task status updated successfully",
+      data: {
+        id: appointment._id,
+        patientId: appointment.patientId,
+        title: appointment.title,
+        reason: appointment.reason,
+        time: appointment.time,
+        taskStatus: appointment.taskStatus,
+        updatedBy: caretaker._id,
+      },
+    });
+
+  } catch (error) {
+    console.log("updateAppointmentTaskStatus Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+
+export const updateNeedsTaskStatus = async (req, res) => {
+  try {
+    const token = req.token;
+    const {  taskStatus } = req.body;
+const { needsId } = req.params;
+    // 1️⃣ Validate caretaker
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+    if (!caretaker) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized - caretaker not found",
+      });
+    }
+
+    // 2️⃣ Validate Inputs
+    if (!taskStatus) {
+      return res.status(400).json({
+        success: false,
+        message: "taskStatus are required",
+      });
+    }
+
+    const allowed = ["Pending", "Completed", "Skipped"];
+    if (!allowed.includes(taskStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid taskStatus",
+      });
+    }
+
+    // 3️⃣ Find Needs
+    const needs = await Needs.findById(needsId);
+    if (!needs) {
+      return res.status(404).json({
+        success: false,
+        message: "Needs record not found",
+      });
+    }
+
+    // 4️⃣ Update
+    needs.taskStatus = taskStatus;
+    needs.statusUpdatedAt = new Date();
+    needs.updatedBy = caretaker._id;
+    await needs.save();
+
+    // 5️⃣ Response
+    return res.status(200).json({
+      success: true,
+      message: "Needs task status updated successfully",
+      data: {
+        id: needs._id,
+        patientId: needs.patientId,
+        title: needs.title,
+        taskStatus: needs.taskStatus,
+        updatedBy: caretaker._id,
+      },
+    });
+
+  } catch (error) {
+    console.log("updateNeedsTaskStatus Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+
+
+export const updateMealAndDietTaskStatus = async (req, res) => {
+  try {
+    const token = req.token;
+    const { taskStatus } = req.body;
+const { mealId } = req.params;
+    // 1️⃣ Validate caretaker
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+    if (!caretaker) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized - caretaker not found",
+      });
+    }
+
+    // 2️⃣ Validate Inputs
+    if (!taskStatus) {
+      return res.status(400).json({
+        success: false,
+        message: " taskStatus are required",
+      });
+    }
+
+    const allowed = ["Pending", "Completed", "Skipped"];
+    if (!allowed.includes(taskStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid taskStatus",
+      });
+    }
+
+    // 3️⃣ Find Meal
+    const meal = await MealsAndDiet.findById(mealId);
+
+    if (!meal) {
+      return res.status(404).json({
+        success: false,
+        message: "Meal & Diet record not found",
+      });
+    }
+
+    // 4️⃣ Update
+    meal.taskStatus = taskStatus;
+    meal.statusUpdatedAt = new Date();
+    meal.updatedBy = caretaker._id;
+    await meal.save();
+
+    // 5️⃣ Response
+    return res.status(200).json({
+      success: true,
+      message: "Meal & Diet task status updated successfully",
+      data: {
+        id: meal._id,
+        patientId: meal.patientId,
+        mealType: meal.mealType,
+        items: meal.items,
+        time: meal.time,
+        taskStatus: meal.taskStatus,
+        updatedBy: caretaker._id,
+      },
+    });
+
+  } catch (error) {
+    console.log("updateMealAndDietTaskStatus Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+
+
+export const updateActivityTaskStatus = async (req, res) => {
+  try {
+    const token = req.token;
+    const { taskStatus } = req.body;
+const { activityId } = req.params;
+    // 1️⃣ Validate caretaker
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+    if (!caretaker) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized - caretaker not found",
+      });
+    }
+
+    // 2️⃣ Validate Inputs
+    if (!taskStatus) {
+      return res.status(400).json({
+        success: false,
+        message: " taskStatus are required",
+      });
+    }
+
+    const allowed = ["Pending", "Completed", "Skipped"];
+    if (!allowed.includes(taskStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid taskStatus",
+      });
+    }
+
+    // 3️⃣ Find Activity
+    const activity = await Activity.findById(activityId);
+
+    if (!activity) {
+      return res.status(404).json({
+        success: false,
+        message: "Activity record not found",
+      });
+    }
+
+    // 4️⃣ Update
+    activity.taskStatus = taskStatus;
+    activity.statusUpdatedAt = new Date();
+    activity.updatedBy = caretaker._id;
+    await activity.save();
+
+    // 5️⃣ Response
+    return res.status(200).json({
+      success: true,
+      message: "Activity task status updated successfully",
+      data: {
+        id: activity._id,
+        patientId: activity.patientId,
+        activityType: activity.activityType,
+        duration: activity.duration,
+        taskStatus: activity.taskStatus,
+        updatedBy: caretaker._id,
+      },
+    });
+
+  } catch (error) {
+    console.log("updateActivityTaskStatus Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 
