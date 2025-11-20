@@ -41,6 +41,10 @@ taskStatus: {
     default: ""
   },
 
+  time: {
+    type: String,
+    default: ""
+  },
   foodType: {
     type: String,
     default: ""

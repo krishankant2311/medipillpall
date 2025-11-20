@@ -5,7 +5,7 @@ import Patient from "../models/patientModel.js";
 export const addActivity = async (req, res) => {
   try {
     let token = req.token;
-    const { title, activityType, duration, details, status, caretakerId } = req.body;
+    const { title, activityType, duration, details,time, status, caretakerId } = req.body;
 
     const patient = await Patient.findOne({ _id: token._id, status: "Active" });
     if (!patient) {
@@ -25,6 +25,7 @@ export const addActivity = async (req, res) => {
       duration,
       details,
       status,
+      time,
     });
 
     await newActivity.save();

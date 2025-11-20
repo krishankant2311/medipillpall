@@ -6,7 +6,7 @@ import Admin from "../models/adminModel.js";
 export const addVisitor = async (req, res) => {
   try {
     let token = req.token;
-    const { name, duration, reason, caretakerId } = req.body;
+    const { name, duration, reason,time, caretakerId } = req.body;
 
     // Required fields check
 if (!name) {
@@ -52,6 +52,8 @@ if (!name) {
       name,
       duration,
       reason,
+      time,
+      caretakerId: caretakerId || null,
     });
 
     await newVisitor.save();

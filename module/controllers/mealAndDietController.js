@@ -669,7 +669,8 @@ export const addMealAndDietByPatient = async (req, res) => {
       specialDietFollowed,
       remarks,
       calories,
-      instructions
+      instructions,
+      time,
     } = req.body;
 
     // ---------------------------
@@ -725,7 +726,8 @@ export const addMealAndDietByPatient = async (req, res) => {
       status: "Active",          // patient adds = completed
       date: new Date(),             // current day
       mealPhoto: type === "Meal" ? mealPhotos : [],
-      attachedDoc
+      attachedDoc,
+      time: time || ""
     };
 
     // ---------------------------

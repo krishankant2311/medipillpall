@@ -42,6 +42,10 @@ const visitorSchema = new mongoose.Schema(
       enum: ["Active", "Deleted"],
       default: "Active",
     },
+    time: {
+      type: String,
+      default: ""
+    },
     // taskStatus: {
     //   type: String,
     //   enum: ["Pending", "Completed","Skipped"],

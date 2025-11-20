@@ -5252,7 +5252,7 @@ export const getAllDailyCare = async (req, res) => {
         duration: v.duration,
         reason: v.reason,
         taskStatus: v.taskStatus || "Pending",
-        time: new Date(v.visitDate).toLocaleTimeString("en-US", {
+        time:v.time || new Date(v.visitDate).toLocaleTimeString("en-US", {
           hour: "2-digit",
           minute: "2-digit",
         }),
@@ -5283,6 +5283,7 @@ export const getAllDailyCare = async (req, res) => {
           .map(m => ({
             ...m,
             taskStatus: m.taskStatus || "Pending",
+            time:m.time,
           })),
 
         lunch: meals
@@ -5290,6 +5291,8 @@ export const getAllDailyCare = async (req, res) => {
           .map(m => ({
             ...m,
             taskStatus: m.taskStatus || "Pending",
+                        time:m.time,
+
           })),
 
         dinner: meals
@@ -5297,6 +5300,8 @@ export const getAllDailyCare = async (req, res) => {
           .map(m => ({
             ...m,
             taskStatus: m.taskStatus || "Pending",
+                        time:m.time,
+
           })),
       },
 
@@ -5311,8 +5316,9 @@ export const getAllDailyCare = async (req, res) => {
             duration: a.duration,
             details: a.details || "",
             status: a.status,
+            time:a.time,
             taskStatus: a.taskStatus || "Pending",
-            time: new Date(a.createdAt).toLocaleTimeString("en-US", {
+            time: a.time || new Date(a.createdAt).toLocaleTimeString("en-US", {
               hour: "2-digit",
               minute: "2-digit",
             }),
@@ -5328,7 +5334,7 @@ export const getAllDailyCare = async (req, res) => {
             details: a.details || "",
             status: a.status,
             taskStatus: a.taskStatus || "Pending",
-            time: new Date(a.createdAt).toLocaleTimeString("en-US", {
+            time:a.time || new Date(a.createdAt).toLocaleTimeString("en-US", {
               hour: "2-digit",
               minute: "2-digit",
             }),
@@ -5344,7 +5350,7 @@ export const getAllDailyCare = async (req, res) => {
             details: a.details || "",
             status: a.status,
             taskStatus: a.taskStatus || "Pending",
-            time: new Date(a.createdAt).toLocaleTimeString("en-US", {
+            time: a.time || new Date(a.createdAt).toLocaleTimeString("en-US", {
               hour: "2-digit",
               minute: "2-digit",
             }),

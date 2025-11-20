@@ -32,6 +32,10 @@ const activitySchema = new mongoose.Schema(
       enum: ["Completed", "Pending"],
       default: "Pending",
     },
+    time: {
+      type: String,
+      default: ""
+    },
     duration: {
       type: String,
       def:""// Minutes
