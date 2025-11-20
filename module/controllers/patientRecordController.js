@@ -302,7 +302,7 @@ export const getPatientBloodPressure = async (req, res) => {
 
     const record = await PatientRecord.findOne({
       patient_id: token._id,
-      // createdAt: { $gte: start, $lte: end },
+      createdAt: { $gte: start, $lte: end },
     }).select("bloodPressure createdAt").sort({ createdAt: -1 });
 
     if (!record || !record.bloodPressure) {
@@ -344,7 +344,7 @@ export const getPatientBloodSugar = async (req, res) => {
 
     const record = await PatientRecord.findOne({
       patient_id: token._id,
-      // createdAt: { $gte: start, $lte: end },
+      createdAt: { $gte: start, $lte: end },
     }).sort({ createdAt: -1 }).select("bloodSugar createdAt");
 
     if (!record || !record.bloodSugar) {
@@ -386,7 +386,7 @@ export const getPatientBodyTemp = async (req, res) => {
 
     const record = await PatientRecord.findOne({
       patient_id: token._id,
-      // createdAt: { $gte: start, $lte: end },
+      createdAt: { $gte: start, $lte: end },
     }).select("bodyTemp createdAt");
 
     if (!record || !record.bodyTemp) {
@@ -470,7 +470,7 @@ export const getPatientHeartRate = async (req, res) => {
 
     const record = await PatientRecord.findOne({
       patient_id: token._id,
-      // createdAt: { $gte: start, $lte: end },
+      createdAt: { $gte: start, $lte: end },
     }).select("heartRate createdAt");
 
     if (!record || !record.heartRate) {
