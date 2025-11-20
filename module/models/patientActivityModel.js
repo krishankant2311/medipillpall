@@ -29,7 +29,7 @@ const activitySchema = new mongoose.Schema(
     },
     taskStatus: {
       type: String,
-      enum: ["Completed", "Pending"],
+      enum: ["Completed","Skipped", "Pending"],
       default: "Pending",
     },
     time: {
