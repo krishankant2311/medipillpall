@@ -6314,7 +6314,7 @@ export const addMealRemark = async (req, res) => {
       });
     }
 
-    const meal = await Meal.findById(mealId);
+    const meal = await MealsAndDiet.findById(mealId);
     if (!meal) {
       return res.status(404).json({
         success: false,
@@ -6370,7 +6370,7 @@ export const editMealRemark = async (req, res) => {
       });
     }
 
-    const meal = await Meal.findById(mealId);
+    const meal = await MealsAndDiet.findById(mealId);
 
     if (!meal) {
       return res.status(404).json({
