@@ -23,7 +23,7 @@ export const verifyAccessToken = (req, res, next) => {
     const incomingToken = req.headers.token; // 👈 as per your pattern
     if (!incomingToken) {
       return res.send({
-        statusCode: 400,
+        statusCode: 401,
         success: false,
         message: "Token not Found",
         result: {},

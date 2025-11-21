@@ -2564,20 +2564,20 @@ export const getPatientBloodPressureByCaretaker = async (req, res) => {
       });
     }
 
-  return res.json({
-  success: true,
-  message: "Blood Pressure fetched successfully",
-  filterApplied: dateFilter,
-  result: record
-    .map((r) => ({
-      _id: r._id,                 // 🔥 Added ID
-      ...r.bloodPressure,
-      createdAt: r.createdAt,
-    }))
-     .filter((bp) => {
-      return bp.day || bp.amBP || bp.pmBP || bp.comments;
-    }), // 🔥 Removes empty BP objects
-});
+    return res.json({
+      success: true,
+      message: "Blood Pressure fetched successfully",
+      filterApplied: dateFilter,
+      result: record
+        .map((r) => ({
+          _id: r._id,                 // 🔥 Added ID
+          ...r.bloodPressure,
+          createdAt: r.createdAt,
+        }))
+        .filter((bp) => {
+          return bp.day || bp.amBP || bp.pmBP || bp.comments;
+        }), // 🔥 Removes empty BP objects
+    });
 
   } catch (err) {
     console.error("Error in getPatientBloodPressureByCaretaker:", err);
@@ -2648,18 +2648,18 @@ export const getPatientBloodSugarByCaretaker = async (req, res) => {
         result: [],
       });
 
-  return res.json({
-  success: true,
-  message: "Blood Sugar fetched successfully",
-  filterApplied: dateFilter,
-  result: record
-    .map((r) => ({
-      _id: r._id,
-      ...r.bloodSugar,
-      createdAt: r.createdAt,
-    }))
-    .filter((s) => s.day || s.amSugar || s.pmSugar || s.comments),
-});
+    return res.json({
+      success: true,
+      message: "Blood Sugar fetched successfully",
+      filterApplied: dateFilter,
+      result: record
+        .map((r) => ({
+          _id: r._id,
+          ...r.bloodSugar,
+          createdAt: r.createdAt,
+        }))
+        .filter((s) => s.day || s.amSugar || s.pmSugar || s.comments),
+    });
 
   } catch (err) {
     console.error("Error in getPatientBloodSugarByCaretaker:", err);
@@ -2731,17 +2731,17 @@ export const getPatientBodyTempByCaretaker = async (req, res) => {
       });
 
     return res.json({
-  success: true,
-  message: "Temperature fetched successfully",
-  filterApplied: dateFilter,
-  result: record
-    .map((r) => ({
-      _id: r._id,
-      ...r.bodyTemp,          // ✔ Correct field name
-      createdAt: r.createdAt,
-    }))
-    .filter((t) => t.day || t.temp || t.time || t.comments),
-});
+      success: true,
+      message: "Temperature fetched successfully",
+      filterApplied: dateFilter,
+      result: record
+        .map((r) => ({
+          _id: r._id,
+          ...r.bodyTemp,          // ✔ Correct field name
+          createdAt: r.createdAt,
+        }))
+        .filter((t) => t.day || t.temp || t.time || t.comments),
+    });
 
   } catch (err) {
     console.error("Error in getPatientBodyTempByCaretaker:", err);
@@ -2811,18 +2811,18 @@ export const getPatientBodyWeightByCaretaker = async (req, res) => {
         result: [],
       });
 
- return res.json({
-  success: true,
-  message: "Weight fetched successfully",
-  filterApplied: dateFilter,
-  result: record
-    .map((r) => ({
-      _id: r._id,
-      ...r.bodyWeight,        // ✔ Correct field name
-      createdAt: r.createdAt,
-    }))
-    .filter((w) => w.day || w.weight || w.comments), // ✔ Empty objects removed
-});
+    return res.json({
+      success: true,
+      message: "Weight fetched successfully",
+      filterApplied: dateFilter,
+      result: record
+        .map((r) => ({
+          _id: r._id,
+          ...r.bodyWeight,        // ✔ Correct field name
+          createdAt: r.createdAt,
+        }))
+        .filter((w) => w.day || w.weight || w.comments), // ✔ Empty objects removed
+    });
 
 
   } catch (err) {
@@ -2894,20 +2894,20 @@ export const getPatientHeartRateByCaretaker = async (req, res) => {
         result: [],
       });
 
-   return res.json({
-  success: true,
-  message: "Heart Rate fetched successfully",
-  filterApplied: dateFilter,
-  result: record
-    .map((r) => ({
-      _id: r._id,                     // ✔ ID include
-      ...r.heartRate,                 // ✔ Heart rate object
-      createdAt: r.createdAt,         // ✔ Timestamp
-    }))
-    .filter((h) =>
-      h.day || h.heartRate || h.time || h.comments
-    ),                                // ✔ Empty entries removed
-});
+    return res.json({
+      success: true,
+      message: "Heart Rate fetched successfully",
+      filterApplied: dateFilter,
+      result: record
+        .map((r) => ({
+          _id: r._id,                     // ✔ ID include
+          ...r.heartRate,                 // ✔ Heart rate object
+          createdAt: r.createdAt,         // ✔ Timestamp
+        }))
+        .filter((h) =>
+          h.day || h.heartRate || h.time || h.comments
+        ),                                // ✔ Empty entries removed
+    });
 
   } catch (err) {
     console.error("Error in getPatientHeartRateByCaretaker:", err);
@@ -5080,123 +5080,6 @@ export const deleteCaretakerByAdmin = async (req, res) => {
     });
   }
 };
-
-
-// export const getAllDailyCare = async (req, res) => {
-//   try {
-//     const { patientId } = req.params;
-//     const { date } = req.query;
-
-//     const today = date ? new Date(date) : new Date();
-
-//     const startOfDay = new Date(today.setHours(0, 0, 0, 0));
-//     const endOfDay = new Date(today.setHours(23, 59, 59, 999));
-
-//     // -------------------------
-//     // 1️⃣   Visitors
-//     // -------------------------
-//     const visitors = await Visitor.find({
-//       patientId,
-//       visitDate: { $gte: startOfDay, $lte: endOfDay },
-//       status: "Active",
-//     }).lean();
-
-//     // -------------------------
-//     // 2️⃣   Meals (Breakfast / Lunch / Dinner)
-//     // -------------------------
-//     const meals = await MealsAndDiet.find({
-//       patientId,
-//       date: { $gte: startOfDay, $lte: endOfDay },
-//       // status: "Active",
-//     }).lean();
-
-//     // -------------------------
-//     // 3️⃣ Activities (Morning Hygiene, Exercise, etc.)
-//     // -------------------------
-//     const activities = await Activity.find({
-//       patientId,
-// createdAt: { $gte: startOfDay, $lte: endOfDay },
-//       // status: "Active",
-//     }).lean();
-
-//     // -------------------------
-//     // 4️⃣ Appointments
-//     // -------------------------
-//     const appointments = await Appointment.find({
-//       patientId,
-//       date: { $gte: startOfDay, $lte: endOfDay },
-//       status: "Active",
-//     }).lean();
-
-//     // -------------------------
-//     // 5️⃣ Needs
-//     // -------------------------
-//     const needs = await Needs.find({
-//       patientId,
-//       date: { $gte: startOfDay, $lte: endOfDay },
-//       status: "Active",
-//     }).lean();
-
-
-//     // -------------------------------------------------------
-//     // 🟦  Build Daily Care Structure (Like Screenshot)
-//     // -------------------------------------------------------
-
-//     const responseData = {
-//       date: startOfDay,
-
-//       visitors: visitors.map(v => ({
-//         id: v._id,
-//         name: v.name,
-//         relation: v.relation,
-//         duration: v.duration,
-//         reason: v.reason,
-//         time: new Date(v.visitDate).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
-//       })),
-
-//       appointments: appointments.map(a => ({
-//         id: a._id,
-//         title: a.title,
-//         time: a.time,
-//         reason: a.reason
-//       })),
-
-//       needs: needs.map(n => ({
-//         id: n._id,
-//         title: n.title,
-//         time: n.time,
-//         description: n.description
-//       })),
-
-//      meals: {
-//   breakfast: meals.filter(m => m.mealType === "Breakfast"),
-//   lunch: meals.filter(m => m.mealType === "Lunch"),
-//   dinner: meals.filter(m => m.mealType === "Dinner"),
-// },
-
-// activities: {
-//   morningHygiene: activities.filter(a => a.activityType === "Morning Hygiene"),
-//   exercise: activities.filter(a => a.activityType === "Exercise"),
-//   others: activities.filter(a => a.activityType === "Other")
-// }
-//     };
-
-
-//     return res.status(200).json({
-//       success: true,
-//       message: "Daily care data fetched successfully",
-//       data: responseData,
-//     });
-
-//   } catch (error) {
-//     console.log("getAllDailyCare Error:", error);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Internal server error",
-//     });
-//   }
-// };
-
 export const getAllDailyCare = async (req, res) => {
   try {
     const { patientId } = req.params;
@@ -5236,7 +5119,6 @@ export const getAllDailyCare = async (req, res) => {
       status: "Active",
     }).lean();
 
-
     // -------------------------------------------------------
     // 🟦 Build Response with taskStatus added globally
     // -------------------------------------------------------
@@ -5252,7 +5134,8 @@ export const getAllDailyCare = async (req, res) => {
         duration: v.duration,
         reason: v.reason,
         taskStatus: v.taskStatus || "Pending",
-        time:v.time || new Date(v.visitDate).toLocaleTimeString("en-US", {
+        remarkAndObservations: v.remarkAndObservations || "",
+        time: v.time || new Date(v.visitDate).toLocaleTimeString("en-US", {
           hour: "2-digit",
           minute: "2-digit",
         }),
@@ -5264,6 +5147,7 @@ export const getAllDailyCare = async (req, res) => {
         title: a.title,
         time: a.time,
         reason: a.reason,
+        remarkAndObservations: a.remarkAndObservations || "",
         taskStatus: a.taskStatus || "Pending",
       })),
 
@@ -5272,38 +5156,42 @@ export const getAllDailyCare = async (req, res) => {
         id: n._id,
         title: n.title,
         time: n.time,
+        remarkAndObservations: n.remarkAndObservations || "",
         description: n.description,
         taskStatus: n.taskStatus || "Pending",
       })),
 
       // ---------------- Meals ----------------
-      meals: {
-        breakfast: meals
-          .filter(m => m.mealType === "Breakfast")
-          .map(m => ({
-            ...m,
-            taskStatus: m.taskStatus || "Pending",
-            time:m.time,
-          })),
+      // ---------------- Meals ----------------
+meals: {
+  breakfast: meals
+    .filter(m => m.mealType === "Breakfast")
+    .map(m => ({
+      ...m,
+      taskStatus: m.taskStatus || "Pending",
+      remarkAndObservations: m.remarkAndObservations || "",
+      time: m.time,
+    })),
 
-        lunch: meals
-          .filter(m => m.mealType === "Lunch")
-          .map(m => ({
-            ...m,
-            taskStatus: m.taskStatus || "Pending",
-                        time:m.time,
+  lunch: meals
+    .filter(m => m.mealType === "Lunch")
+    .map(m => ({
+      ...m,
+      taskStatus: m.taskStatus || "Pending",
+      remarkAndObservations: m.remarkAndObservations || "",
+      time: m.time,
+    })),
 
-          })),
+  dinner: meals
+    .filter(m => m.mealType === "Dinner")
+    .map(m => ({
+      ...m,
+      taskStatus: m.taskStatus || "Pending",
+      remarkAndObservations: m.remarkAndObservations || "",
+      time: m.time,
+    })),
+},
 
-        dinner: meals
-          .filter(m => m.mealType === "Dinner")
-          .map(m => ({
-            ...m,
-            taskStatus: m.taskStatus || "Pending",
-                        time:m.time,
-
-          })),
-      },
 
       // ---------------- Activities ----------------
       activities: {
@@ -5316,7 +5204,8 @@ export const getAllDailyCare = async (req, res) => {
             duration: a.duration,
             details: a.details || "",
             status: a.status,
-            time:a.time,
+            time: a.time,
+            remarkAndObservations: a.remarkAndObservations || "",
             taskStatus: a.taskStatus || "Pending",
             time: a.time || new Date(a.createdAt).toLocaleTimeString("en-US", {
               hour: "2-digit",
@@ -5333,8 +5222,9 @@ export const getAllDailyCare = async (req, res) => {
             duration: a.duration,
             details: a.details || "",
             status: a.status,
+            remarkAndObservations: a.remarkAndObservations || "",
             taskStatus: a.taskStatus || "Pending",
-            time:a.time || new Date(a.createdAt).toLocaleTimeString("en-US", {
+            time: a.time || new Date(a.createdAt).toLocaleTimeString("en-US", {
               hour: "2-digit",
               minute: "2-digit",
             }),
@@ -5347,6 +5237,7 @@ export const getAllDailyCare = async (req, res) => {
             title: a.title,
             activityType: a.activityType,
             duration: a.duration,
+            remarkAndObservations: a.remarkAndObservations || "",
             details: a.details || "",
             status: a.status,
             taskStatus: a.taskStatus || "Pending",
@@ -5358,6 +5249,10 @@ export const getAllDailyCare = async (req, res) => {
       },
     };
 
+    // ---------------- Optional Extra Date Filter (ONLY ADDITION) ----------------
+    if (date) {
+      responseData.date = new Date(date);
+    }
 
     // ---------------- Final Response ----------------
     return res.status(200).json({
@@ -5375,11 +5270,190 @@ export const getAllDailyCare = async (req, res) => {
   }
 };
 
+
+// export const getAllDailyCare = async (req, res) => {
+//   try {
+//     const { patientId } = req.params;
+//     const { date } = req.query;
+
+//     const today = date ? new Date(date) : new Date();
+
+//     const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+//     const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+
+//     // ---------------- Fetch All ----------------
+//     const visitors = await Visitor.find({
+//       patientId,
+//       visitDate: { $gte: startOfDay, $lte: endOfDay },
+//       status: "Active",
+//     }).lean();
+
+//     const meals = await MealsAndDiet.find({
+//       patientId,
+//       date: { $gte: startOfDay, $lte: endOfDay },
+//     }).lean();
+
+//     const activities = await Activity.find({
+//       patientId,
+//       createdAt: { $gte: startOfDay, $lte: endOfDay },
+//     }).lean();
+
+//     const appointments = await Appointment.find({
+//       patientId,
+//       date: { $gte: startOfDay, $lte: endOfDay },
+//       status: "Active",
+//     }).lean();
+
+//     const needs = await Needs.find({
+//       patientId,
+//       date: { $gte: startOfDay, $lte: endOfDay },
+//       status: "Active",
+//     }).lean();
+
+
+//     // -------------------------------------------------------
+//     // 🟦 Build Response with taskStatus added globally
+//     // -------------------------------------------------------
+
+//     const responseData = {
+//       date: startOfDay,
+
+//       // ---------------- Visitors ----------------
+//       visitors: visitors.map(v => ({
+//         id: v._id,
+//         name: v.name,
+//         relation: v.relation,
+//         duration: v.duration,
+//         reason: v.reason,
+//         taskStatus: v.taskStatus || "Pending",
+//         time:v.time || new Date(v.visitDate).toLocaleTimeString("en-US", {
+//           hour: "2-digit",
+//           minute: "2-digit",
+//         }),
+//       })),
+
+//       // ---------------- Appointments ----------------
+//       appointments: appointments.map(a => ({
+//         id: a._id,
+//         title: a.title,
+//         time: a.time,
+//         reason: a.reason,
+//         taskStatus: a.taskStatus || "Pending",
+//       })),
+
+//       // ---------------- Needs ----------------
+//       needs: needs.map(n => ({
+//         id: n._id,
+//         title: n.title,
+//         time: n.time,
+//         description: n.description,
+//         taskStatus: n.taskStatus || "Pending",
+//       })),
+
+//       // ---------------- Meals ----------------
+//       meals: {
+//         breakfast: meals
+//           .filter(m => m.mealType === "Breakfast")
+//           .map(m => ({
+//             ...m,
+//             taskStatus: m.taskStatus || "Pending",
+//             time:m.time,
+//           })),
+
+//         lunch: meals
+//           .filter(m => m.mealType === "Lunch")
+//           .map(m => ({
+//             ...m,
+//             taskStatus: m.taskStatus || "Pending",
+//                         time:m.time,
+
+//           })),
+
+//         dinner: meals
+//           .filter(m => m.mealType === "Dinner")
+//           .map(m => ({
+//             ...m,
+//             taskStatus: m.taskStatus || "Pending",
+//                         time:m.time,
+
+//           })),
+//       },
+
+//       // ---------------- Activities ----------------
+//       activities: {
+//         morningHygiene: activities
+//           .filter(a => a.activityType === "Morning Hygiene")
+//           .map(a => ({
+//             id: a._id,
+//             title: a.title,
+//             activityType: a.activityType,
+//             duration: a.duration,
+//             details: a.details || "",
+//             status: a.status,
+//             time:a.time,
+//             taskStatus: a.taskStatus || "Pending",
+//             time: a.time || new Date(a.createdAt).toLocaleTimeString("en-US", {
+//               hour: "2-digit",
+//               minute: "2-digit",
+//             }),
+//           })),
+
+//         exercise: activities
+//           .filter(a => a.activityType === "Exercise")
+//           .map(a => ({
+//             id: a._id,
+//             title: a.title,
+//             activityType: a.activityType,
+//             duration: a.duration,
+//             details: a.details || "",
+//             status: a.status,
+//             taskStatus: a.taskStatus || "Pending",
+//             time:a.time || new Date(a.createdAt).toLocaleTimeString("en-US", {
+//               hour: "2-digit",
+//               minute: "2-digit",
+//             }),
+//           })),
+
+//         others: activities
+//           .filter(a => a.activityType === "Other")
+//           .map(a => ({
+//             id: a._id,
+//             title: a.title,
+//             activityType: a.activityType,
+//             duration: a.duration,
+//             details: a.details || "",
+//             status: a.status,
+//             taskStatus: a.taskStatus || "Pending",
+//             time: a.time || new Date(a.createdAt).toLocaleTimeString("en-US", {
+//               hour: "2-digit",
+//               minute: "2-digit",
+//             }),
+//           })),
+//       },
+//     };
+
+
+//     // ---------------- Final Response ----------------
+//     return res.status(200).json({
+//       success: true,
+//       message: "Daily care data fetched successfully",
+//       data: responseData,
+//     });
+
+//   } catch (error) {
+//     console.log("getAllDailyCare Error:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error",
+//     });
+//   }
+// };
+
 export const updateVisitorTaskStatus = async (req, res) => {
   try {
     const token = req.token; // caretaker token
-    const {  taskStatus } = req.body;
-const { visitorId } = req.params;
+    const { taskStatus } = req.body;
+    const { visitorId } = req.params;
     // ---------------------------------------
     // 1️⃣ Validate caretaker 
     // ---------------------------------------
@@ -5464,8 +5538,8 @@ const { visitorId } = req.params;
 export const updateAppointmentTaskStatus = async (req, res) => {
   try {
     const token = req.token;
-    const {  taskStatus } = req.body;
-const { appointmentId } = req.params;
+    const { taskStatus } = req.body;
+    const { appointmentId } = req.params;
     // 1️⃣ Validate caretaker
     const caretaker = await Caretaker.findOne({
       _id: token._id,
@@ -5538,8 +5612,8 @@ const { appointmentId } = req.params;
 export const updateNeedsTaskStatus = async (req, res) => {
   try {
     const token = req.token;
-    const {  taskStatus } = req.body;
-const { needsId } = req.params;
+    const { taskStatus } = req.body;
+    const { needsId } = req.params;
     // 1️⃣ Validate caretaker
     const caretaker = await Caretaker.findOne({
       _id: token._id,
@@ -5611,7 +5685,7 @@ export const updateMealAndDietTaskStatus = async (req, res) => {
   try {
     const token = req.token;
     const { taskStatus } = req.body;
-const { mealId } = req.params;
+    const { mealId } = req.params;
     // 1️⃣ Validate caretaker
     const caretaker = await Caretaker.findOne({
       _id: token._id,
@@ -5686,7 +5760,7 @@ export const updateActivityTaskStatus = async (req, res) => {
   try {
     const token = req.token;
     const { taskStatus } = req.body;
-const { activityId } = req.params;
+    const { activityId } = req.params;
     // 1️⃣ Validate caretaker
     const caretaker = await Caretaker.findOne({
       _id: token._id,
