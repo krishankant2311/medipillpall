@@ -25,6 +25,10 @@ const visitorSchema = new mongoose.Schema(
       enum: ["Pending", "Completed", "Skipped"],
       default: "Pending",
     },
+     remarkAndObservations: {
+    type: String,
+    default: ""
+  },
     visitDate: {
       type: Date,
       default: Date.now,

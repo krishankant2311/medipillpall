@@ -12,7 +12,10 @@ const appointmentSchema = new mongoose.Schema(
       type: String,          // "3:00 PM"
       required: true,
     },
-
+ remarkAndObservations: {
+    type: String,
+    default: ""
+  },
     reason: {
       type: String,          // "For routine checkup"
       default: "",

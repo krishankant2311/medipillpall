@@ -80,7 +80,10 @@ taskStatus: {
     type: Date,
     default: Date.now
   },
-
+ remarkAndObservations: {
+    type: String,
+    default: ""
+  },
   // -------------------------------
   // Fields used when type = "Diet"
   // -------------------------------

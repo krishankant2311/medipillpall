@@ -49,6 +49,8 @@ import { addCaretaker,
   editPatientHeartRateByCaretaker,
   editPatientBodyWeightByCaretaker,
   editPatientBloodSugarByCaretaker,
+  addActivityRemark,
+  editActivityRemark,
   getAllCareNotesByCaretaker,deleteCaretakerByAdmin,getAllDailyCare,
   addReminderByCaretaker,editCaretakerProfile,getMedicalHistoryByCaretaker,
   getTermsAndConditionsByCaretaker,getPrivacyPolicyByCaretaker,getFaqByCaretaker,
@@ -194,6 +196,7 @@ router.post("/change-appointment-task-status-by-caretaker/:appointmentId", verif
 router.post("/change-visitors-task-status-by-caretaker/:visitorId", verifyAccessToken, upload.none(), updateVisitorTaskStatus);
 router.post("/change-meal-and-diet-task-status-by-caretaker/:mealId", verifyAccessToken, upload.none(), updateMealAndDietTaskStatus);
 router.post("/change-activity-task-status-by-caretaker/:activityId", verifyAccessToken, upload.none(), updateActivityTaskStatus);
-
+router.post("/add-activity-remarks/:activityId",verifyAccessToken,upload.none(), addActivityRemark);
+router.post("/edit-activity-remarks/:activityId", editActivityRemark);
 
 export default router;

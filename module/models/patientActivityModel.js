@@ -48,6 +48,10 @@ const activitySchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+     remarkAndObservations: {
+    type: String,
+    default: ""
+  },
     status: {
       type: String,
       enum: ["Active", "Pending","Delete"],
