@@ -51,6 +51,14 @@ import { addCaretaker,
   editPatientBloodSugarByCaretaker,
   addActivityRemark,
   editActivityRemark,
+  addVisitorRemark,
+  editVisitorRemark,
+  addNeedsRemark,
+  editNeedsRemark,
+  addAppointmentRemark,
+  editAppointmentRemark,
+  addMealRemark,
+  editMealRemark,
   getAllCareNotesByCaretaker,deleteCaretakerByAdmin,getAllDailyCare,
   addReminderByCaretaker,editCaretakerProfile,getMedicalHistoryByCaretaker,
   getTermsAndConditionsByCaretaker,getPrivacyPolicyByCaretaker,getFaqByCaretaker,
@@ -197,6 +205,14 @@ router.post("/change-visitors-task-status-by-caretaker/:visitorId", verifyAccess
 router.post("/change-meal-and-diet-task-status-by-caretaker/:mealId", verifyAccessToken, upload.none(), updateMealAndDietTaskStatus);
 router.post("/change-activity-task-status-by-caretaker/:activityId", verifyAccessToken, upload.none(), updateActivityTaskStatus);
 router.post("/add-activity-remarks/:activityId",verifyAccessToken,upload.none(), addActivityRemark);
-router.post("/edit-activity-remarks/:activityId", editActivityRemark);
+router.post("/edit-activity-remarks/:activityId",verifyAccessToken,upload.none(), editActivityRemark);
+router.post("/add-visitor-remarks/:visitorId",verifyAccessToken,upload.none(), addVisitorRemark);
+router.post("/edit-visitor-remarks/:visitorId",verifyAccessToken,upload.none(), editVisitorRemark);
+router.post("/add-needs-remarks/:needsId",verifyAccessToken,upload.none(), addNeedsRemark);
+router.post("/edit-needs-remarks/:needsId",verifyAccessToken,upload.none(), editNeedsRemark);
+router.post("/add-appointment-remarks/:appointmentId",verifyAccessToken,upload.none(), addAppointmentRemark);
+router.post("/edit-appointment-remarks/:appointmentId",verifyAccessToken,upload.none(), editAppointmentRemark);
+router.post("/add-meal-remarks/:mealId",verifyAccessToken,upload.none(), addMealRemark);
+router.post("/edit-meal-remarks/:mealId",verifyAccessToken,upload.none(), editMealRemark);
 
 export default router;
