@@ -6359,7 +6359,7 @@ export const editMealRemark = async (req, res) => {
     if (!caretaker) {
       return res.status(401).json({
         success: false,
-        message: "Unauthorized - caretaker not found",
+        message: "Unauthorized - caregiver not found",
       });
     }
 

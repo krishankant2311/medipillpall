@@ -2718,6 +2718,108 @@ export const assignPatientToCaregiver = async (req, res) => {
 
 
 
+// export const getPatientDetailByGuardian = async (req, res) => {
+//   try {
+//     const token = req.token; // Guardian token
+//     const { patientId } = req.params;
+
+//     // 🧩 Step 1: Validate Guardian
+//     const guardian = await Guardian.findOne({ _id: token._id, status: "Active" }).select(
+//       "_id fullName mobileNumber gender language profilePhoto status"
+//     );
+//     if (!guardian) {
+//       return res.send({
+//         statusCode: 401,
+//         success: false,
+//         message: "Invalid or inactive guardian",
+//         result: {},
+//       });
+//     }
+
+//     // 🧩 Step 2: Validate Patient
+//     if (!patientId) {
+//       return res.send({
+//         statusCode: 400,
+//         success: false,
+//         message: "Patient ID is required",
+//         result: {},
+//       });
+//     }
+
+//     const patient = await Patient.findOne({
+//       _id: patientId,
+//       guardianId: guardian._id,
+//       status: "Active",
+//     }).select(
+//       "_id fullName age gender language mobileNumber profilePhoto diseaseCondition status caretakerId guardianId"
+//     );
+
+//     if (!patient) {
+//       return res.send({
+//         statusCode: 404,
+//         success: false,
+//         message: "Patient not found or not linked to this guardian",
+//         result: {},
+//       });
+//     }
+
+//     // 🧩 Step 3: Fetch related data (linked via patient_id)
+//     const [medicalReports, patientRecords, medications, careNotes] = await Promise.all([
+//       MedicalReport.find({ patient_id: patient._id, status: "Active" }).sort({ createdAt: -1 }),
+//       PatientRecord.find({ patient_id: patient._id, status: "Active" }).sort({ createdAt: -1 }),
+//       Medication.find({ patient_id: patient._id, status: "Active" }).sort({ createdAt: -1 }),
+//       CareNote.find({ patientId: patient._id, status: "Active" }).sort({ createdAt: -1 }),
+//     ]);
+
+//     // console.log("Fetched Data:", { medicalReports, patientRecords, medications });
+
+//     // 🧩 Step 4: Fetch Caretaker (optional)
+//     let caretaker = {};
+//     if (patient.caretakerId) {
+//       caretaker = await Caregiver.findOne(
+//         { _id: patient.caretakerId, status: "Active" },
+//         "_id fullName mobileNumber gender language profilePhoto status"
+//       );
+//     }
+
+//     // 🧩 Step 5: Final Response
+//     return res.send({
+//       statusCode: 200,
+//       success: true,
+//       message: "Patient details fetched successfully",
+//       result: {
+//         patient: {
+//           _id: patient._id,
+//           fullName: patient.fullName,
+//           age: patient.age,
+//           gender: patient.gender,
+//           language: patient.language,
+//           mobileNumber: patient.mobileNumber,
+//           profilePhoto: patient.profilePhoto,
+//           diseaseCondition: patient.diseaseCondition,
+//           status: patient.status,
+//         },
+//         vitals: patientRecords || [],
+//         meds: medications || [],
+//         docs: medicalReports || [],
+//         careNotes: careNotes || [],
+//         caretaker: caretaker || {},
+//         guardian: guardian,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Error in getPatientDetailByGuardian:", error);
+//     return res.send({
+//       statusCode: 500,
+//       success: false,
+//       message: "Internal Server Error",
+//       error: error.message,
+//       result: {},
+//     });
+//   }
+// };
+
+
 export const getPatientDetailByGuardian = async (req, res) => {
   try {
     const token = req.token; // Guardian token
@@ -2771,8 +2873,6 @@ export const getPatientDetailByGuardian = async (req, res) => {
       CareNote.find({ patientId: patient._id, status: "Active" }).sort({ createdAt: -1 }),
     ]);
 
-    // console.log("Fetched Data:", { medicalReports, patientRecords, medications });
-
     // 🧩 Step 4: Fetch Caretaker (optional)
     let caretaker = {};
     if (patient.caretakerId) {
@@ -2799,7 +2899,48 @@ export const getPatientDetailByGuardian = async (req, res) => {
           diseaseCondition: patient.diseaseCondition,
           status: patient.status,
         },
-        vitals: patientRecords || [],
+
+        // ⭐ UPDATED VITALS BLOCK ⭐ (UI screenshot ke hisaab se)
+        vitals:
+          patientRecords?.map((rec) => {
+            const createdAt = rec.createdAt ? new Date(rec.createdAt) : new Date();
+            const now = new Date();
+            const diffMs = now - createdAt;
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+            const timeAgo =
+              diffHours < 1
+                ? "Just Now"
+                : diffHours === 1
+                ? "1 Hour Ago"
+                : `${diffHours} Hours Ago`;
+
+            return {
+              _id: rec._id,
+              timeAgo,
+
+              bloodPressure:
+                rec?.bloodPressure?.amBP || rec?.bloodPressure?.pmBP
+                  ? `${rec?.bloodPressure?.amBP || ""}/${rec?.bloodPressure?.pmBP || ""}`
+                  : "",
+
+              heartRate:
+                rec?.heartRate?.amRate || rec?.heartRate?.pmRate
+                  ? `${rec?.heartRate?.amRate || rec?.heartRate?.pmRate} bpm`
+                  : "",
+
+              glucose:
+                rec?.bloodSugar?.before || rec?.bloodSugar?.after
+                  ? `${rec?.bloodSugar?.before || rec?.bloodSugar?.after} mg/dL`
+                  : "",
+
+              temperature:
+                rec?.bodyTemp?.amTemp || rec?.bodyTemp?.pmTemp
+                  ? `${rec?.bodyTemp?.amTemp || rec?.bodyTemp?.pmTemp}°F`
+                  : "",
+            };
+          }) || [],
+
         meds: medications || [],
         docs: medicalReports || [],
         careNotes: careNotes || [],
