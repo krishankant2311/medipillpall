@@ -2865,13 +2865,57 @@ export const getPatientDetailByGuardian = async (req, res) => {
       });
     }
 
-    // 🧩 Step 3: Fetch related data (linked via patient_id)
+    // ------------------------------
+    // TIME AGO HELPER (Only Hours)
+    // ------------------------------
+    function getHoursAgo(date) {
+      const now = new Date();
+      const recordTime = new Date(date);
+
+      let diffMs = now - recordTime;
+      if (diffMs < 0) diffMs = 0;
+
+      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+      return `${hours} Hours Ago`;
+    }
+
+    // 🧩 Step 3: Fetch related data
     const [medicalReports, patientRecords, medications, careNotes] = await Promise.all([
       MedicalReport.find({ patient_id: patient._id, status: "Active" }).sort({ createdAt: -1 }),
-      PatientRecord.find({ patient_id: patient._id, status: "Active" }).sort({ createdAt: -1 }),
+      PatientRecord.find({ patient_id: patient._id,  }).sort({ createdAt: -1 }),
       Medication.find({ patient_id: patient._id, status: "Active" }).sort({ createdAt: -1 }),
       CareNote.find({ patientId: patient._id, status: "Active" }).sort({ createdAt: -1 }),
     ]);
+
+    // -----------------------------------------
+    // MAP VITALS (BP, BT, BW, HR + Hours Ago)
+    // -----------------------------------------
+    const vitals = patientRecords.map((rec) => {
+      return {
+        _id: rec._id,
+        timeAgo: getHoursAgo(rec.createdAt),
+
+        bloodPressure:
+          rec.bloodPressure?.amBP && rec.bloodPressure?.pmBP
+            ? `${rec.bloodPressure.amBP}/${rec.bloodPressure.pmBP}`
+            : "",
+
+        heartRate:
+          rec.heartRate?.amRate || rec.heartRate?.pmRate
+            ? `${rec.heartRate.amRate || ""} ${rec.heartRate.pmRate || ""}`.trim()
+            : "",
+
+        glucose:
+          rec.bloodSugar?.before || rec.bloodSugar?.after
+            ? `${rec.bloodSugar.before || ""}/${rec.bloodSugar.after || ""}`
+            : "",
+
+        temperature:
+          rec.bodyTemp?.amTemp || rec.bodyTemp?.pmTemp
+            ? `${rec.bodyTemp.amTemp || ""}/${rec.bodyTemp.pmTemp || ""}`
+            : "",
+      };
+    });
 
     // 🧩 Step 4: Fetch Caretaker (optional)
     let caretaker = {};
@@ -2899,48 +2943,7 @@ export const getPatientDetailByGuardian = async (req, res) => {
           diseaseCondition: patient.diseaseCondition,
           status: patient.status,
         },
-
-        // ⭐ UPDATED VITALS BLOCK ⭐ (UI screenshot ke hisaab se)
-        vitals:
-          patientRecords?.map((rec) => {
-            const createdAt = rec.createdAt ? new Date(rec.createdAt) : new Date();
-            const now = new Date();
-            const diffMs = now - createdAt;
-            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-
-            const timeAgo =
-              diffHours < 1
-                ? "Just Now"
-                : diffHours === 1
-                ? "1 Hour Ago"
-                : `${diffHours} Hours Ago`;
-
-            return {
-              _id: rec._id,
-              timeAgo,
-
-              bloodPressure:
-                rec?.bloodPressure?.amBP || rec?.bloodPressure?.pmBP
-                  ? `${rec?.bloodPressure?.amBP || ""}/${rec?.bloodPressure?.pmBP || ""}`
-                  : "",
-
-              heartRate:
-                rec?.heartRate?.amRate || rec?.heartRate?.pmRate
-                  ? `${rec?.heartRate?.amRate || rec?.heartRate?.pmRate} bpm`
-                  : "",
-
-              glucose:
-                rec?.bloodSugar?.before || rec?.bloodSugar?.after
-                  ? `${rec?.bloodSugar?.before || rec?.bloodSugar?.after} mg/dL`
-                  : "",
-
-              temperature:
-                rec?.bodyTemp?.amTemp || rec?.bodyTemp?.pmTemp
-                  ? `${rec?.bodyTemp?.amTemp || rec?.bodyTemp?.pmTemp}°F`
-                  : "",
-            };
-          }) || [],
-
+        vitals: vitals,
         meds: medications || [],
         docs: medicalReports || [],
         careNotes: careNotes || [],
@@ -2959,6 +2962,7 @@ export const getPatientDetailByGuardian = async (req, res) => {
     });
   }
 };
+
 
 // export const getPatientDetailByGuardian = async (req, res) => {
 //   try {
