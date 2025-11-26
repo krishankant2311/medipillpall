@@ -524,6 +524,14 @@ export const guardianLogin = async (req, res) => {
         result: {},
       });
     }
+    if(guardian.status==="Blocked"){  
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Guardian is blocked, contact admin",
+        result: {},
+      });
+    }
 
     const { otpValue, otpExpiry } = genrateOTP();
 
