@@ -15,6 +15,7 @@ import Medication from "../../models/medicationModel.js";
 import FAQ from "../../models/patientFAQModel.js";
 import TermsAndConditions from "../../models/termsAndConditionsModel.js";
 import PrivacyPolicy from "../../models/privacyPolicyModel.js";
+import PatientFile from "../../models/patientFilesModel.js";
 // import CareNote from "../../models/guardiansModel/careModel.js";
 export const addGuardian = async (req, res) => {
   try {
@@ -2819,7 +2820,6 @@ export const assignPatientToCaregiver = async (req, res) => {
 //   }
 // };
 
-
 export const getPatientDetailByGuardian = async (req, res) => {
   try {
     const token = req.token; // Guardian token
@@ -2880,10 +2880,14 @@ export const getPatientDetailByGuardian = async (req, res) => {
     }
 
     // 🧩 Step 3: Fetch related data
-    const [medicalReports, patientRecords, medications, careNotes] = await Promise.all([
-      MedicalReport.find({ patient_id: patient._id, status: "Active" }).sort({ createdAt: -1 }),
-      PatientRecord.find({ patient_id: patient._id,  }).sort({ createdAt: -1 }),
+    const [patientFiles, patientRecords, medications, careNotes] = await Promise.all([
+      // 🔥 CHANGED HERE → Now using PatientFile instead of MedicalReport
+      PatientFile.find({ patient_id: patient._id, status: "Active" }).sort({ createdAt: -1 }),
+
+      PatientRecord.find({ patient_id: patient._id }).sort({ createdAt: -1 }),
+
       Medication.find({ patient_id: patient._id, status: "Active" }).sort({ createdAt: -1 }),
+
       CareNote.find({ patientId: patient._id, status: "Active" }).sort({ createdAt: -1 }),
     ]);
 
@@ -2902,7 +2906,7 @@ export const getPatientDetailByGuardian = async (req, res) => {
 
         heartRate:
           rec.heartRate?.amRate || rec.heartRate?.pmRate
-            ? `${rec.heartRate.amRate || ""} ${rec.heartRate.pmRate || ""}`.trim()
+            ? `${rec.heartRate.amRate || ""}/${rec.heartRate.pmRate || ""}`.trim()
             : "",
 
         glucose:
@@ -2945,7 +2949,7 @@ export const getPatientDetailByGuardian = async (req, res) => {
         },
         vitals: vitals,
         meds: medications || [],
-        docs: medicalReports || [],
+        docs: patientFiles || [], // 🔥 CHANGED HERE
         careNotes: careNotes || [],
         caretaker: caretaker || {},
         guardian: guardian,
@@ -2962,7 +2966,6 @@ export const getPatientDetailByGuardian = async (req, res) => {
     });
   }
 };
-
 
 // export const getPatientDetailByGuardian = async (req, res) => {
 //   try {
@@ -3009,14 +3012,57 @@ export const getPatientDetailByGuardian = async (req, res) => {
 //       });
 //     }
 
-//     // 🧩 Step 3: Fetch related data (linked via patient_id)
-//     const [medicalReports, patientRecords, medications] = await Promise.all([
-//       MedicalReport.find({ patient_id: patient._id }).sort({ createdAt: -1 }),
-//       PatientRecord.find({ patient_id: patient._id }).sort({ createdAt: -1 }),
+//     // ------------------------------
+//     // TIME AGO HELPER (Only Hours)
+//     // ------------------------------
+//     function getHoursAgo(date) {
+//       const now = new Date();
+//       const recordTime = new Date(date);
+
+//       let diffMs = now - recordTime;
+//       if (diffMs < 0) diffMs = 0;
+
+//       const hours = Math.floor(diffMs / (1000 * 60 * 60));
+//       return `${hours} Hours Ago`;
+//     }
+
+//     // 🧩 Step 3: Fetch related data
+//     const [medicalReports, patientRecords, medications, careNotes] = await Promise.all([
+//       MedicalReport.find({ patient_id: patient._id, status: "Active" }).sort({ createdAt: -1 }),
+//       PatientRecord.find({ patient_id: patient._id,  }).sort({ createdAt: -1 }),
 //       Medication.find({ patient_id: patient._id, status: "Active" }).sort({ createdAt: -1 }),
+//       CareNote.find({ patientId: patient._id, status: "Active" }).sort({ createdAt: -1 }),
 //     ]);
 
-//     // console.log("Fetched Data:", { medicalReports, patientRecords, medications });
+//     // -----------------------------------------
+//     // MAP VITALS (BP, BT, BW, HR + Hours Ago)
+//     // -----------------------------------------
+//     const vitals = patientRecords.map((rec) => {
+//       return {
+//         _id: rec._id,
+//         timeAgo: getHoursAgo(rec.createdAt),
+
+//         bloodPressure:
+//           rec.bloodPressure?.amBP && rec.bloodPressure?.pmBP
+//             ? `${rec.bloodPressure.amBP}/${rec.bloodPressure.pmBP}`
+//             : "",
+
+//         heartRate:
+//           rec.heartRate?.amRate || rec.heartRate?.pmRate
+//             ? `${rec.heartRate.amRate || ""}/${rec.heartRate.pmRate || ""}`.trim()
+//             : "",
+
+//         glucose:
+//           rec.bloodSugar?.before || rec.bloodSugar?.after
+//             ? `${rec.bloodSugar.before || ""}/${rec.bloodSugar.after || ""}`
+//             : "",
+
+//         temperature:
+//           rec.bodyTemp?.amTemp || rec.bodyTemp?.pmTemp
+//             ? `${rec.bodyTemp.amTemp || ""}/${rec.bodyTemp.pmTemp || ""}`
+//             : "",
+//       };
+//     });
 
 //     // 🧩 Step 4: Fetch Caretaker (optional)
 //     let caretaker = {};
@@ -3044,9 +3090,10 @@ export const getPatientDetailByGuardian = async (req, res) => {
 //           diseaseCondition: patient.diseaseCondition,
 //           status: patient.status,
 //         },
-//         vitals: patientRecords || [],
+//         vitals: vitals,
 //         meds: medications || [],
 //         docs: medicalReports || [],
+//         careNotes: careNotes || [],
 //         caretaker: caretaker || {},
 //         guardian: guardian,
 //       },
@@ -3062,6 +3109,7 @@ export const getPatientDetailByGuardian = async (req, res) => {
 //     });
 //   }
 // };
+
 
 export const getAllCaretakersByGuardianForPatient = async (req, res) => {
   try {

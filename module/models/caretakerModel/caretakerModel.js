@@ -18,14 +18,14 @@ const caretakerSchema = new mongoose.Schema(
     mobileNumber: {
       type: String,
       trim: true,
-      unique: true,
+      // unique: true,
       default: "",
     },
     email: {
       type: String,
       trim: true,
       lowercase: true,
-      unique: true,
+      // unique: true,
       default: "",
     },
     otp: {

@@ -9,7 +9,7 @@ const patientSchema = new mongoose.Schema(
     caretakerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Caretaker",
-      default: null
+      // default: null
     },
     fullName: {
       type: String,
