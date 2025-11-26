@@ -2882,7 +2882,7 @@ export const getPatientDetailByGuardian = async (req, res) => {
     // 🧩 Step 3: Fetch related data
     const [patientFiles, patientRecords, medications, careNotes] = await Promise.all([
       // 🔥 CHANGED HERE → Now using PatientFile instead of MedicalReport
-      PatientFile.find({ patient_id: patient._id, status: "Active" }).sort({ createdAt: -1 }),
+      PatientFile.find({ patientId: patient._id, status:"Active" }).sort({ createdAt: -1 }),
 
       PatientRecord.find({ patient_id: patient._id }).sort({ createdAt: -1 }),
 
