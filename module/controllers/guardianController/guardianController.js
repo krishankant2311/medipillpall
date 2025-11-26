@@ -2898,7 +2898,6 @@ export const getPatientDetailByGuardian = async (req, res) => {
       return {
         _id: rec._id,
         timeAgo: getHoursAgo(rec.createdAt),
-
         bloodPressure:
           rec.bloodPressure?.amBP && rec.bloodPressure?.pmBP
             ? `${rec.bloodPressure.amBP}/${rec.bloodPressure.pmBP}`
