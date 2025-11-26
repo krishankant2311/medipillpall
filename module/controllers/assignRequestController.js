@@ -138,6 +138,7 @@ export const handleAssignRequest = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Request accepted & patient assigned successfully",
+      result: { patient, guardian, caregiver },
     });
 
   } catch (error) {
