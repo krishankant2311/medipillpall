@@ -72,8 +72,8 @@ export const getAssignRequestsForCaregiver = async (req, res) => {
       caregiverId: token._id,
       status: "Pending"
     })
-      .populate("guardianId", "fullName")
-      .populate("patientId", "fullName age gender");
+      .populate("guardianId", "fullName profilePhoto age gender",)
+      .populate("patientId", "fullName age gender profilePhoto");
 
     return res.status(200).json({
       success: true,
