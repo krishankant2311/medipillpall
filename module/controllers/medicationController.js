@@ -417,7 +417,7 @@ export const addMedicationByCaretaker = async (req, res) => {
     if (!caretaker) {
       return res.status(404).json({
         success: false,
-        message: "Caretaker not found or inactive",
+        message: "Caregiver not found or inactive",
       });
     }
 
@@ -487,12 +487,12 @@ export const addMedicationByCaretaker = async (req, res) => {
     // ---------------- RESPONSE ----------------
     return res.status(200).json({
       success: true,
-      message: "Medication added successfully by caretaker",
+      message: "Medication added successfully by Caregiver",
       result: newMedication,
     });
 
   } catch (error) {
-    console.error("Error adding medication by caretaker:", error);
+    console.error("Error adding medication by Caregiver:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -511,7 +511,7 @@ export const stopMedicationByCaretaker = async (req, res) => {
     if (!token || !token._id) {
       return res.status(400).json({
         success: false,
-        message: "Caretaker token is required",
+        message: "Caregiver token is required",
       });
     }
 
@@ -523,7 +523,7 @@ export const stopMedicationByCaretaker = async (req, res) => {
     if (!caretaker) {
       return res.status(404).json({
         success: false,
-        message: "Caretaker not found or inactive",
+        message: "Caregiver not found or inactive",
       });
     }
 
@@ -550,7 +550,7 @@ export const stopMedicationByCaretaker = async (req, res) => {
     // ---------------- RESPONSE ----------------
     return res.status(200).json({
       success: true,
-      message: "Medication stopped successfully by caretaker",
+      message: "Medication stopped successfully by Caregiver",
       result: medication,
     });
   } catch (error) {
@@ -573,7 +573,7 @@ export const completeMedicationByCaretaker = async (req, res) => {
     if (!token || !token._id) {
       return res.status(400).json({
         success: false,
-        message: "Caretaker token is required",
+        message: "Caregiver token is required",
       });
     }
 
@@ -585,7 +585,7 @@ export const completeMedicationByCaretaker = async (req, res) => {
     if (!caretaker) {
       return res.status(404).json({
         success: false,
-        message: "Caretaker not found or inactive",
+        message: "Caregiver not found or inactive",
       });
     }
 
@@ -612,7 +612,7 @@ export const completeMedicationByCaretaker = async (req, res) => {
     // ---------------- RESPONSE ----------------
     return res.status(200).json({
       success: true,
-      message: "Medication marked as completed by caretaker",
+      message: "Medication marked as completed by Caregiver",
       result: medication,
     });
   } catch (error) {
@@ -634,7 +634,7 @@ export const getAllStoppedMedicationsByCaretaker = async (req, res) => {
     if (!token || !token._id) {
       return res.status(400).json({
         success: false,
-        message: "Caretaker token is required",
+        message: "Caregiver token is required",
       });
     }
 
@@ -646,7 +646,7 @@ export const getAllStoppedMedicationsByCaretaker = async (req, res) => {
     if (!caretaker) {
       return res.status(404).json({
         success: false,
-        message: "Caretaker not found or inactive",
+        message: "Caregiver not found or inactive",
       });
     }
 
@@ -698,7 +698,7 @@ export const getAllActiveMedicationsByCaretaker = async (req, res) => {
     if (!token || !token._id) {
       return res.status(400).json({
         success: false,
-        message: "Caretaker token is required",
+        message: "Caregiver token is required",
       });
     }
 
@@ -710,7 +710,7 @@ export const getAllActiveMedicationsByCaretaker = async (req, res) => {
     if (!caretaker) {
       return res.status(404).json({
         success: false,
-        message: "Caretaker not found or inactive",
+        message: "Caregiver not found or inactive",
       });
     }
 
@@ -767,7 +767,7 @@ export const updateMedicationStatus = async (req, res) => {
     if (!caretaker) {
       return res.status(401).json({
         success: false,
-        message: "Invalid caretaker token",
+        message: "Invalid Caregiver token",
       });
     }
 

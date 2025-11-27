@@ -561,7 +561,7 @@ export const caretakerProfile = async (req, res) => {
     return res.send({
       statusCode: 500,
       success: false,
-      message: error.message + " Error in caretaker profile API",
+      message: error.message + " Error in caregiver profile API",
       result: {},
     });
   }
