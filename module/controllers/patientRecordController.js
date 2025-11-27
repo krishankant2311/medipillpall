@@ -10,14 +10,15 @@ const getDateRange = (date = new Date()) => {
 
 export const addPatientBloodPressure = async (req, res) => {
   try {
-    const { patient_id, day, amBP, pmBP, comments } = req.body;
-
-    if (!patient_id) {
-      return res.status(400).json({
-        success: false,
-        message: "patient_id required",
-      });
-    }
+    const { day, amBP, pmBP, comments } = req.body;
+   const token = req.token;
+    const patient_id = token._id;
+    // if (!patient_id) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "patient_id required",
+    //   });
+    // }
 
     if (!day || !amBP || !pmBP) {
       return res.status(400).json({
@@ -66,14 +67,15 @@ export const addPatientBloodPressure = async (req, res) => {
 
 export const addPatientBloodSugar = async (req, res) => {
   try {
-    const { patient_id, day, before, after, insulinDose, notes } = req.body;
-
-    if (!patient_id) {
-      return res.status(400).json({
-        success: false,
-        message: "patient_id required",
-      });
-    }
+    const {  day, before, after, insulinDose, notes } = req.body;
+ const   token = req.token;
+    const patient_id = token._id;
+    // if (!patient_id) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "patient_id required",
+    //   });
+    // }
 
     if (!day || !before || !after) {
       return res.status(400).json({
@@ -122,14 +124,17 @@ export const addPatientBloodSugar = async (req, res) => {
 
 export const addPatientBodyTemp = async (req, res) => {
   try {
-    const { patient_id, day, time, amTemp, pmTemp, notes } = req.body;
+    const {  day, time, amTemp, pmTemp, notes } = req.body;
 
-    if (!patient_id) {
-      return res.status(400).json({
-        success: false,
-        message: "patient_id required",
-      });
-    }
+    // if (!patient_id) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "patient_id required",
+    //   });
+    // }
+
+    const   token = req.token;
+    const patient_id = token._id;
 
     if (!day) {
       return res.status(400).json({
@@ -178,14 +183,17 @@ export const addPatientBodyTemp = async (req, res) => {
 
 export const addPatientBodyWeight = async (req, res) => {
   try {
-    const { patient_id, day, weight } = req.body;
+    const {  day, weight } = req.body;
 
-    if (!patient_id) {
-      return res.status(400).json({
-        success: false,
-        message: "patient_id required",
-      });
-    }
+    // if (!patient_id) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "patient_id required",
+    //   });
+    // }
+
+    const   token = req.token;
+    const patient_id = token._id;
 
     if (!day || !weight) {
       return res.status(400).json({
@@ -234,15 +242,18 @@ export const addPatientBodyWeight = async (req, res) => {
 
 export const addPatientHeartRate = async (req, res) => {
   try {
-    const { patient_id, day, time, amRate, pmRate, notes } = req.body;
+    const {  day, time, amRate, pmRate, notes } = req.body;
 
-    if (!patient_id) {
-      return res.status(400).json({
-        success: false,
-        message: "patient_id required",
-      });
-    }
+    // if (!patient_id) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "patient_id required",
+    //   });
+    // }
 
+    const   token = req.token;
+    const patient_id = token._id;
+    
     if (!day) {
       return res.status(400).json({
         success: false,
@@ -495,48 +506,61 @@ export const addPatientHeartRate = async (req, res) => {
 //     });
 //   }
 // };
-
 export const getPatientBloodPressure = async (req, res) => {
   try {
     const token = req.token;
+console.log("Token ID:", token._id);
 
-    if (!token || !token._id) {
+    // 🔹 Validate patient
+    const patient = await Patient.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+
+    if (!patient) {
       return res.status(401).json({
         success: false,
-        message: "Invalid token",
+        message: "Invalid or inactive patient",
       });
     }
 
-    const { start, end } = getDateRange(new Date());
+    // 🔹 Last 24 hours
+    const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-    const record = await PatientRecord.findOne({
+    // 🔹 Fetch BP records from last 24 hours
+    const records = await PatientRecord.find({
       patient_id: token._id,
-      createdAt: { $gte: start, $lte: end },
-    }).select("bloodPressure createdAt").sort({ createdAt: -1 });
+      createdAt: { $gte: last24h },
+    })
+      .select("bloodPressure createdAt")
+      .sort({ createdAt: -1 });
 
-    // ✔ Added same logic as caretaker API
-    if (
-      !record ||
-      !record.bloodPressure ||
-      (!record.bloodPressure.day &&
-        !record.bloodPressure.amBP &&
-        !record.bloodPressure.pmBP &&
-        !record.bloodPressure.comments)
-    ) {
+    if (!records.length) {
       return res.json({
         success: true,
-        message: "No blood pressure record found for today",
-        result: {},
+        message: "No blood pressure record available in the last 24 hours",
+        result: [],
       });
     }
+
+    // 🔹 Flatten bloodPressure for response
+    const finalResult = records.map((r) => ({
+      _id: r._id,
+      day: r.bloodPressure?.day || "",
+      amBP: r.bloodPressure?.amBP || "",
+      pmBP: r.bloodPressure?.pmBP || "",
+      comments: r.bloodPressure?.comments || "",
+      createdAt: r.createdAt,
+    }));
 
     return res.json({
       success: true,
-      message: "Blood Pressure fetched successfully",
-      result: record.bloodPressure,
+      message: "Blood pressure fetched successfully for the last 24 hours",
+      result: finalResult,
     });
+
   } catch (err) {
-    console.error("Error in getPatientBloodPressure:", err);
+    console.error("Patient BP Fetch Error:", err);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -544,6 +568,9 @@ export const getPatientBloodPressure = async (req, res) => {
     });
   }
 };
+
+
+
 export const getPatientBloodSugar = async (req, res) => {
   try {
     const token = req.token;
@@ -592,6 +619,7 @@ export const getPatientBloodSugar = async (req, res) => {
     });
   }
 };
+
 export const getPatientBodyTemp = async (req, res) => {
   try {
     const token = req.token;
