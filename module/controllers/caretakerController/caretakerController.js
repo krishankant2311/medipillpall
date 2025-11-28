@@ -601,17 +601,135 @@ export const caretakerLogout = async (req, res) => {
   }
 };
 
+// export const signupCaretaker = async (req, res) => {
+//   try {
+//     // Step 1: Extract data from request body in one line
+//     let { fullName, mobileNumber, email } = req.body;
+
+//     // Step 2: Trim and normalize
+//     fullName = fullName?.trim()?.toLowerCase();
+//     mobileNumber = mobileNumber?.trim();
+//     email = email?.trim()?.toLowerCase();
+
+//     // Step 3: Validate inputs
+//     if (!fullName) {
+//       return res.status(400).json({
+//         statusCode: 400,
+//         success: false,
+//         message: "Required fullName",
+//         result: {},
+//       });
+//     }
+
+//     if (!mobileNumber) {
+//       return res.status(400).json({
+//         statusCode: 400,
+//         success: false,
+//         message: "Required mobileNumber",
+//         result: {},
+//       });
+//     }
+
+//     // if (!/^\d+$/.test(mobileNumber)) {
+//     //   return res.status(400).json({
+//     //     statusCode: 400,
+//     //     success: false,
+//     //     message: "mobileNumber must contain only numbers",
+//     //     result: {},
+//     //   });
+//     // }
+
+//     if (!email) {
+//       return res.status(400).json({
+//         statusCode: 400,
+//         success: false,
+//         message: "Required email",
+//         result: {},
+//       });
+//     }
+
+//     // Step 4: Check if caretaker already exists
+//     const caretakerExist = await Caretaker.findOne({
+//       $or: [{ mobileNumber }, { email }],
+//     });
+
+//     // Step 5: If caretaker exists
+//     if (caretakerExist) {
+//       // Step 5a: If status is Pending → resend OTP allowed
+//       if (caretakerExist.status === "Pending") {
+//         const { otpValue, otpExpiry } = genrateOTP();
+//         caretakerExist.otp = { otpValue, otpExpiry };
+//         await caretakerExist.save();
+
+//         return res.status(200).json({
+//           statusCode: 200,
+//           success: true,
+//           message: "OTP resent successfully",
+//           result: {
+//             mobileNumber: caretakerExist.mobileNumber,
+//             otpValue,
+//             otpExpiry,
+//           },
+//         });
+//       }
+
+//       // Step 5b: If status is Active → cannot add again
+//       if (caretakerExist.status === "Active") {
+//         return res.status(400).json({
+//           statusCode: 400,
+//           success: false,
+//           message: "Caregiver already exists",
+//           result: {},
+//         });
+//       }
+//     }
+
+//     // Step 6: If caretaker does not exist → generate OTP
+//     const { otpValue, otpExpiry } = genrateOTP();
+
+//     // Step 7: Create new caretaker instance with Pending status
+//     // const enc_password = bcrypt.hashSync(password, 10);
+
+//     const newCaretaker = new Caretaker({
+//       fullName,
+//       mobileNumber,
+//       email,
+//       // password: enc_password,
+//       status: "Pending",
+//       otp: { otpValue, otpExpiry },
+//     });
+
+//     // Step 8: Save new caretaker to DB
+//     await newCaretaker.save();
+
+//     // Step 9: Respond with OTP info
+//     return res.status(200).json({
+//       statusCode: 200,
+//       success: true,
+//       message: "OTP sent successfully",
+//       result: { mobileNumber, otpValue, otpExpiry },
+//     });
+
+//   } catch (error) {
+//     // Step 10: Catch any errors
+//     return res.status(500).json({
+//       statusCode: 500,
+//       success: false,
+//       message: error.message,
+//       result: {},
+//     });
+//   }
+// };
+
+
 export const signupCaretaker = async (req, res) => {
   try {
-    // Step 1: Extract data from request body in one line
     let { fullName, mobileNumber, email } = req.body;
 
-    // Step 2: Trim and normalize
     fullName = fullName?.trim()?.toLowerCase();
     mobileNumber = mobileNumber?.trim();
     email = email?.trim()?.toLowerCase();
 
-    // Step 3: Validate inputs
     if (!fullName) {
       return res.status(400).json({
         statusCode: 400,
@@ -630,15 +748,6 @@ export const signupCaretaker = async (req, res) => {
       });
     }
 
-    // if (!/^\d+$/.test(mobileNumber)) {
-    //   return res.status(400).json({
-    //     statusCode: 400,
-    //     success: false,
-    //     message: "mobileNumber must contain only numbers",
-    //     result: {},
-    //   });
-    // }
-
     if (!email) {
       return res.status(400).json({
         statusCode: 400,
@@ -648,14 +757,15 @@ export const signupCaretaker = async (req, res) => {
       });
     }
 
-    // Step 4: Check if caretaker already exists
+    // ---------------------- FIX ADDED HERE ----------------------
+    // Find caretaker but IGNORE those with status Delete
     const caretakerExist = await Caretaker.findOne({
+      status: { $ne: "Delete" },   // 👈 Delete वालों को exist में मत शामिल करो
       $or: [{ mobileNumber }, { email }],
     });
+    // --------------------------------------------------------------
 
-    // Step 5: If caretaker exists
     if (caretakerExist) {
-      // Step 5a: If status is Pending → resend OTP allowed
       if (caretakerExist.status === "Pending") {
         const { otpValue, otpExpiry } = genrateOTP();
         caretakerExist.otp = { otpValue, otpExpiry };
@@ -673,7 +783,6 @@ export const signupCaretaker = async (req, res) => {
         });
       }
 
-      // Step 5b: If status is Active → cannot add again
       if (caretakerExist.status === "Active") {
         return res.status(400).json({
           statusCode: 400,
@@ -684,25 +793,18 @@ export const signupCaretaker = async (req, res) => {
       }
     }
 
-    // Step 6: If caretaker does not exist → generate OTP
     const { otpValue, otpExpiry } = genrateOTP();
-
-    // Step 7: Create new caretaker instance with Pending status
-    // const enc_password = bcrypt.hashSync(password, 10);
 
     const newCaretaker = new Caretaker({
       fullName,
       mobileNumber,
       email,
-      // password: enc_password,
       status: "Pending",
       otp: { otpValue, otpExpiry },
     });
 
-    // Step 8: Save new caretaker to DB
     await newCaretaker.save();
 
-    // Step 9: Respond with OTP info
     return res.status(200).json({
       statusCode: 200,
       success: true,
@@ -711,7 +813,6 @@ export const signupCaretaker = async (req, res) => {
     });
 
   } catch (error) {
-    // Step 10: Catch any errors
     return res.status(500).json({
       statusCode: 500,
       success: false,
