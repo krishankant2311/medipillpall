@@ -3,68 +3,138 @@ import Medication from "../models/medicationModel.js"; // apne schema ka path
 import Caretaker from "../models/caretakerModel/caretakerModel.js";
 
 // ✅ Add Medication
+// export const addMedication = async (req, res) => {
+//   try {
+//     let token = req.token; // token se patient identify hoga
+//     const { medicationName, dosage, time, startingDate, reason } = req.body;
+
+//     // Validations
+//     if (!medicationName) {
+//   return res.send({
+//     statusCode: 400,
+//     success: false,
+//     message: "Medication name is required",
+//     result: {},
+//   });
+// }
+
+// if (!dosage) {
+//   return res.send({
+//     statusCode: 400,
+//     success: false,
+//     message: "Dosage is required",
+//     result: {},
+//   });
+// }
+
+// if (!time) {
+//   return res.send({
+//     statusCode: 400,
+//     success: false,
+//     message: "Time is required",
+//     result: {},
+//   });
+// }
+// if (!time.length === 0) {
+//   return res.send({
+//     statusCode: 400,  
+//     success: false,
+//     message: "Time cannot be an empty ",
+//     result: {},
+//   });
+// }
+
+// if (!startingDate) {
+//   return res.send({
+//     statusCode: 400,
+//     success: false,
+//     message: "Starting date is required",
+//     result: {},
+//   });
+// }
+
+// if (!reason) {
+//   return res.send({
+//     statusCode: 400,
+//     success: false,
+//     message: "Reason is required",
+//     result: {},
+//   });
+// }
+
+
+//     // Patient validate
+//     const patient = await Patient.findOne({ _id:token._id, status: "Active" });
+//     if (!patient) {
+//       return res.send({
+//         statusCode: 404,
+//         success: false,
+//         message: "Patient not found or inactive",
+//         result: {},
+//       });
+//     }
+
+//     // Medication object
+//     const newMedication = new Medication({
+//       patientId: token._id,
+//       medicationName: medicationName?.trim(),
+//       dosage: dosage?.trim(),
+//       times: [time],
+//       startingDate,
+//       reason: reason?.trim(),
+//     });
+
+//     await newMedication.save();
+
+//     return res.status(200).json({
+//       statusCode: 200,
+//       success: true,
+//       message: "Medication record added successfully",
+//       result: newMedication,
+//     });
+//   } catch (error) {
+//     return res.send({
+//       statusCode: 500,
+//       success: false,
+//       message: error.message + " ERROR in add medication api",
+//       result: {},
+//     });
+//   }
+// };
+
 export const addMedication = async (req, res) => {
   try {
-    let token = req.token; // token se patient identify hoga
+    let token = req.token;
     const { medicationName, dosage, time, startingDate, reason } = req.body;
 
     // Validations
     if (!medicationName) {
-  return res.send({
-    statusCode: 400,
-    success: false,
-    message: "Medication name is required",
-    result: {},
-  });
-}
+      return res.send({ statusCode: 400, success: false, message: "Medication name is required", result: {} });
+    }
+    if (!dosage) {
+      return res.send({ statusCode: 400, success: false, message: "Dosage is required", result: {} });
+    }
+    if (!time) {
+      return res.send({ statusCode: 400, success: false, message: "Time is required", result: {} });
+    }
+    if (!startingDate) {
+      return res.send({ statusCode: 400, success: false, message: "Starting date is required", result: {} });
+    }
+    if (!reason) {
+      return res.send({ statusCode: 400, success: false, message: "Reason is required", result: {} });
+    }
 
-if (!dosage) {
-  return res.send({
-    statusCode: 400,
-    success: false,
-    message: "Dosage is required",
-    result: {},
-  });
-}
+    // Convert DD-MM-YYYY to YYYY-MM-DD
+    let formattedStartingDate;
+    if (startingDate.includes("-")) {
+      const [day, month, year] = startingDate.split("-");
+      formattedStartingDate = `${year}-${month}-${day}`;
+    } else {
+      formattedStartingDate = startingDate;
+    }
 
-if (!time) {
-  return res.send({
-    statusCode: 400,
-    success: false,
-    message: "Time is required",
-    result: {},
-  });
-}
-if (!time.length === 0) {
-  return res.send({
-    statusCode: 400,  
-    success: false,
-    message: "Time cannot be an empty ",
-    result: {},
-  });
-}
-
-if (!startingDate) {
-  return res.send({
-    statusCode: 400,
-    success: false,
-    message: "Starting date is required",
-    result: {},
-  });
-}
-
-if (!reason) {
-  return res.send({
-    statusCode: 400,
-    success: false,
-    message: "Reason is required",
-    result: {},
-  });
-}
-
-
-    // Patient validate
-    const patient = await Patient.findOne({ _id:token._id, status: "Active" });
+    // Validate patient
+    const patient = await Patient.findOne({ _id: token._id, status: "Active" });
     if (!patient) {
       return res.send({
         statusCode: 404,
@@ -74,13 +144,13 @@ if (!reason) {
       });
     }
 
-    // Medication object
+    // Create medication
     const newMedication = new Medication({
       patientId: token._id,
       medicationName: medicationName?.trim(),
       dosage: dosage?.trim(),
       times: [time],
-      startingDate,
+      startingDate: formattedStartingDate,
       reason: reason?.trim(),
     });
 
