@@ -418,7 +418,15 @@ export const caretakerLogin = async (req, res) => {
         result: {},
       });
     }
-
+  
+    if (caretaker.status === "Blocked") {
+      return res.send({ 
+        statusCode: 400,
+        success: false,
+        message: "Your account has been blocked. Please contact support.",
+        result: {},
+      });
+    }
     const { otpValue, otpExpiry } = genrateOTP();
 
     caretaker.otp = {

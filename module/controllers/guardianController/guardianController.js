@@ -125,17 +125,149 @@ export const addGuardian = async (req, res) => {
 };
 
 
+// export const signupGuardian = async (req, res) => {
+//   try {
+//     // Step 1: Extract data from request body in one line
+//     let { fullName, mobileNumber, gender, email } = req.body;
+
+//     // Step 2: Trim and normalize
+//     fullName = fullName?.trim()?.toLowerCase();
+//     mobileNumber = mobileNumber?.trim();
+//     email = email?.trim()?.toLowerCase();
+
+//     // Step 3: Validate inputs
+//     if (!fullName) {
+//       return res.status(400).json({
+//         statusCode: 400,
+//         success: false,
+//         message: "Required fullName",
+//         result: {},
+//       });
+//     }
+
+//     if (!mobileNumber) {
+//       return res.status(400).json({
+//         statusCode: 400,
+//         success: false,
+//         message: "Required mobileNumber",
+//         result: {},
+//       });
+//     }
+
+//     // if (!/^\d+$/.test(mobileNumber)) {
+//     //   return res.status(400).json({
+//     //     statusCode: 400,
+//     //     success: false,
+//     //     message: "mobileNumber must contain only numbers",
+//     //     result: {},
+//     //   });
+//     // }
+
+//     if (!email) {
+//       return res.status(400).json({
+//         statusCode: 400,
+//         success: false,
+//         message: "Required email",
+//         result: {},
+//       });
+//     }
+
+//     // if (!password) {
+//     //   return res.status(400).json({
+//     //     statusCode: 400,
+//     //     success: false,
+//     //     message: "Required password",
+//     //     result: {},
+//     //   });
+//     // }
+
+//     // if (password.length < 8) {
+//     //   return res.status(400).json({
+//     //     statusCode: 400,
+//     //     success: false,
+//     //     message: "Password must be at least 8 characters long",
+//     //     result: {},
+//     //   });
+//     // }
+
+//     // Step 4: Check if guardian already exists
+//     const guardianExist = await Guardian.findOne({
+//       $or: [{ mobileNumber }, { email }],
+//     });
+
+//     // Step 5: If guardian exists
+//     if (guardianExist) {
+//       // Step 5a: If status is Pending → resend OTP allowed
+//       if (guardianExist.status === "Pending") {
+//         const { otpValue, otpExpiry } = genrateOTP();
+//         guardianExist.otp = { otpValue, otpExpiry };
+//         await guardianExist.save();
+
+//         return res.status(200).json({
+//           statusCode: 200,
+//           success: true,
+//           message: "OTP resent successfully",
+//           result: { mobileNumber: guardianExist.mobileNumber, otpValue, otpExpiry },
+//         });
+//       }
+
+//       // Step 5b: If status is Active → cannot add again
+//       if (guardianExist.status === "Active") {
+//         return res.status(400).json({
+//           statusCode: 400,
+//           success: false,
+//           message: "Guardian already exists",
+//           result: {},
+//         });
+//       }
+//     }
+
+//     // Step 6: If guardian does not exist → generate OTP
+//     const { otpValue, otpExpiry } = genrateOTP();
+
+//     // Step 7: Create new guardian instance with Pending status
+//     // const enc_password = bcrypt.hashSync(password, 10);
+
+//     const newGuardian = new Guardian({
+//       fullName,
+//       mobileNumber,
+//       email,
+//       gender,
+//       // password: enc_password,
+//       status: "Pending",
+//       otp: { otpValue, otpExpiry },
+//     });
+
+//     // Step 8: Save new guardian to DB
+//     await newGuardian.save();
+
+//     // Step 9: Respond with OTP info
+//     return res.status(200).json({
+//       statusCode: 200,
+//       success: true,
+//       message: "OTP sent successfully",
+//       result: { mobileNumber, otpValue, otpExpiry },
+//     });
+
+//   } catch (error) {
+//     // Step 10: Catch any errors
+//     return res.status(500).json({
+//       statusCode: 500,
+//       success: false,
+//       message: error.message,
+//       result: {},
+//     });
+//   }
+// };
+
 export const signupGuardian = async (req, res) => {
   try {
-    // Step 1: Extract data from request body in one line
     let { fullName, mobileNumber, gender, email } = req.body;
 
-    // Step 2: Trim and normalize
     fullName = fullName?.trim()?.toLowerCase();
     mobileNumber = mobileNumber?.trim();
     email = email?.trim()?.toLowerCase();
 
-    // Step 3: Validate inputs
     if (!fullName) {
       return res.status(400).json({
         statusCode: 400,
@@ -154,15 +286,6 @@ export const signupGuardian = async (req, res) => {
       });
     }
 
-    // if (!/^\d+$/.test(mobileNumber)) {
-    //   return res.status(400).json({
-    //     statusCode: 400,
-    //     success: false,
-    //     message: "mobileNumber must contain only numbers",
-    //     result: {},
-    //   });
-    // }
-
     if (!email) {
       return res.status(400).json({
         statusCode: 400,
@@ -172,32 +295,15 @@ export const signupGuardian = async (req, res) => {
       });
     }
 
-    // if (!password) {
-    //   return res.status(400).json({
-    //     statusCode: 400,
-    //     success: false,
-    //     message: "Required password",
-    //     result: {},
-    //   });
-    // }
-
-    // if (password.length < 8) {
-    //   return res.status(400).json({
-    //     statusCode: 400,
-    //     success: false,
-    //     message: "Password must be at least 8 characters long",
-    //     result: {},
-    //   });
-    // }
-
-    // Step 4: Check if guardian already exists
+    // ---------------------- FIX ADDED HERE ----------------------
+    // Delete users ko exist check me mat lo
     const guardianExist = await Guardian.findOne({
+      status: { $ne: "Delete" },   // 👈 Delete wale ignore
       $or: [{ mobileNumber }, { email }],
     });
+    // -------------------------------------------------------------
 
-    // Step 5: If guardian exists
     if (guardianExist) {
-      // Step 5a: If status is Pending → resend OTP allowed
       if (guardianExist.status === "Pending") {
         const { otpValue, otpExpiry } = genrateOTP();
         guardianExist.otp = { otpValue, otpExpiry };
@@ -207,11 +313,14 @@ export const signupGuardian = async (req, res) => {
           statusCode: 200,
           success: true,
           message: "OTP resent successfully",
-          result: { mobileNumber: guardianExist.mobileNumber, otpValue, otpExpiry },
+          result: {
+            mobileNumber: guardianExist.mobileNumber,
+            otpValue,
+            otpExpiry,
+          },
         });
       }
 
-      // Step 5b: If status is Active → cannot add again
       if (guardianExist.status === "Active") {
         return res.status(400).json({
           statusCode: 400,
@@ -222,26 +331,19 @@ export const signupGuardian = async (req, res) => {
       }
     }
 
-    // Step 6: If guardian does not exist → generate OTP
     const { otpValue, otpExpiry } = genrateOTP();
-
-    // Step 7: Create new guardian instance with Pending status
-    // const enc_password = bcrypt.hashSync(password, 10);
 
     const newGuardian = new Guardian({
       fullName,
       mobileNumber,
       email,
       gender,
-      // password: enc_password,
       status: "Pending",
       otp: { otpValue, otpExpiry },
     });
 
-    // Step 8: Save new guardian to DB
     await newGuardian.save();
 
-    // Step 9: Respond with OTP info
     return res.status(200).json({
       statusCode: 200,
       success: true,
@@ -250,7 +352,6 @@ export const signupGuardian = async (req, res) => {
     });
 
   } catch (error) {
-    // Step 10: Catch any errors
     return res.status(500).json({
       statusCode: 500,
       success: false,
@@ -259,6 +360,7 @@ export const signupGuardian = async (req, res) => {
     });
   }
 };
+
 
 // export const getAllGuardiansByAdmin = async (req, res) => {
 //   try {
