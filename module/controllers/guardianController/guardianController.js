@@ -330,7 +330,15 @@ export const signupGuardian = async (req, res) => {
         });
       }
     }
-
+ 
+    if(guardianExist.status==="Blocked"){
+      return res.status(400).json({
+        statusCode: 400,
+        success: false,
+        message: "Guardian is blocked, contact admin",
+        result: {},
+      });
+    }
     const { otpValue, otpExpiry } = genrateOTP();
 
     const newGuardian = new Guardian({
