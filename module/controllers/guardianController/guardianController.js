@@ -260,9 +260,10 @@ export const addGuardian = async (req, res) => {
 //   }
 // };
 
+// Guardian Signup
 export const signupGuardian = async (req, res) => {
   try {
-    let { fullName, mobileNumber, gender, email } = req.body;
+    let { fullName, mobileNumber, email, relation } = req.body;
 
     fullName = fullName?.trim()?.toLowerCase();
     mobileNumber = mobileNumber?.trim();
@@ -295,15 +296,17 @@ export const signupGuardian = async (req, res) => {
       });
     }
 
-    // ---------------------- FIX ADDED HERE ----------------------
-    // Delete users ko exist check me mat lo
+    // Check existing guardian
     const guardianExist = await Guardian.findOne({
-      status: { $ne: "Delete" },   // 👈 Delete wale ignore
-      $or: [{ mobileNumber }, { email }],
+      $or: [{ mobileNumber }],
     });
-    // -------------------------------------------------------------
 
-    if (guardianExist) {
+    // ⭐ FIX: If status = Delete → allow new account to be created
+    if (guardianExist && guardianExist.status === "Delete") {
+      // ignore old, continue to create new
+    } 
+    else if (guardianExist) {
+      // Pending → resend OTP
       if (guardianExist.status === "Pending") {
         const { otpValue, otpExpiry } = genrateOTP();
         guardianExist.otp = { otpValue, otpExpiry };
@@ -321,6 +324,7 @@ export const signupGuardian = async (req, res) => {
         });
       }
 
+      // Active → block signup
       if (guardianExist.status === "Active") {
         return res.status(400).json({
           statusCode: 400,
@@ -330,22 +334,15 @@ export const signupGuardian = async (req, res) => {
         });
       }
     }
- 
-    if(guardianExist.status==="Blocked"){
-      return res.status(400).json({
-        statusCode: 400,
-        success: false,
-        message: "Guardian is blocked, contact admin",
-        result: {},
-      });
-    }
+
+    // Create new guardian record
     const { otpValue, otpExpiry } = genrateOTP();
 
     const newGuardian = new Guardian({
       fullName,
       mobileNumber,
       email,
-      gender,
+      relation,
       status: "Pending",
       otp: { otpValue, otpExpiry },
     });
@@ -368,6 +365,8 @@ export const signupGuardian = async (req, res) => {
     });
   }
 };
+
+
 
 
 // export const getAllGuardiansByAdmin = async (req, res) => {
