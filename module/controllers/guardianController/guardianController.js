@@ -641,6 +641,15 @@ export const guardianLogin = async (req, res) => {
         result: {},
       });
     }
+    if (guardian.status==="Pending"){
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Guardian registration is still pending. Please complete the signup process.",
+        result: {},
+      });
+    } 
+    
 
     const { otpValue, otpExpiry } = genrateOTP();
 

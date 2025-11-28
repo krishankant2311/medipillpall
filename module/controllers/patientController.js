@@ -368,22 +368,22 @@ export const login = async (req, res) => {
         result: {},
       });
     }
-    // if (patient.status === "Pending") {
-    //   return res.send({
-    //     statusCode: 400,
-    //     success: false,
-    //     message: "Please verify OTP",
-    //     result: {},
-    //   });
-    // }
-    // if (user.status === "Block") {
-    //   return res.send({
-    //     statusCode: 400,
-    //     success: false,
-    //     message: "user has been blocked",
-    //     result: {},
-    //   });
-    // }
+    if (patient.status === "Pending") {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "unauthorise access, please verify your otp first",
+        result: {},
+      });
+    }
+    if (patient.status === "Block") {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "patient has been blocked",
+        result: {},
+      });
+    }
   const {otpValue,otpExpiry} = genrateOTP();
     // const dec_password = await bcrypt.compare(password, patient.password);
 
