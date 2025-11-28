@@ -637,7 +637,7 @@ export const guardianLogin = async (req, res) => {
       return res.send({
         statusCode: 400,
         success: false,
-        message: "Guardian is blocked, contact admin",
+        message: "Guardian is blocked, Please contact admin at support@medipillpaltest.com",
         result: {},
       });
     }
@@ -649,7 +649,7 @@ export const guardianLogin = async (req, res) => {
         result: {},
       });
     } 
-    
+
 
     const { otpValue, otpExpiry } = genrateOTP();
 
@@ -706,7 +706,7 @@ export const verifyGuardianOTP = async (req, res) => {
       return res.status(400).json({
         statusCode: 400,
         success: false,
-        message: "Guardian is blocked, contact admin",
+        message: "Guardian is blocked, Please contact admin at support@medipillpaltest.com",
         result: {},
       });
     }

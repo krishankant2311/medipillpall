@@ -380,7 +380,7 @@ export const login = async (req, res) => {
       return res.send({
         statusCode: 400,
         success: false,
-        message: "patient has been blocked",
+        message: "patient has been blocked, Please contact admin at support@medipillpaltest.com",
         result: {},
       });
     }
@@ -672,7 +672,7 @@ export const resendOTPbyNumber = async (req, res) => {
       return res.send({
         statusCode: 400,
         success: false,
-        message: "Patient is blocked",
+        message: "Patient has blocked, Please contact admin at support@medipillpaltest.com",
         result: {},
       });
     }

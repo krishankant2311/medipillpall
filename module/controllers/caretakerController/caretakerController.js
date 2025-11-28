@@ -423,7 +423,7 @@ export const caretakerLogin = async (req, res) => {
       return res.send({ 
         statusCode: 400,
         success: false,
-        message: "Your account has been blocked. Please contact support.",
+        message: "Your account has been blocked. Please contact admin at support@medipillpaltest.com.",
         result: {},
       });
     }
