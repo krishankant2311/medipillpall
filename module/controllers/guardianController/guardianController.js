@@ -629,7 +629,7 @@ export const guardianLogin = async (req, res) => {
       return res.send({
         statusCode: 400,
         success: false,
-        message: "user has been deleted",
+        message: "guardian has been deleted",
         result: {},
       });
     }
@@ -649,8 +649,6 @@ export const guardianLogin = async (req, res) => {
         result: {},
       });
     } 
-
-
     const { otpValue, otpExpiry } = genrateOTP();
 
     guardian.otp = {
@@ -710,14 +708,14 @@ export const verifyGuardianOTP = async (req, res) => {
         result: {},
       });
     }
-    if (guardian.status === "Delete") {
-      return res.status(400).json({
-        statusCode: 400,
-        success: false,
-        message: "Guardian has been deleted",
-        result: {},
-      });
-    }
+    // if (guardian.status === "Delete") {
+    //   return res.status(400).json({
+    //     statusCode: 400,
+    //     success: false,
+    //     message: "Guardian has been deleted",
+    //     result: {},
+    //   });
+    // }
 
     // Step 2a: Check if OTP object exists
     if (!guardian.otp) {
