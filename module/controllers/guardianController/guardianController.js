@@ -324,7 +324,6 @@ export const signupGuardian = async (req, res) => {
         });
       }
 
-      // Active → block signup
       if (guardianExist.status === "Active") {
         return res.status(400).json({
           statusCode: 400,
@@ -736,6 +735,7 @@ export const verifyGuardianOTP = async (req, res) => {
         result: {},
       });
     }
+    console.log("guardian.otp.otpValue:", guardian.otp.otpValue);
 
     // Step 2c: Check if OTP is expired
     const currentTime = new Date();

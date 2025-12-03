@@ -858,7 +858,7 @@ export const updateMedicationStatus = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: `Medication status updated to ${medicationStatus}`,
+      message: "Medication status updated successfully",
       result: medication,
     });
   } catch (error) {
