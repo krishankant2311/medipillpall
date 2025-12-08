@@ -963,6 +963,7 @@ export const getAllPatientsByAdmin = async (req, res) => {
       searchFilter.$or = [
         { fullName: { $regex: searchRegex } },
         { mobileNumber: { $regex: searchRegex } },
+        { gender: { $regex: searchRegex } },
       ];
     }
 
@@ -1097,6 +1098,7 @@ export const getAllPatientsByAdmin = async (req, res) => {
 // };
 
 // 
+
 export const resendPatientOTPforSignup = async (req, res) => {
   try {
     const { mobileNumber } = req.body;

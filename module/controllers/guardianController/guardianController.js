@@ -470,6 +470,7 @@ export const getAllGuardiansByAdmin = async (req, res) => {
           { fullName: { $regex: searchRegex } },
           { email: { $regex: searchRegex } },
           { mobileNumber: { $regex: searchRegex } },
+          {gender: { $regex: searchRegex } },
         ],
       }
       : { ...statusCondition };
