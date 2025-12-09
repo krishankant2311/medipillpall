@@ -714,7 +714,7 @@ export const sendToAllCaretakers = async (req, res) => {
 import axios from "axios";
 
 const ONE_SIGNAL_API = "https://onesignal.com/api/v1/notifications";
-const REST_KEY = "os_v2_app_2dikztjxbjfivatvio4yc6s6iircrpvtla4edffpxksiw53zdd55skaea4xhl3ctjyu6wkjzkmisbipf2dyeekyff3hf6nuxjdj2udq";
+const REST_KEY = "os_v2_app_2dikztjxbjfivatvio4yc6s6iluar6jvgzcuwieeehwsmlh2ga3bxxltagrrti66akdt55bxvb4pfyeigqz4np7hchlcqufioumtxoi";
 const APP_ID = "d0d0accd-370a-4a8a-8275-43b9817a5e42";
 
 // export const sendNotificationtoguardian = async (req, res) => {
@@ -868,7 +868,7 @@ export const sendNotificationToAllPatient = async (req, res) => {
 // 🔹 Caretaker ke liye alag REST KEY
 
 // const APP_ID_CARETAKER = "68422854-8b34-4e61-b9c9-3a52d5fb7251";
-const REST_KEY_CARETAKER = "os_v2_app_nbbcqvelgrhgdoojhjjnl63skhh4ui2mtize3zehhq567lyfafkgdqnhvj3fvjsn7omzwg7qdh4nvuyjjmmmqnsv66sv74tvw5buffy";
+const REST_KEY_CARETAKER = "os_v2_app_nbbcqvelgrhgdoojhjjnl63skhmycinclo3egjfisulaopar6mtakfgrugy5ulqzcmx4pees7bm6ulhytf2phq647miwqio37ptpepy";
 const APP_ID_CARETAKER = "68422854-8b34-4e61-b9c9-3a52d5fb7251";
 
 export const sendNotificationToAllCaretaker = async (req, res) => {
