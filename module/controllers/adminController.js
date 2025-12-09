@@ -49,8 +49,8 @@ export const adminLogin = async (req, res) => {
       });
     }
 
-    const admin = await Admin.findOne({ email:email });
-    console.log("admin",admin);
+    const admin = await Admin.findOne({ email: email });
+    console.log("admin", admin);
     if (!admin) {
       return res.send({
         statusCode: 404,
@@ -70,7 +70,7 @@ export const adminLogin = async (req, res) => {
     }
 
     const dec_password = await bcrypt.compare(password, admin.password);
-    console.log("dec_password",dec_password);
+    console.log("dec_password", dec_password);
     if (!dec_password) {
       return res.send({
         statusCode: 400,
@@ -1326,128 +1326,6 @@ export const getUserPiechartData = async (req, res) => {
   }
 };
 
-// export const getAdminDashboardPiechart = async (req, res) => {
-
-//   try {
-//     const token = req.token;
-//     const admin = await Admin.findOne({ _id: token._id, status: "Active" });
-//     if (!admin) {
-//       return res.send({
-//         statusCode: 404,
-//         success: false,
-//         message: "Admin not found",
-//         result: {},
-//       });
-//     }
-//     const range = req.query.range || "all";
-//     let currentFilter = {};
-//     let previousFilter = {};
-//     const now = new Date();
-//     if (range === "week") {
-//       const start = new Date();
-//       start.setDate(start.getDate() - 7);
-//       currentFilter.createdAt = { $gte: start };
-//       const prevStart = new Date();
-//       prevStart.setDate(prevStart.getDate() - 14);
-//       const prevEnd = new Date();
-//       prevEnd.setDate(prevEnd.getDate() - 7);
-//       previousFilter.createdAt = { $gte: prevStart, $lt: prevEnd };
-//     } else if (range === "month") {
-//       const start = new Date(now.getFullYear(), now.getMonth(), 1);
-//       currentFilter.createdAt = { $gte: start };
-//       const prevStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-//       const prevEnd = new Date(now.getFullYear(), now.getMonth(), 0);
-//       previousFilter.createdAt = { $gte: prevStart, $lte: prevEnd };
-//     } else if (range === "year") {
-//       const start = new Date(now.getFullYear(), 0, 1);
-//       currentFilter.createdAt = { $gte: start };
-//       const prevStart = new Date(now.getFullYear() - 1, 0, 1);
-//       const prevEnd = new Date(now.getFullYear() - 1, 11, 31);
-//       previousFilter.createdAt = { $gte: prevStart, $lte: prevEnd };
-//     } else if (range === "custom") {
-//       const startDate = new Date(req.query.startDate);
-//       const endDate = new Date(req.query.endDate);
-//       endDate.setHours(23, 59, 59, 999);
-//       if (!isNaN(startDate) && !isNaN(endDate)) {
-//         currentFilter.createdAt = { $gte: startDate, $lte: endDate };
-//         // Previous range calculation for custom you can decide as per requirement
-//       }
-//     }
-//     // :white_tick: Current Counts
-//     const totalActivePatients = await Patient.countDocuments({
-//       status: "Active",
-//       ...currentFilter,
-//     });
-//     const totalActiveGuardians = await Guardian.countDocuments({
-//       status: "Active",
-//       ...currentFilter,
-//     });
-//     const totalActiveCaretakers = await Caretaker.countDocuments({
-//       status: "Active",
-//       ...currentFilter,
-//     });
-//     // :white_tick: Previous Counts
-//     const prevPatients = await Patient.countDocuments({
-//       status: "Active",
-//       ...previousFilter,
-//     });
-//     const prevGuardians = await Guardian.countDocuments({
-//       status: "Active",
-//       ...previousFilter,
-//     });
-//     const prevCaretakers = await Caretaker.countDocuments({
-//       status: "Active",
-//       ...previousFilter,
-//     });
-//     // :white_tick: Helper function
-//     const calcPercentage = (current, prev) => {
-//       if (prev === 0) return 100; // avoid divide by 0
-//       return Math.round(((current - prev) / prev) * 100);
-//     };
-//     return res.send({
-//       statusCode: 200,
-//       success: true,
-//       message: "Patient, Guardian & Caretaker stats fetched successfully",
-//       result: {
-//         range,
-//         cards: [
-//           {
-//             title: "Total Patients",
-//             amount: totalActivePatients,
-//             percentage: calcPercentage(totalActivePatients, prevPatients),
-//             isIncrease: totalActivePatients >= prevPatients,
-//             para: "Patients Registered",
-//             isCurrency: false,
-//           },
-//           {
-//             title: "Total Guardians",
-//             amount: totalActiveGuardians,
-//             percentage: calcPercentage(totalActiveGuardians, prevGuardians),
-//             isIncrease: totalActiveGuardians >= prevGuardians,
-//             para: "Parents Who Have Visited",
-//             isCurrency: false,
-//           },
-//           {
-//             title: "Total Caretakers",
-//             amount: totalActiveCaretakers,
-//             percentage: calcPercentage(totalActiveCaretakers, prevCaretakers),
-//             isIncrease: totalActiveCaretakers >= prevCaretakers,
-//             para: "Caretakers Registered",
-//             isCurrency: false,
-//           },
-//         ],
-//       },
-//     });
-//   } catch (error) {
-//     return res.send({
-//       statusCode: 500,
-//       success: false,
-//       message: error.message + " ERROR in getDashboardPiechart",
-//       result: {},
-//     });
-//   }
-// };
-
 export const getAdminDashboardPiechart = async (req, res) => {
   try {
     const token = req.token;
@@ -1496,13 +1374,15 @@ export const getAdminDashboardPiechart = async (req, res) => {
       }
     }
     // --- Current counts (all active) ---
-    const totalActivePatients = await Patient.countDocuments({ status: "Active" });
-    const totalActiveGuardians = await Guardian.countDocuments({ status: "Active" });
-    const totalActiveCaretakers = await Caretaker.countDocuments({ status: "Active" });
+    const totalActivePatients = await Patient.countDocuments({ status: { $in: ["Active", "Blocked"] } });
+    const totalActiveGuardians = await Guardian.countDocuments({ status: { $in: ["Active", "Blocked"] } });
+    const totalActiveCaretakers = await Caretaker.countDocuments({ status: { $in: ["Active", "Blocked"] } });
+
     // --- Previous counts ---
-    const prevPatients = previousFilter ? await Patient.countDocuments({ status: "Active", ...previousFilter }) : 0;
-    const prevGuardians = previousFilter ? await Guardian.countDocuments({ status: "Active", ...previousFilter }) : 0;
-    const prevCaretakers = previousFilter ? await Caretaker.countDocuments({ status: "Active", ...previousFilter }) : 0;
+    const prevPatients = previousFilter ? await Patient.countDocuments({ status: { $in: ["Active", "Blocked"] }, ...previousFilter }) : 0;
+    const prevGuardians = previousFilter ? await Guardian.countDocuments({ status: { $in: ["Active", "Blocked"] }, ...previousFilter }) : 0;
+    const prevCaretakers = previousFilter ? await Caretaker.countDocuments({ status: { $in: ["Active", "Blocked"] }, ...previousFilter }) : 0;
+
     // --- Helper ---
     const calcPercentage = (current, prev) => {
       if (!prev || prev === 0) return 0; // no previous period
@@ -1583,20 +1463,20 @@ export const blockGuardianbyAdmin = async (req, res) => {
       });
     }
 
-    const guardian = await Guardian.findOne({_id:guardianId}).select("-password -otp -accessToken -refreshToken");
-    if (guardian.status === "Blocked" ) {
+    const guardian = await Guardian.findOne({ _id: guardianId }).select("-password -otp -accessToken -refreshToken");
+    if (guardian.status === "Blocked") {
       return res.status(400).json({
         success: false,
         message: "Guardian is already blocked",
       });
     }
-    if(!guardian.status === "Active" ) {
+    if (!guardian.status === "Active") {
       return res.status(400).json({
         success: false,
         message: "Only active guardians can be blocked",
       });
     }
-      
+
     if (!guardian) {
       return res.status(404).json({
         success: false,
@@ -1718,16 +1598,16 @@ export const blockCaretakerByAdmin = async (req, res) => {
       });
     }
 
-    const caretaker = await Caretaker.findOne({_id:caretakerId}).select(
+    const caretaker = await Caretaker.findOne({ _id: caretakerId }).select(
       "-password -otp -accessToken -refreshToken"
     );
-    if (caretaker.status === "Blocked" ) {
+    if (caretaker.status === "Blocked") {
       return res.status(400).json({
         success: false,
         message: "Caregiver is already blocked",
       });
     }
-    if(!caretaker.status === "Active" ) {
+    if (!caretaker.status === "Active") {
       return res.status(400).json({
         success: false,
         message: "Only active caregiver can be blocked",
@@ -1847,17 +1727,17 @@ export const blockPatientByAdmin = async (req, res) => {
       });
     }
 
-    const patient = await Patient.findOne({_id:patientId}).select(
+    const patient = await Patient.findOne({ _id: patientId }).select(
       "-password -otp -accessToken -refreshToken"
     );
-    if (patient.status === "Blocked" ) {
+    if (patient.status === "Blocked") {
       return res.status(400).json({
         success: false,
         message: "Patient is already blocked",
       });
     }
 
-    if(!patient.status === "Active" ) {
+    if (!patient.status === "Active") {
       return res.status(400).json({
         success: false,
         message: "Only active patients can be blocked",
@@ -1919,7 +1799,7 @@ export const unblockPatient = async (req, res) => {
       });
     }
 
-    const patient = await Patient.findOne({_id:patientId}).select(
+    const patient = await Patient.findOne({ _id: patientId }).select(
       "-password -otp -accessToken -refreshToken"
     );
 
@@ -1967,7 +1847,7 @@ export const adminEditCaretakerProfile = async (req, res) => {
         result: {},
       });
     }
- const admin = await Admin.findOne({ _id:token._id, status: "Active" });
+    const admin = await Admin.findOne({ _id: token._id, status: "Active" });
     if (!admin) {
       return res.send({
         statusCode: 404,
@@ -2045,10 +1925,10 @@ export const editGuardianProfile = async (req, res) => {
   try {
     const token = req.token;
     let { fullName, certification, mobileNumber, gender, age } = req.body;
- const {guardianId} =  req.params;
+    const { guardianId } = req.params;
     fullName = fullName?.trim();
     // email = email?.trim()?.toLowerCase();
-if (!guardianId) {
+    if (!guardianId) {
       return res.send({
         statusCode: 400,
         success: false,
@@ -2110,7 +1990,7 @@ if (!guardianId) {
       }
 
       // Build absolute URL for new photo
-      
+
       const baseUrl = `${req.protocol}://${req.get("host")}`; // e.g. http://localhost:5000
       profilePhotoUrl = `${baseUrl}/uploads/${req.file.filename}`;
 
@@ -2121,10 +2001,10 @@ if (!guardianId) {
     guardian.fullName = fullName;
     // guardian.email = email;
     guardian.profilePhoto = profilePhotoUrl;
-    guardian.certification=certification;
-    guardian.mobileNumber=mobileNumber;
-    guardian.gender=gender;
-    guardian.age=age;
+    guardian.certification = certification;
+    guardian.mobileNumber = mobileNumber;
+    guardian.gender = gender;
+    guardian.age = age;
 
     await guardian.save();
 
@@ -2151,7 +2031,7 @@ export const adminEditPatient = async (req, res) => {
     const { fullName, age, mobileNumber, gender } = req.body;
 
     // --- Validate Admin Token ---
-    if (!token || !token._id ) {
+    if (!token || !token._id) {
       return res.send({
         statusCode: 401,
         success: false,
