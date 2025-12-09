@@ -33,7 +33,7 @@ router.post("/send-to-all-caretakers", sendToAllCaretakers);
 // 🔥 Admin → Send Notification to all Guardians
 router.post("/send-to-all-guardians", sendToAllGuardians);
 
-router.post("/send-to-guardian",upload.none(),sendNotificationtoguardian);
+router.post("/send-to-guardian",verifyAccessToken,upload.none(),sendNotificationtoguardian);
 
 router.post("/send-to-caretaker",verifyAccessToken,upload.none(),sendNotificationToAllCaretaker);
 

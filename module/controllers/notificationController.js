@@ -714,43 +714,102 @@ export const sendToAllCaretakers = async (req, res) => {
 import axios from "axios";
 
 const ONE_SIGNAL_API = "https://onesignal.com/api/v1/notifications";
-const REST_KEY = "os_v2_app_2dikztjxbjfivatvio4yc6s6ijkbykgr4jdefymzgdelvgalqrriyneypm4xprgxrvlxnnhhdttpnrmm3ljzsp2ct2r2zrchmuia7va";
+const REST_KEY = "os_v2_app_2dikztjxbjfivatvio4yc6s6iircrpvtla4edffpxksiw53zdd55skaea4xhl3ctjyu6wkjzkmisbipf2dyeekyff3hf6nuxjdj2udq";
 const APP_ID = "d0d0accd-370a-4a8a-8275-43b9817a5e42";
+
+// export const sendNotificationtoguardian = async (req, res) => {
+//   try {
+//     const { title, message, imageUrl } = req.body;
+//     const token = req.token;
+//     const admin = await Admin.findOne({ _id:token._id, status:"Active" });
+//     if (!admin) {
+//       return res.status(403).json({
+//         ok: false,
+//         error: "Unauthorized or deleted admin",
+//       });
+//     }
+
+
+//     const payload = {
+//       app_id: APP_ID,
+
+//       // 🔥 Send to all users (no playerIds)
+//       included_segments: ["All"],
+
+//       headings: { en: title || "Default title" },
+//       contents: { en: message || "Default message" },
+
+//       big_picture: imageUrl || undefined,
+//       ios_attachments: imageUrl ? { id: imageUrl } : undefined
+//     };
+
+//     const resp = await axios.post(ONE_SIGNAL_API, payload, {
+//       headers: {
+//         "Content-Type": "application/json;charset=utf-8",
+//         Authorization: `Basic ${REST_KEY}`,  // <-- Direct REST KEY
+//       },
+//     });
+
+//     return res.json({ ok: true, result: resp.data });
+
+//   } catch (err) {
+//     return res.status(500).json({
+//       ok: false,
+//       error: err?.response?.data || err.message,
+//     });
+//   }
+// };
+
+
+// 🔹 Patient ke liye alag REST KEY
 
 export const sendNotificationtoguardian = async (req, res) => {
   try {
     const { title, message, imageUrl } = req.body;
 
-    const admin = await Admin.findOne({ _id: req.token._id, status:"Active" });
+    let token = req.token;
+  
+//  console.log("Token in sendNotificationtoguardian:", req.token   );
+    // ✅ FIX: Prevent crash if token missing
+    if (!token || !token._id) {
+      return res.status(401).json({
+        ok: false,
+        error: "Invalid or missing token",
+      });
+    }
+
+    // ✅ Validate admin
+    const admin = await Admin.findOne({ _id: token._id, status: "Active" });
     if (!admin) {
       return res.status(403).json({
         ok: false,
         error: "Unauthorized or deleted admin",
       });
     }
-
-
+//  console.log("Admin validated:", admin._id);  
+    // 🔥 OneSignal Payload
     const payload = {
       app_id: APP_ID,
-
-      // 🔥 Send to all users (no playerIds)
       included_segments: ["All"],
-
       headings: { en: title || "Default title" },
       contents: { en: message || "Default message" },
-
       big_picture: imageUrl || undefined,
       ios_attachments: imageUrl ? { id: imageUrl } : undefined
     };
-
+// console.log("Payload prepared:", payload);/
+    // 🔥 Send Notification
     const resp = await axios.post(ONE_SIGNAL_API, payload, {
       headers: {
         "Content-Type": "application/json;charset=utf-8",
-        Authorization: `Basic ${REST_KEY}`,  // <-- Direct REST KEY
+        Authorization: `Basic ${REST_KEY}`,
       },
     });
+    // console.log("OneSignal Response:", resp.data);
 
-    return res.json({ ok: true, result: resp.data });
+    return res.json({
+      ok: true,
+      result: resp.data,
+    });
 
   } catch (err) {
     return res.status(500).json({
@@ -761,7 +820,6 @@ export const sendNotificationtoguardian = async (req, res) => {
 };
 
 
-// 🔹 Patient ke liye alag REST KEY
 const REST_KEY_PATIENT = "YOUR_PATIENT_REST_KEY_HERE";
 
 // 🔹 Patient ke liye alag APP ID
@@ -810,7 +868,7 @@ export const sendNotificationToAllPatient = async (req, res) => {
 // 🔹 Caretaker ke liye alag REST KEY
 
 // const APP_ID_CARETAKER = "68422854-8b34-4e61-b9c9-3a52d5fb7251";
-const REST_KEY_CARETAKER = "os_v2_app_nbbcqvelgrhgdoojhjjnl63skefgy2jcanlug75psrspfo5cwtcyx5ufcubxntibhqzirnoatktp6swxzihj3j4lxmmzn4i7k7jgcga";
+const REST_KEY_CARETAKER = "os_v2_app_nbbcqvelgrhgdoojhjjnl63skhh4ui2mtize3zehhq567lyfafkgdqnhvj3fvjsn7omzwg7qdh4nvuyjjmmmqnsv66sv74tvw5buffy";
 const APP_ID_CARETAKER = "68422854-8b34-4e61-b9c9-3a52d5fb7251";
 
 export const sendNotificationToAllCaretaker = async (req, res) => {
