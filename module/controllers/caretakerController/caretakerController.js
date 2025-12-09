@@ -401,7 +401,7 @@ export const caretakerLogin = async (req, res) => {
       });
     }
 
-    const caretaker = await Caretaker.findOne({ mobileNumber });
+    const caretaker = await Caretaker.findOne({ mobileNumber:mobileNumber });
     if (!caretaker) {
       return res.send({
         statusCode: 400,
@@ -428,6 +428,16 @@ export const caretakerLogin = async (req, res) => {
         result: {},
       });
     }
+    if(caretaker.status==="Pending"){ 
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Your account is pending please signup first",
+        result: {},
+      });
+    }
+    
+
     const { otpValue, otpExpiry } = genrateOTP();
 
     caretaker.otp = {
