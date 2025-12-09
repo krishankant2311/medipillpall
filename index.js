@@ -33,6 +33,7 @@ import medicationInventory from "./module/routes/medicationInventoryRoute.js";
 import appointmentRouter from "./module/routes/patientAppointmentRoute.js"
 import needsRouter from "./module/routes/patientNeedsRoute.js"
 import assignRequestRouter from "./module/routes/assignRequestRoute.js"
+import notificationRouter from "./module/routes/notificationRoute.js"
 import path from "path";
 import { fileURLToPath } from "url";
 dotenv.config();
@@ -87,6 +88,7 @@ app.use('/api/medicationInventory',medicationInventory)
 app.use('/api/appointment',appointmentRouter)
 app.use('/api/needs',needsRouter)
 app.use('/api/assignRequest',assignRequestRouter)
+app.use('/api/notification',notificationRouter)
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(` Server running on port ${PORT}`));
   

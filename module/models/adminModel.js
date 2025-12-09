@@ -55,7 +55,7 @@ export const createDefaultAdmin = async () => {
     const enc_password = await bcrypt.hash(password, 10);
 
     const newAdmin = new Admin({
-      fullName: "",
+      fullName: "Abhinandan daksh",
       email,
       password: enc_password,
     });

@@ -4181,7 +4181,7 @@ export const editCaretakerProfile = async (req, res) => {
     }
 
     // --- Step 1: Find Caretaker ---
-    const caretaker = await Caretaker.findById(token._id);
+    const caretaker = await Caretaker.findOne({_id:token._id, status: "Active"});
     if (!caretaker) {
       return res.send({
         statusCode: 404,
