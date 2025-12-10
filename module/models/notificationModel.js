@@ -21,7 +21,7 @@ const notificationSchema = new mongoose.Schema(
         ref: "Guardian",
         // default: null,
     },
-
+status: { type: String, enum: ["Sent", "Pending", "Failed"], default: "Failed" },
     caretakerId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Caretaker",
@@ -35,7 +35,7 @@ const notificationSchema = new mongoose.Schema(
     type: { type: String, default: "General" },
     data: { type: Object, default: {} },
 
-    
+
     targetUserIds: [
       {
         type: mongoose.Schema.Types.ObjectId,
