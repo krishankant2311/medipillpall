@@ -6,7 +6,7 @@ import {
   getGuardianNotifications,sendToAllPatients,
 sendToAllGuardians,sendToAllCaretakers,
 sendNotificationtoguardian,sendNotificationToAllCaretaker,
-sendNotificationToAllApps,getAdminNotifications,
+sendNotificationToAllApps,getAdminNotifications,getOneSignalcaretaker,getOneSignalguardian,
 } from "../controllers/notificationController.js";
 
 import { verifyAccessToken } from "../../helpers/jwt.js";
@@ -41,5 +41,10 @@ router.post("/send-to-caretaker",verifyAccessToken,upload.none(),sendNotificatio
 router.post("/send-to-all-apps",verifyAccessToken,upload.none(),sendNotificationToAllApps);
 
 router.get("/admin/get", verifyAccessToken, getAdminNotifications);
+
+router.get("/onesignal-users", verifyAccessToken, getOneSignalcaretaker);
+
+router.get("/onesignal-guardians", verifyAccessToken, getOneSignalguardian);
+
 
 export default router;

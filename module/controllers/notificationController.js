@@ -1131,3 +1131,36 @@ export const getAdminNotifications = async (req, res) => {
     });
   }
 };
+
+
+export const getOneSignalcaretaker = async (req, res) => {
+  try {
+    const response = await axios.get(
+      `https://onesignal.com/api/v1/players?app_id=${APP_ID_CARETAKER}`,
+      {
+        headers: {
+          Authorization: `Basic ${REST_KEY_CARETAKER}`,
+        },
+      }
+    );
+    res.json(response.data.players);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getOneSignalguardian = async (req, res) => {
+  try {
+    const response = await axios.get(
+      `https://onesignal.com/api/v1/players?app_id=${APP_ID}`,
+      {
+        headers: {
+          Authorization: `Basic ${REST_KEY}`,
+        },
+      }
+    );
+    res.json(response.data.players);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
