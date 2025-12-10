@@ -829,7 +829,8 @@ export const sendNotificationtoguardian = async (req, res) => {
       imageUrl,
       sentTo: "Guardian",
       createdBy: admin._id,
-      userType: "Guardian"
+      userType: "Guardian",
+      status: "Sent",
     });
 
     return res.json({
@@ -1039,6 +1040,7 @@ export const sendNotificationToAllCaretaker = async (req, res) => {
       imageUrl: imageUrl || null,
       userType: "Caretaker",
       type: "General",
+      status: "Sent",
       sentToAll: true,
       onesignalResponse: {
         status: "sent",
