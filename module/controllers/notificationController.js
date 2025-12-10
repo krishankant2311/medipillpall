@@ -720,40 +720,56 @@ const ONE_SIGNAL_API = process.env.ONESIGNAL_API;
 const REST_KEY = process.env.ONESIGNAL_REST_KEY;
 const APP_ID = process.env.ONESIGNAL_APP_ID;
 
+
 // export const sendNotificationtoguardian = async (req, res) => {
 //   try {
 //     const { title, message, imageUrl } = req.body;
-//     const token = req.token;
-//     const admin = await Admin.findOne({ _id:token._id, status:"Active" });
+
+//     let token = req.token;
+  
+// //  console.log("Token in sendNotificationtoguardian:", req.token   );
+//     // ✅ FIX: Prevent crash if token missing
+//     if (!token || !token._id) {
+//       return res.status(401).json({
+//         ok: false,
+//         error: "Invalid or missing token",
+//       });
+//     }
+
+//     // ✅ Validate admin
+//     const admin = await Admin.findOne({ _id: token._id, status: "Active" });
 //     if (!admin) {
 //       return res.status(403).json({
 //         ok: false,
 //         error: "Unauthorized or deleted admin",
 //       });
 //     }
-
-
+// //  console.log("Admin validated:", admin._id);  
+//     // 🔥 OneSignal Payload
 //     const payload = {
 //       app_id: APP_ID,
-
-//       // 🔥 Send to all users (no playerIds)
 //       included_segments: ["All"],
-
 //       headings: { en: title || "Default title" },
 //       contents: { en: message || "Default message" },
-
 //       big_picture: imageUrl || undefined,
 //       ios_attachments: imageUrl ? { id: imageUrl } : undefined
 //     };
-
+// // console.log("Payload prepared:", payload);/
+//     // 🔥 Send Notification
 //     const resp = await axios.post(ONE_SIGNAL_API, payload, {
 //       headers: {
 //         "Content-Type": "application/json;charset=utf-8",
-//         Authorization: `Basic ${REST_KEY}`,  // <-- Direct REST KEY
+//         Authorization: `Basic ${REST_KEY}`,
 //       },
 //     });
+//     // console.log("OneSignal Response:", resp.data);
 
-//     return res.json({ ok: true, result: resp.data });
+//     return res.json({
+//       success: true,
+//       message: "Notification sent to Guardian users",
+//       statusCode: 200,
+//       result: resp.data,
+//     });
 
 //   } catch (err) {
 //     return res.status(500).json({
@@ -764,16 +780,12 @@ const APP_ID = process.env.ONESIGNAL_APP_ID;
 // };
 
 
-// 🔹 Patient ke liye alag REST KEY
-
 export const sendNotificationtoguardian = async (req, res) => {
   try {
     const { title, message, imageUrl } = req.body;
 
     let token = req.token;
-  
-//  console.log("Token in sendNotificationtoguardian:", req.token   );
-    // ✅ FIX: Prevent crash if token missing
+
     if (!token || !token._id) {
       return res.status(401).json({
         ok: false,
@@ -781,7 +793,6 @@ export const sendNotificationtoguardian = async (req, res) => {
       });
     }
 
-    // ✅ Validate admin
     const admin = await Admin.findOne({ _id: token._id, status: "Active" });
     if (!admin) {
       return res.status(403).json({
@@ -789,29 +800,40 @@ export const sendNotificationtoguardian = async (req, res) => {
         error: "Unauthorized or deleted admin",
       });
     }
-//  console.log("Admin validated:", admin._id);  
+
     // 🔥 OneSignal Payload
     const payload = {
       app_id: APP_ID,
       included_segments: ["All"],
-      headings: { en: title || "Default title" },
-      contents: { en: message || "Default message" },
+      headings: { en: title },
+      contents: { en: message },
       big_picture: imageUrl || undefined,
       ios_attachments: imageUrl ? { id: imageUrl } : undefined
     };
-// console.log("Payload prepared:", payload);/
-    // 🔥 Send Notification
+
+    // 🔥 Send Notification via OneSignal
     const resp = await axios.post(ONE_SIGNAL_API, payload, {
       headers: {
         "Content-Type": "application/json;charset=utf-8",
         Authorization: `Basic ${REST_KEY}`,
       },
     });
-    // console.log("OneSignal Response:", resp.data);
+
+    // -------------------------------------------
+    // 🟢 SAVE NOTIFICATION INTO DATABASE
+    // -------------------------------------------
+
+    await Notification.create({
+      title,
+      message,
+      imageUrl,
+      sentTo: "Guardian",
+      createdBy: admin._id,
+    });
 
     return res.json({
       success: true,
-      message: "Notification sent to Guardian users",
+      message: "Notification sent to Guardian users & Saved!",
       statusCode: 200,
       result: resp.data,
     });
@@ -830,21 +852,59 @@ const REST_KEY_PATIENT = "YOUR_PATIENT_REST_KEY_HERE";
 // 🔹 Patient ke liye alag APP ID
 const APP_ID_PATIENT = "YOUR_PATIENT_APP_ID_HERE";
 
+// export const sendNotificationToAllPatient = async (req, res) => {
+//   try {
+//     const { title, message, imageUrl } = req.body;
+
+//     const payload = {
+//       app_id: APP_ID_PATIENT,
+
+//       // 🎯 Sirf Patient users
+//       filters: [
+//         { field: "tag", key: "userType", relation: "=", value: "Patient" }
+//       ],
+
+//       headings: { en: title || "Default title" },
+//       contents: { en: message || "Default message" },
+
+//       big_picture: imageUrl || undefined,
+//       ios_attachments: imageUrl ? { id: imageUrl } : undefined
+//     };
+
+//     const resp = await axios.post(ONE_SIGNAL_API, payload, {
+//       headers: {
+//         "Content-Type": "application/json;charset=utf-8",
+//         Authorization: `Basic ${REST_KEY_PATIENT}`,  // Patient key use
+//       },
+//     });
+
+//     return res.json({
+//       ok: true,
+//       message: "Notification sent to Patient users",
+//       result: resp.data,
+//     });
+
+//   } catch (err) {
+//     return res.status(500).json({
+//       ok: false,
+//       error: err?.response?.data || err.message,
+//     });
+//   }
+// };
+
+
 export const sendNotificationToAllPatient = async (req, res) => {
   try {
     const { title, message, imageUrl } = req.body;
 
+    // Send notification by tag filter
     const payload = {
       app_id: APP_ID_PATIENT,
-
-      // 🎯 Sirf Patient users
       filters: [
         { field: "tag", key: "userType", relation: "=", value: "Patient" }
       ],
-
       headings: { en: title || "Default title" },
       contents: { en: message || "Default message" },
-
       big_picture: imageUrl || undefined,
       ios_attachments: imageUrl ? { id: imageUrl } : undefined
     };
@@ -852,13 +912,24 @@ export const sendNotificationToAllPatient = async (req, res) => {
     const resp = await axios.post(ONE_SIGNAL_API, payload, {
       headers: {
         "Content-Type": "application/json;charset=utf-8",
-        Authorization: `Basic ${REST_KEY_PATIENT}`,  // Patient key use
+        Authorization: `Basic ${REST_KEY_PATIENT}`,
       },
+    });
+
+    // ================================
+    // 🔥 SAVE NOTIFICATION IN DATABASE
+    // ================================
+    await Notification.create({
+      title,
+      message,
+      imageUrl,
+      sendTo: "Patient",
+      createdBy: req.token._id
     });
 
     return res.json({
       ok: true,
-      message: "Notification sent to Patient users",
+      message: "Notification sent to Patient users & saved to database",
       result: resp.data,
     });
 
@@ -919,6 +990,105 @@ export const sendNotificationToAllCaretaker = async (req, res) => {
     return res.status(500).json({
       ok: false,
       error: err?.response?.data || err.message,
+    });
+  }
+};
+
+export const sendNotificationToAllApps = async (req, res) => {
+  try {
+    const { title, message, imageUrl } = req.body;
+    const token = req.token;
+    const admin = await Admin.findOne({ _id: req.token._id, status: "Active" });
+    if (!admin) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized admin",
+      });
+    }
+
+    // 1️⃣ Payload
+    const payload = {
+      included_segments: ["All"],
+      headings: { en: title },
+      contents: { en: message },
+      big_picture: imageUrl || undefined,
+      ios_attachments: imageUrl ? { id: imageUrl } : undefined
+    };
+
+    // 2️⃣ Prepare All Three Configs
+    const apps = [
+      {
+        appId: process.env.ONESIGNAL_APP_ID,
+        key: process.env.ONESIGNAL_REST_KEY,
+        userType: "Guardian"
+      },
+      {
+        appId: process.env.ONESIGNAL_PATIENT_APP_ID,
+        key: process.env.ONESIGNAL_PATIENT_REST_KEY,
+        userType: "Patient"
+      },
+      {
+        appId: process.env.ONESIGNAL_CARETAKER_APP_ID,
+        key: process.env.ONESIGNAL_CARETAKER_REST_KEY,
+        userType: "Caretaker"
+      }
+    ];
+
+    let responses = [];
+
+    // 3️⃣ Loop Each App → Send Notification
+    for (let app of apps) {
+      const body = { ...payload, app_id: app.appId };
+
+      try {
+        const resp = await axios.post(
+          process.env.ONESIGNAL_API,
+          body,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Basic ${app.key}`,
+            },
+          }
+        );
+
+        responses.push({
+          userType: app.userType,
+          status: "sent",
+          onesignalId: resp.data.id || null,
+          response: resp.data
+        });
+
+      } catch (err) {
+        responses.push({
+          userType: app.userType,
+          status: "failed",
+          error: err?.response?.data || err.message
+        });
+      }
+    }
+
+    // 4️⃣ SAVE NOTIFICATION IN DATABASE
+    await Notification.create({
+      title,
+      message,
+      imageUrl: imageUrl || null,
+      userType: "All",
+      type: "General",
+      sentToAll: true,
+      onesignalResponse: responses,
+    });
+
+    return res.json({
+      success: true,
+      message: "Notification sent to all three apps",
+      responses,
+    });
+
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      error: err.message,
     });
   }
 };

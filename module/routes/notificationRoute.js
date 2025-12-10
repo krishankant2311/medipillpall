@@ -6,6 +6,7 @@ import {
   getGuardianNotifications,sendToAllPatients,
 sendToAllGuardians,sendToAllCaretakers,
 sendNotificationtoguardian,sendNotificationToAllCaretaker,
+sendNotificationToAllApps,
 } from "../controllers/notificationController.js";
 
 import { verifyAccessToken } from "../../helpers/jwt.js";
@@ -36,5 +37,7 @@ router.post("/send-to-all-guardians", sendToAllGuardians);
 router.post("/send-to-guardian",verifyAccessToken,upload.none(),sendNotificationtoguardian);
 
 router.post("/send-to-caretaker",verifyAccessToken,upload.none(),sendNotificationToAllCaretaker);
+
+router.post("/send-to-all-apps",verifyAccessToken,upload.none(),sendNotificationToAllApps);
 
 export default router;

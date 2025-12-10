@@ -16,6 +16,26 @@ const notificationSchema = new mongoose.Schema(
       default: "All",
     },
 
+    guardianId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Guardian",
+        // default: null,
+    },
+
+    caretakerId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Caretaker",
+        // default: null,
+    },
+    patientId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Patient",
+        // default: null,
+    },
+    type: { type: String, default: "General" },
+    data: { type: Object, default: {} },
+
+    
     targetUserIds: [
       {
         type: mongoose.Schema.Types.ObjectId,
