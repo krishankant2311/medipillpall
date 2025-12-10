@@ -868,7 +868,7 @@ export const sendNotificationToAllPatient = async (req, res) => {
 // 🔹 Caretaker ke liye alag REST KEY
 
 // const APP_ID_CARETAKER = "68422854-8b34-4e61-b9c9-3a52d5fb7251";
-const REST_KEY_CARETAKER = "os_v2_app_nbbcqvelgrhgdoojhjjnl63skhmycinclo3egjfisulaopar6mtakfgrugy5ulqzcmx4pees7bm6ulhytf2phq647miwqio37ptpepy";
+const REST_KEY_CARETAKER = "os_v2_app_nbbcqvelgrhgdoojhjjnl63skhbz7bkefu3e2vuzv5faj3eogw5xmvj2dvejonab2pnd6pvb7tohw7laeygij3h45uwpvicf6j2waaa";
 const APP_ID_CARETAKER = "68422854-8b34-4e61-b9c9-3a52d5fb7251";
 
 export const sendNotificationToAllCaretaker = async (req, res) => {
