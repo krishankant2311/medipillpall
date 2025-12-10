@@ -436,7 +436,7 @@ export const caretakerLogin = async (req, res) => {
         result: {},
       });
     }
-    
+
 
     const { otpValue, otpExpiry } = genrateOTP();
 
@@ -523,7 +523,7 @@ export const verifyCaretakerOTP = async (req, res) => {
       return res.status(400).json({
         statusCode: 400,
         success: false,
-        message: "Invalid OTP",
+        message: "Incorrect OTP",
         result: {},
       });
     }

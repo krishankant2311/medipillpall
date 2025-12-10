@@ -914,6 +914,24 @@ export const editGuardianProfile = async (req, res) => {
       });
     }
 
+    if(guardian.status==="Blocked"){
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Guardian is blocked, Please contact admin",
+        result: {},
+      });
+    }
+    if(guardian.status==="Delete"){
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Guardian has been deleted",
+        result: {},
+      });
+    }
+    
+
     // --- Step 2: Handle Profile Photo Upload (if any) ---
     let profilePhotoUrl = guardian.profilePhoto; // keep old one if not updated
 
