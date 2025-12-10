@@ -172,7 +172,7 @@ export const addMedicationByCaretaker = async (req, res) => {
     if (!caretaker) {
       return res.status(404).json({
         success: false,
-        message: "Caretaker not found."
+        message: "Caregiver not found."
       });
     }
 
@@ -202,12 +202,12 @@ export const addMedicationByCaretaker = async (req, res) => {
     // 🔹 Success response
     return res.status(200).json({
       success: true,
-      message: "Medication added successfully by caretaker.",
+      message: "Medication added successfully by caregiver.",
       result: newMedication
     });
 
   } catch (error) {
-    console.error("Add Medication (Caretaker) Error:", error);
+    console.error("Add Medication (Caregiver) Error:", error);
     return res.status(500).json({
       success: false,
       message: error.message
@@ -295,7 +295,7 @@ export const getAllMedicationByCaretaker = async (req, res) => {
     if (!caretaker) {
       return res.status(401).json({
         success: false,
-        message: "Invalid caretaker."
+        message: "Invalid caregiver."
       });
     }
 
@@ -345,7 +345,7 @@ export const getAllMedicationByCaretaker = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Get Medication (Caretaker) Error:", error);
+    console.error("Get Medication (Caregiver) Error:", error);
     return res.status(500).json({
       success: false,
       message: error.message
