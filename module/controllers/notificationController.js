@@ -1092,3 +1092,42 @@ export const sendNotificationToAllApps = async (req, res) => {
     });
   }
 };
+
+
+
+export const getAdminNotifications = async (req, res) => {
+  try {
+    const admin = await Admin.findOne({ _id: req.token._id, status: "Active" });
+    if (!admin) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized admin",
+      });
+    }
+
+    // Pagination
+    let { page = 1, limit = 20 } = req.query;
+    page = parseInt(page);
+    limit = parseInt(limit);
+
+    const notifications = await Notification.find()
+      .sort({ createdAt: -1 }) // latest first
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    const total = await Notification.countDocuments();
+
+    return res.json({
+      success: true,
+      page,
+      limit,
+      total,
+      notifications,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
