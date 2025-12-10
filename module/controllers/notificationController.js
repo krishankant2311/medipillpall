@@ -1164,6 +1164,7 @@ export const sendNotificationToAllApps = async (req, res) => {
 
 export const getAdminNotifications = async (req, res) => {
   try {
+    const token = req.token;
     const admin = await Admin.findOne({ _id: req.token._id, status: "Active" });
     if (!admin) {
       return res.status(403).json({
@@ -1173,7 +1174,7 @@ export const getAdminNotifications = async (req, res) => {
     }
 
     // Pagination
-    let { page = 1, limit = 20 } = req.query;
+    let { page = 1, limit = 10 } = req.query;
     page = parseInt(page);
     limit = parseInt(limit);
 
