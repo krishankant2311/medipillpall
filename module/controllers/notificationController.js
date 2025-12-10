@@ -2,6 +2,9 @@ import Notification from "../models/notificationModel.js";
 import Admin from "../models/adminModel.js";
 // import Notification from "../models/Notification.js";
 
+import dotenv from "dotenv";
+dotenv.config();
+
 export const sendNotificationToUser = async (req, res) => {
   try {
     const { userId, userType, title, message, data, type } = req.body;
@@ -713,9 +716,9 @@ export const sendToAllCaretakers = async (req, res) => {
 
 import axios from "axios";
 
-const ONE_SIGNAL_API = "https://onesignal.com/api/v1/notifications";
-const REST_KEY = "os_v2_app_2dikztjxbjfivatvio4yc6s6iluar6jvgzcuwieeehwsmlh2ga3bxxltagrrti66akdt55bxvb4pfyeigqz4np7hchlcqufioumtxoi";
-const APP_ID = "d0d0accd-370a-4a8a-8275-43b9817a5e42";
+const ONE_SIGNAL_API = process.env.ONESIGNAL_API;
+const REST_KEY = process.env.ONESIGNAL_REST_KEY;
+const APP_ID = process.env.ONESIGNAL_APP_ID;
 
 // export const sendNotificationtoguardian = async (req, res) => {
 //   try {
@@ -866,10 +869,9 @@ export const sendNotificationToAllPatient = async (req, res) => {
 };
 
 // 🔹 Caretaker ke liye alag REST KEY
-
-// const APP_ID_CARETAKER = "68422854-8b34-4e61-b9c9-3a52d5fb7251";
-const REST_KEY_CARETAKER = "os_v2_app_nbbcqvelgrhgdoojhjjnl63skhbz7bkefu3e2vuzv5faj3eogw5xmvj2dvejonab2pnd6pvb7tohw7laeygij3h45uwpvicf6j2waaa";
-const APP_ID_CARETAKER = "68422854-8b34-4e61-b9c9-3a52d5fb7251";
+// const ONE_SIGNAL_API = process.env.ONESIGNAL_API;
+const APP_ID_CARETAKER = process.env.ONESIGNAL_CARETAKER_APP_ID;
+const REST_KEY_CARETAKER = process.env.ONESIGNAL_CARETAKER_REST_KEY;
 
 export const sendNotificationToAllCaretaker = async (req, res) => {
   try {
