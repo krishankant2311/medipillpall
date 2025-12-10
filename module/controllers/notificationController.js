@@ -829,11 +829,12 @@ export const sendNotificationtoguardian = async (req, res) => {
       imageUrl,
       sentTo: "Guardian",
       createdBy: admin._id,
+      userType: "Guardian"
     });
 
     return res.json({
       success: true,
-      message: "Notification sent to Guardian users & Saved!",
+      message: "Notification sent to Guardian users",
       statusCode: 200,
       result: resp.data,
     });
@@ -924,7 +925,8 @@ export const sendNotificationToAllPatient = async (req, res) => {
       message,
       imageUrl,
       sendTo: "Patient",
-      createdBy: req.token._id
+      createdBy: req.token._id,
+      userType: "Patient"
     });
 
     return res.json({
@@ -945,6 +947,56 @@ export const sendNotificationToAllPatient = async (req, res) => {
 // const ONE_SIGNAL_API = process.env.ONESIGNAL_API;
 const APP_ID_CARETAKER = process.env.ONESIGNAL_CARETAKER_APP_ID;
 const REST_KEY_CARETAKER = process.env.ONESIGNAL_CARETAKER_REST_KEY;
+
+
+
+// export const sendNotificationToAllCaretaker = async (req, res) => {
+//   try {
+//     const { title, message, imageUrl } = req.body;
+
+//     // ✅ Check if admin is valid
+//     const admin = await Admin.findOne({ _id: req.token._id, status: "Active" });
+//     if (!admin) {
+//       return res.status(403).json({
+//         ok: false,
+//         error: "Unauthorized or deleted admin",
+//       });
+//     }
+
+//     const payload = {
+//       app_id: APP_ID_CARETAKER,
+
+//       // 🔥 Send to all users (Caregiver devices)
+//       included_segments: ["All"],
+
+//       headings: { en: title || "Default title" },
+//       contents: { en: message || "Default message" },
+
+//       big_picture: imageUrl || undefined,
+//       ios_attachments: imageUrl ? { id: imageUrl } : undefined
+//     };
+
+//     const resp = await axios.post(ONE_SIGNAL_API, payload, {
+//       headers: {
+//         "Content-Type": "application/json;charset=utf-8",
+//         Authorization: `Basic ${REST_KEY_CARETAKER}`,  // Caretaker key
+//       },
+//     });
+
+//     return res.json({
+//       success: true,
+//       message: "Notification sent to all Caregiver users",
+//       statusCode: 200,
+//       result: resp.data,
+//     });
+
+//   } catch (err) {
+//     return res.status(500).json({
+//       ok: false,
+//       error: err?.response?.data || err.message,
+//     });
+//   }
+// };
 
 export const sendNotificationToAllCaretaker = async (req, res) => {
   try {
@@ -972,6 +1024,7 @@ export const sendNotificationToAllCaretaker = async (req, res) => {
       ios_attachments: imageUrl ? { id: imageUrl } : undefined
     };
 
+    // 🔥 Send Notification
     const resp = await axios.post(ONE_SIGNAL_API, payload, {
       headers: {
         "Content-Type": "application/json;charset=utf-8",
@@ -979,9 +1032,23 @@ export const sendNotificationToAllCaretaker = async (req, res) => {
       },
     });
 
+    // ✅ Save notification to DB
+    await Notification.create({
+      title: title || "Default title",
+      message: message || "Default message",
+      imageUrl: imageUrl || null,
+      userType: "Caretaker",
+      type: "General",
+      sentToAll: true,
+      onesignalResponse: {
+        status: "sent",
+        response: resp.data
+      }
+    });
+
     return res.json({
       success: true,
-      message: "Notification sent to all Caregiver users",
+      message: "Notification sent to all Caregiver",
       statusCode: 200,
       result: resp.data,
     });
