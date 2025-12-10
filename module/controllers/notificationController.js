@@ -810,7 +810,9 @@ export const sendNotificationtoguardian = async (req, res) => {
     // console.log("OneSignal Response:", resp.data);
 
     return res.json({
-      ok: true,
+      success: true,
+      message: "Notification sent to Guardian users",
+      statusCode: 200,
       result: resp.data,
     });
 
@@ -907,8 +909,9 @@ export const sendNotificationToAllCaretaker = async (req, res) => {
     });
 
     return res.json({
-      ok: true,
+      success: true,
       message: "Notification sent to all Caregiver users",
+      statusCode: 200,
       result: resp.data,
     });
 
