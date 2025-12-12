@@ -40,7 +40,10 @@ taskStatus: {
     type: String,
     default: ""
   },
-
+remark: {
+    type: String,
+    default: ""
+  },
   time: {
     type: String,
     default: ""
@@ -72,7 +75,7 @@ taskStatus: {
 
   status: {
     type: String,
-    enum: ["Active", "Pending","Taken"],
+    enum: ["Active", "Pending","Taken","Completed"],
     default: "Active"
   },
 

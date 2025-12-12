@@ -753,3 +753,50 @@ export const addMealAndDietByPatient = async (req, res) => {
     });
   }
 };
+
+
+export const addRemarksByCaretaker = async (req, res) => {
+  try {
+    const token = req.token;
+    const { mealandDietId } = req.params;
+    const { remarks } = req.body;
+    // 🧩 Validate Caretaker
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active"
+    });
+    if (!caretaker) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid caregiver",
+      });
+    }
+    // 🧩 Find Existing Meal/Diet Record
+    const existing = await MealAndDiet.findOne({
+      _id:mealandDietId,
+      // caretakerId: caretaker._id
+    });
+    if (!existing) {
+      return res.status(404).json({
+        success: false,
+        message: "Meal/Diet record not found"
+      });
+    }
+    // 🧩 Update remarks
+    existing.remarks = remarks || existing.remarks;
+    await existing.save();
+    return res.json({
+      success: true,
+      message: `Remarks updated successfully`,
+      result: existing
+    });
+  }
+  catch (error) {
+    console.error("Add Remarks Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
