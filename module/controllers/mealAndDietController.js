@@ -381,6 +381,7 @@ export const getAllMealAndDiet = async (req, res) => {
         dailyMeals: item.dailyMeals,
         mealPhoto: mealPhotos, // always array
         attachedDoc,
+        taskStatus:item.taskStatus,
         calories: item.calories,
         status: item.status,
         createdAt: item.createdAt
