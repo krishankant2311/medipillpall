@@ -488,7 +488,6 @@ export const sendNotificationToPatient = async (req, res) => {
   }
 };
 
-
 export const sendNotificationToCaretaker = async (req, res) => {
   try {
     const { caretakerId, title, message } = req.body;
@@ -538,8 +537,9 @@ export const sendNotificationToCaretaker = async (req, res) => {
       imageUrl = `${req.protocol}://${req.get("host")}/public/${sanitized}`;
     }
 
+    // ⭐ Correct App ID for Caretaker app
     const notification = {
-      app_id: process.env.ONESIGNAL_APP_ID,
+      app_id: process.env.ONESIGNAL_CARETAKER_APP_ID,
       include_player_ids: [caretaker.playerId.trim()],
       headings: { en: title },
       contents: { en: message },
@@ -550,13 +550,14 @@ export const sendNotificationToCaretaker = async (req, res) => {
       notification.ios_attachments = { id1: imageUrl };
     }
 
+    // ⭐ Using env API URL + correct caretaker rest key
     const result = await axios.post(
-      "https://onesignal.com/api/v1/notifications",
+      process.env.ONESIGNAL_API,
       notification,
       {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Basic ${process.env.ONESIGNAL_API_KEY}`,
+          Authorization: `Basic ${process.env.ONESIGNAL_CARETAKER_REST_KEY}`,
         },
       }
     );
@@ -567,6 +568,8 @@ export const sendNotificationToCaretaker = async (req, res) => {
       title,
       message,
       image: imageUrl,
+      status:"Sent"
+      
     });
 
     return res.status(200).json({
@@ -585,6 +588,7 @@ export const sendNotificationToCaretaker = async (req, res) => {
     });
   }
 };
+
 
 
 export const sendToAllPatients = async (req, res) => {

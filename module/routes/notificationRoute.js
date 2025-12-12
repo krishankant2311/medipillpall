@@ -4,7 +4,7 @@ import {
   getPatientNotifications,
   getCaretakerNotifications,
   getGuardianNotifications,sendToAllPatients,
-sendToAllGuardians,sendToAllCaretakers,
+sendToAllGuardians,sendToAllCaretakers,sendNotificationToCaretaker,
 sendNotificationtoguardian,sendNotificationToAllCaretaker,registerPlayerIdPatient,
 registerPlayerIdCaretaker,registerPlayerIdGuardian,
 sendNotificationToAllApps,getAdminNotifications,getOneSignalcaretaker,getOneSignalguardian,
@@ -39,6 +39,8 @@ router.post("/send-to-guardian",verifyAccessToken,upload.none(),sendNotification
 
 router.post("/send-to-caretaker",verifyAccessToken,upload.none(),sendNotificationToAllCaretaker);
 
+router.post("/send-to-specific-caretaker",verifyAccessToken,upload.none(),sendNotificationToCaretaker)
+
 router.post("/send-to-all-apps",verifyAccessToken,upload.none(),sendNotificationToAllApps);
 
 router.get("/admin/get", verifyAccessToken, getAdminNotifications);
@@ -46,6 +48,8 @@ router.get("/admin/get", verifyAccessToken, getAdminNotifications);
 router.get("/onesignal-users", verifyAccessToken, getOneSignalcaretaker);
 
 router.get("/onesignal-guardians", verifyAccessToken, getOneSignalguardian);
+
+
 
 router.post("/registerPlayer-caregiver",verifyAccessToken,upload.none(),registerPlayerIdCaretaker)
 router.post("/registerPlayer-guardian",verifyAccessToken,upload.none(),registerPlayerIdGuardian)
