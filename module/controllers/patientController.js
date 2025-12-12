@@ -1098,7 +1098,6 @@ export const getAllPatientsByAdmin = async (req, res) => {
 // };
 
 // 
-
 export const resendPatientOTPforSignup = async (req, res) => {
   try {
     const { mobileNumber } = req.body;
@@ -1143,19 +1142,26 @@ export const resendPatientOTPforSignup = async (req, res) => {
       });
     }
 
-    // Step 4: Check if OTP cooldown period has passed
-    const now = new Date();
+    // Step 4: OTP cooldown check (30 sec)
+    const now = Date.now();
+
     if (patient.otp?.otpExpiry) {
-      const otpExpiryDate = new Date(patient.otp.otpExpiry);
-      if (!isNaN(otpExpiryDate.getTime())) {
-        const otpSentTime = new Date(otpExpiryDate.getTime() - 5 * 60 * 1000);
+
+      const otpExpiry = Number(patient.otp.otpExpiry);
+
+      if (!isNaN(otpExpiry)) {
+        // OTP sent time = expiry - 5 min
+        const otpSentTime = otpExpiry - 5 * 60 * 1000;
+
         const diffSeconds = (now - otpSentTime) / 1000;
 
         if (diffSeconds < 30) {
           return res.status(400).json({
             statusCode: 400,
             success: false,
-            message: `Please wait ${Math.ceil(30 - diffSeconds)} seconds before requesting a new OTP`,
+            message: `Please wait ${Math.ceil(
+              30 - diffSeconds
+            )} seconds before requesting a new OTP`,
             result: {},
           });
         }
@@ -1169,7 +1175,7 @@ export const resendPatientOTPforSignup = async (req, res) => {
     patient.otp = { otpValue, otpExpiry };
     await patient.save();
 
-    // Step 7: Send success response
+    // Step 7: Success
     return res.status(200).json({
       statusCode: 200,
       success: true,
@@ -1181,11 +1187,100 @@ export const resendPatientOTPforSignup = async (req, res) => {
     return res.status(500).json({
       statusCode: 500,
       success: false,
-      message: error.message + " Error in resendPatientOTPforSignup API",
+      message:
+        error.message + " Error in resendPatientOTPforSignup API",
       result: {},
     });
   }
 };
+
+// export const resendPatientOTPforSignup = async (req, res) => {
+//   try {
+//     const { mobileNumber } = req.body;
+
+//     // Step 1: Validate mobile number
+//     if (!mobileNumber) {
+//       return res.status(400).json({
+//         statusCode: 400,
+//         success: false,
+//         message: "Mobile number is required",
+//         result: {},
+//       });
+//     }
+
+//     // Step 2: Find patient
+//     const patient = await Patient.findOne({ mobileNumber });
+//     if (!patient) {
+//       return res.status(404).json({
+//         statusCode: 404,
+//         success: false,
+//         message: "Patient not found",
+//         result: {},
+//       });
+//     }
+
+//     // Step 3: Check status
+//     if (patient.status === "Active") {
+//       return res.status(400).json({
+//         statusCode: 400,
+//         success: false,
+//         message: "Patient already verified. Please login instead.",
+//         result: {},
+//       });
+//     }
+
+//     if (patient.status === "Delete") {
+//       return res.status(400).json({
+//         statusCode: 400,
+//         success: false,
+//         message: "Patient has been deleted",
+//         result: {},
+//       });
+//     }
+
+//     // Step 4: Check if OTP cooldown period has passed
+//     const now = new Date();
+//     if (patient.otp?.otpExpiry) {
+//       const otpExpiryDate = new Date(patient.otp.otpExpiry);
+//       if (!isNaN(otpExpiryDate.getTime())) {
+//         const otpSentTime = new Date(otpExpiryDate.getTime() - 5 * 60 * 1000);
+//         const diffSeconds = (now - otpSentTime) / 1000;
+
+//         if (diffSeconds < 30) {
+//           return res.status(400).json({
+//             statusCode: 400,
+//             success: false,
+//             message: `Please wait ${Math.ceil(30 - diffSeconds)} seconds before requesting a new OTP`,
+//             result: {},
+//           });
+//         }
+//       }
+//     }
+
+//     // Step 5: Generate new OTP
+//     const { otpValue, otpExpiry } = genrateOTP();
+
+//     // Step 6: Update patient’s OTP
+//     patient.otp = { otpValue, otpExpiry };
+//     await patient.save();
+
+//     // Step 7: Send success response
+//     return res.status(200).json({
+//       statusCode: 200,
+//       success: true,
+//       message: "OTP resent successfully",
+//       result: { mobileNumber, otpValue, otpExpiry },
+//     });
+
+//   } catch (error) {
+//     return res.status(500).json({
+//       statusCode: 500,
+//       success: false,
+//       message: error.message + " Error in resendPatientOTPforSignup API",
+//       result: {},
+//     });
+//   }
+// };
 
 export const resendPatientOTPforLogin = async (req, res) => {
   try {
