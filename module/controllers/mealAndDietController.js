@@ -759,7 +759,7 @@ export const addRemarksByCaretaker = async (req, res) => {
   try {
     const token = req.token;
     const { mealandDietId } = req.params;
-    const { remarks } = req.body;
+    const { remark } = req.body;
     // 🧩 Validate Caretaker
     const caretaker = await Caretaker.findOne({
       _id: token._id,
@@ -783,7 +783,7 @@ export const addRemarksByCaretaker = async (req, res) => {
       });
     }
     // 🧩 Update remarks
-    existing.remarks = remarks || existing.remarks;
+    existing.remark = remark || existing.remark;
     await existing.save();
     return res.json({
       success: true,
@@ -799,4 +799,6 @@ export const addRemarksByCaretaker = async (req, res) => {
     });
   }
 };
+
+
 
