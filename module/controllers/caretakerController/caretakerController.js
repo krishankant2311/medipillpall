@@ -3209,7 +3209,7 @@ export const addPatientBloodPressureByCaretaker = async (req, res) => {
     return res.send({
       statusCode: 200,
       success: true,
-      message: "Blood Pressure added/updated successfully",
+      message: "Blood Pressure added successfully",
       result: record,
     });
   } catch (err) {
@@ -3221,7 +3221,6 @@ export const addPatientBloodPressureByCaretaker = async (req, res) => {
     });
   }
 };
-
 
 export const addPatientBloodSugarByCaretaker = async (req, res) => {
   try {
@@ -3366,7 +3365,7 @@ export const addPatientBodyWeightByCaretaker = async (req, res) => {
     return res.send({
       statusCode: 200,
       success: true,
-      message: "Body Weight added/updated successfully",
+      message: "Body Weight added successfully",
       result: record,
     });
   } catch (err) {
@@ -3444,7 +3443,7 @@ export const addPatientHeartRateByCaretaker = async (req, res) => {
     return res.send({
       statusCode: 200,
       success: true,
-      message: "Heart Rate added/updated successfully",
+      message: "Heart Rate added successfully",
       result: record,
     });
   } catch (err) {
@@ -3527,7 +3526,7 @@ export const addPatientBodyTempByCaretaker = async (req, res) => {
     return res.send({
       statusCode: 200,
       success: true,
-      message: "Body Temperature added/updated successfully",
+      message: "Body Temperature added successfully",
       result: record,
     });
 
