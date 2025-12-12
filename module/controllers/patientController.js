@@ -1221,22 +1221,29 @@ export const resendPatientOTPforLogin = async (req, res) => {
         result: {},
       });
     }
+// Step 4: Check OTP cooldown (exact 30 sec)
+const now = Date.now();
 
-    // Step 4: Check if OTP cooldown period has passed
-    const now = new Date();
-    if (patient.otp?.otpExpiry) {
-      const otpSentTime = new Date(patient.otp.otpExpiry.getTime() - 5 * 60 * 1000);
-      const diffSeconds = (now - otpSentTime) / 1000;
+if (patient.otp?.otpExpiry) {
+  
+  const otpExpiry = Number(patient.otp.otpExpiry);
 
-      if (diffSeconds < 30) {
-        return res.status(400).json({
-          statusCode: 400,
-          success: false,
-          message: `Please wait ${Math.ceil(30 - diffSeconds)} seconds before requesting a new OTP`,
-          result: {},
-        });
-      }
-    }
+  // OTP sent time = expiry - 5 min
+  const otpSentTime = otpExpiry - 5 * 60 * 1000;
+
+  // Now - otpSentTime
+  const diffSeconds = (now - otpSentTime) / 1000;
+
+  if (diffSeconds < 30) {
+    return res.status(400).json({
+      statusCode: 400,
+      success: false,
+      message: `Please wait ${Math.ceil(30 - diffSeconds)} seconds before requesting a new OTP`,
+      result: {},
+    });
+  }
+}
+
 
     // Step 5: Generate new OTP
     const { otpValue, otpExpiry } = genrateOTP();
