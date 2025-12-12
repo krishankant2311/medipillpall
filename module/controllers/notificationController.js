@@ -23,7 +23,7 @@ export const sendNotificationToUser = async (req, res) => {
     if (!allowedTypes.includes(userType)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid userType. Allowed: Patient, Caretaker, Guardian",
+        message: "Invalid userType. Allowed: Patient, Caregiver, Guardian",
       });
     }
 
@@ -108,7 +108,7 @@ export const getCaretakerNotifications = async (req, res) => {
     });
 
   } catch (error) {
-    console.log("Error fetching caretaker notifications:", error);
+    console.log("Error fetching caregiver notifications:", error);
     return res.status(500).json({
       success: false,
       message: "Internal Server Error",
@@ -219,7 +219,7 @@ export const registerPlayerIdCaretaker = async (req, res) => {
       return res.status(404).send({
         statusCode: 404,
         success: false,
-        message: "Caretaker not found",
+        message: "Caregiver not found",
         result: {},
       });
     }
@@ -234,7 +234,7 @@ export const registerPlayerIdCaretaker = async (req, res) => {
       result: {},
     });
   } catch (error) {
-    console.error("Register PlayerId Caretaker Error:", error); // ✅ FIXED
+    console.error("Register PlayerId Caregiver Error:", error); // ✅ FIXED
     return res.status(500).send({
       statusCode: 500,
       success: false,
@@ -497,7 +497,7 @@ export const sendNotificationToCaretaker = async (req, res) => {
       return res.status(400).json({
         statusCode: 400,
         success: false,
-        message: "caretakerId, title & message are required",
+        message: "caregiverId, title & message are required",
         result: {},
       });
     }
@@ -517,7 +517,7 @@ export const sendNotificationToCaretaker = async (req, res) => {
       return res.status(404).json({
         statusCode: 404,
         success: false,
-        message: "Caretaker not found",
+        message: "Caregiver not found",
         result: {},
       });
     }
@@ -526,7 +526,7 @@ export const sendNotificationToCaretaker = async (req, res) => {
       return res.status(400).json({
         statusCode: 400,
         success: false,
-        message: "Caretaker does not have a valid playerId",
+        message: "Caregiver does not have a valid playerId",
         result: {},
       });
     }
@@ -575,7 +575,7 @@ export const sendNotificationToCaretaker = async (req, res) => {
     return res.status(200).json({
       statusCode: 200,
       success: true,
-      message: "Notification sent to caretaker successfully",
+      message: "Notification sent to caregiver successfully",
       result: result.data,
     });
 
@@ -708,7 +708,7 @@ export const sendToAllCaretakers = async (req, res) => {
     return res.status(200).json({
       statusCode: 200,
       success: true,
-      message: "Notification sent to all caretakers",
+      message: "Notification sent to all caregivers",
       result: {},
     });
 
