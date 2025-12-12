@@ -2079,4 +2079,215 @@ export const adminEditPatient = async (req, res) => {
     });
   }
 };
+export const getAllCaretakersByAdminforSearch = async (req, res) => {
+  try {
+    const token = req.token;
+    let { page = 1, limit = 10, search = "" } = req.query;
 
+    page = Number(page);
+    limit = Number(limit);
+    const skip = (page - 1) * limit;
+
+    // --- Validate Admin ---
+    const adminUser = await Admin.findById(token._id);
+    if (!adminUser || adminUser.status !== "Active") {
+      return res.status(403).send({
+        statusCode: 403,
+        success: false,
+        message: "Access denied: Admins only",
+        result: {},
+      });
+    }
+
+    // --- Search Regex ---
+    const searchRegex = new RegExp(search.trim(), "i");
+
+    // --- Filter: ONLY Active caretakers ---
+    const filter = {
+      status: "Active",
+      ...(search.trim()
+        ? {
+            $or: [
+              { fullName: { $regex: searchRegex } },
+              { email: { $regex: searchRegex } },
+              { mobileNumber: { $regex: searchRegex } },
+              { gender: { $regex: searchRegex } },
+            ],
+          }
+        : {}),
+    };
+
+    // --- Fetch caretakers WITHOUT populate ---
+    const caretakers = await Caretaker.find(filter)
+      .select("-password -refreshToken -otp -accessToken")
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    // --- Count total ---
+    const totalCaretakers = await Caretaker.countDocuments(filter);
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Active caregivers fetched successfully (Admin)",
+      result: {
+        caretakers,
+        currentPage: page,
+        totalPage: Math.ceil(totalCaretakers / limit),
+        totalRecord: totalCaretakers,
+      },
+    });
+
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in getAllCaretakersByAdmin API",
+      result: {},
+    });
+  }
+};
+
+
+
+export const getAllGuardiansByAdminforSearch = async (req, res) => {
+  try {
+    const token = req.token;
+    let { page = 1, limit = 10, search = "" } = req.query;
+
+    page = Number(page);
+    limit = Number(limit);
+    const skip = (page - 1) * limit;
+
+    // --- Validate Admin ---
+    const adminUser = await Admin.findById(token._id);
+    if (!adminUser || adminUser.status !== "Active") {
+      return res.status(403).send({
+        statusCode: 403,
+        success: false,
+        message: "Access denied: Admins only",
+        result: {},
+      });
+    }
+
+    // --- Search Regex ---
+    const searchRegex = new RegExp(search.trim(), "i");
+
+    // --- ONLY Active guardians ---
+    const filter = {
+      status: "Active",
+      ...(search.trim()
+        ? {
+            $or: [
+              { fullName: { $regex: searchRegex } },
+              { email: { $regex: searchRegex } },
+              { mobileNumber: { $regex: searchRegex } },
+              { gender: { $regex: searchRegex } },
+            ],
+          }
+        : {}),
+    };
+
+    // --- Fetch Guardians WITHOUT populate ---
+    const guardians = await Guardian.find(filter)
+      .select("-password -otp -refreshToken -accessToken")
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    // Count
+    const totalGuardians = await Guardian.countDocuments(filter);
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Active guardians fetched successfully",
+      result: {
+        guardians,
+        currentPage: page,
+        totalPage: Math.ceil(totalGuardians / limit),
+        totalRecord: totalGuardians,
+      },
+    });
+
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in getAllGuardiansByAdmin API",
+      result: {},
+    });
+  }
+};
+
+export const getAllPatientsByAdminforSearch = async (req, res) => {
+  try {
+    const token = req.token;
+    let { page = 1, limit = 10, search = "" } = req.query;
+
+    page = Number(page);
+    limit = Number(limit);
+    const skip = (page - 1) * limit;
+
+    // --- Validate Admin ---
+    const adminUser = await Admin.findById(token._id);
+    if (!adminUser || adminUser.status !== "Active") {
+      return res.status(403).send({
+        statusCode: 403,
+        success: false,
+        message: "Access denied: Admins only",
+        result: {},
+      });
+    }
+
+    // --- Search Regex ---
+    const searchRegex = new RegExp(search.trim(), "i");
+
+    // --- Filter: ONLY Active patients ---
+    const filter = {
+      status: "Active",
+      ...(search.trim()
+        ? {
+            $or: [
+              { fullName: { $regex: searchRegex } },
+              { email: { $regex: searchRegex } },
+              { mobileNumber: { $regex: searchRegex } },
+              { gender: { $regex: searchRegex } },
+              { diseaseCondition: { $regex: searchRegex } }
+            ],
+          }
+        : {}),
+    };
+
+    // --- Fetch Patients (NO populate) ---
+    const patients = await Patient.find(filter)
+      .select("-password -refreshToken -otp -accessToken")
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    // --- Count ---
+    const totalPatients = await Patient.countDocuments(filter);
+
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Active patients fetched successfully (Admin)",
+      result: {
+        patients,
+        currentPage: page,
+        totalPage: Math.ceil(totalPatients / limit),
+        totalRecord: totalPatients,
+      },
+    });
+
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in getAllPatientsByAdminforSearch API",
+      result: {},
+    });
+  }
+};

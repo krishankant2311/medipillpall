@@ -22,6 +22,9 @@ blockPatientByAdmin,
 unblockPatient,
 editGuardianProfile,
 adminEditPatient,
+getAllCaretakersByAdminforSearch,
+getAllGuardiansByAdminforSearch,
+getAllPatientsByAdminforSearch,
 } from "../controllers/adminController.js";
 
 import { verifyAccessToken } from "../../helpers/jwt.js"; // token verify middleware
@@ -58,4 +61,8 @@ router.post("/unblock-patient/:patientId", verifyAccessToken, upload.none(), unb
 router.post("/admin-edit-caretaker-profile/:caretakerId", verifyAccessToken, upload.single("profilePhoto"), adminEditCaretakerProfile);
 router.post("/edit-guardian-profile/:guardianId", verifyAccessToken, upload.single("profilePhoto"), editGuardianProfile);
 router.post("/admin-edit-patient/:patientId", verifyAccessToken, upload.single("profilePhoto"), adminEditPatient);
+
+router.get("/searchcaregiverByadmin",verifyAccessToken,upload.none(),getAllCaretakersByAdminforSearch)
+router.get("/searchguardianByadmin",verifyAccessToken,upload.none(),getAllGuardiansByAdminforSearch)
+router.get("/searchAllPatientsByadmin",verifyAccessToken,upload.none(),getAllPatientsByAdminforSearch)
 export default router;
