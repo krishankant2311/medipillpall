@@ -5,7 +5,7 @@ import {
   getCaretakerNotifications,
   getGuardianNotifications,sendToAllPatients,
 sendToAllGuardians,sendToAllCaretakers,
-sendNotificationtoguardian,sendNotificationToAllCaretaker,
+sendNotificationtoguardian,sendNotificationToAllCaretaker,registerPlayerIdPatient,registerPlayerIdCaretaker,
 sendNotificationToAllApps,getAdminNotifications,getOneSignalcaretaker,getOneSignalguardian,
 } from "../controllers/notificationController.js";
 
@@ -46,5 +46,5 @@ router.get("/onesignal-users", verifyAccessToken, getOneSignalcaretaker);
 
 router.get("/onesignal-guardians", verifyAccessToken, getOneSignalguardian);
 
-
+router.post("/registerPlayer-caregiver",verifyAccessToken,upload.none(),registerPlayerIdCaretaker)
 export default router;

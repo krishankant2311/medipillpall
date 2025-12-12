@@ -2,6 +2,10 @@ import mongoose from "mongoose";
 
 const caretakerSchema = new mongoose.Schema(
   {
+    playerId:{
+      type:String,
+      def:"",
+    },
     guardianId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Guardian",

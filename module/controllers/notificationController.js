@@ -1,7 +1,7 @@
 import Notification from "../models/notificationModel.js";
 import Admin from "../models/adminModel.js";
 // import Notification from "../models/Notification.js";
-
+import Caretaker from "../../module/models/caretakerModel/caretakerModel.js"
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -209,7 +209,11 @@ export const registerPlayerIdCaretaker = async (req, res) => {
       });
     }
 
-    const caretaker = await Caretaker.findOne({ _id: token._id });
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+
     if (!caretaker) {
       return res.status(404).send({
         statusCode: 404,
@@ -228,9 +232,8 @@ export const registerPlayerIdCaretaker = async (req, res) => {
       message: "Player ID saved successfully",
       result: {},
     });
-
   } catch (error) {
-    console.error("Register PlayerId Caretaker Error:", error.message);
+    console.error("Register PlayerId Caretaker Error:", error); // ✅ FIXED
     return res.status(500).send({
       statusCode: 500,
       success: false,
@@ -239,6 +242,7 @@ export const registerPlayerIdCaretaker = async (req, res) => {
     });
   }
 };
+
 
 export const registerPlayerIdGuardian = async (req, res) => {
   try {
@@ -715,6 +719,7 @@ export const sendToAllCaretakers = async (req, res) => {
 
 
 import axios from "axios";
+import status from "statuses";
 
 const ONE_SIGNAL_API = process.env.ONESIGNAL_API;
 const REST_KEY = process.env.ONESIGNAL_REST_KEY;
