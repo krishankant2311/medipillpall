@@ -6,7 +6,7 @@ import {
   getGuardianNotifications,sendToAllPatients,
 sendToAllGuardians,sendToAllCaretakers,sendNotificationToCaretaker,
 sendNotificationtoguardian,sendNotificationToAllCaretaker,registerPlayerIdPatient,
-registerPlayerIdCaretaker,registerPlayerIdGuardian,
+registerPlayerIdCaretaker,registerPlayerIdGuardian,sendNotificationTospecificGuardian,
 sendNotificationToAllApps,getAdminNotifications,getOneSignalcaretaker,getOneSignalguardian,
 } from "../controllers/notificationController.js";
 
@@ -40,6 +40,7 @@ router.post("/send-to-guardian",verifyAccessToken,upload.none(),sendNotification
 router.post("/send-to-caretaker",verifyAccessToken,upload.none(),sendNotificationToAllCaretaker);
 
 router.post("/send-to-specific-caretaker",verifyAccessToken,upload.none(),sendNotificationToCaretaker)
+router.post("/send-to-specific-guardian",verifyAccessToken,upload.none(),sendNotificationTospecificGuardian)
 
 router.post("/send-to-all-apps",verifyAccessToken,upload.none(),sendNotificationToAllApps);
 
