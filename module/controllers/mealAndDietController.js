@@ -373,7 +373,7 @@ export const getAllMealAndDiet = async (req, res) => {
         foodType: item.foodType,
         portionSize: item.portionSize,
         specialDietFollowed: item.specialDietFollowed,
-        remarks: item.remarks,
+        remark: item.remark,
         planName: item.planName,
         startDate: item.startDate,
         endDate: item.endDate,
@@ -799,6 +799,8 @@ export const addRemarksByCaretaker = async (req, res) => {
     });
   }
 };
+
+
 
 
 
