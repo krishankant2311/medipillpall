@@ -260,7 +260,6 @@ export const addGuardian = async (req, res) => {
 //   }
 // };
 
-// Guardian Signup
 export const signupGuardian = async (req, res) => {
   try {
     let { fullName, mobileNumber, email, relation } = req.body;
@@ -269,79 +268,56 @@ export const signupGuardian = async (req, res) => {
     mobileNumber = mobileNumber?.trim();
     email = email?.trim()?.toLowerCase();
 
-    if (!fullName) {
+    if (!fullName || !mobileNumber || !email) {
       return res.status(400).json({
         statusCode: 400,
         success: false,
-        message: "Required fullName",
+        message: "Required fields missing",
         result: {},
       });
     }
 
-    if (!mobileNumber) {
+    // ✅ ONLY check non-deleted guardian
+    const guardianExist = await Guardian.findOne({
+      mobileNumber,
+      status: { $ne: "Delete" }
+    });
+
+    // ❌ Blocked
+    if (guardianExist?.status === "Blocked") {
       return res.status(400).json({
         statusCode: 400,
         success: false,
-        message: "Required mobileNumber",
+        message: "Guardian is blocked, please contact admin",
         result: {},
       });
     }
 
-    if (!email) {
+    // 🔁 Pending → resend OTP (NO new document)
+    if (guardianExist?.status === "Pending") {
+      const { otpValue, otpExpiry } = genrateOTP();
+      guardianExist.otp = { otpValue, otpExpiry };
+      await guardianExist.save();
+
+      return res.status(200).json({
+        statusCode: 200,
+        success: true,
+        message: "OTP resent successfully",
+        result: { mobileNumber, otpValue, otpExpiry },
+      });
+    }
+
+    // ❌ Active
+    if (guardianExist?.status === "Active") {
       return res.status(400).json({
         statusCode: 400,
         success: false,
-        message: "Required email",
+        message: "Mobile number already exists",
         result: {},
       });
     }
 
-    // Check existing guardian
-    const guardianExist = await Guardian.findOne({ mobileNumber: mobileNumber});
-
-    // ⭐ FIX: If status = Delete → allow new account to be created
-    if (guardianExist && guardianExist.status === "Delete") {
-      // ignore old, continue to create new
-    } 
-    
-    else if (guardianExist) {
-      if(guardianExist.status==="Blocked"){
-        return res.status(400).json({
-          statusCode: 400,
-          success: false,
-          message: "Guardian is blocked, Please contact admin ",
-          result: {},
-        });
-      }
-      // Pending → resend OTP
-      if (guardianExist.status === "Pending") {
-        const { otpValue, otpExpiry } = genrateOTP();
-        guardianExist.otp = { otpValue, otpExpiry };
-        await guardianExist.save();
-
-        return res.status(200).json({
-          statusCode: 200,
-          success: true,
-          message: "OTP resent successfully",
-          result: {
-            mobileNumber: guardianExist.mobileNumber,
-            otpValue,
-            otpExpiry,
-          },
-        });
-      }
-
-      if (guardianExist.status === "Active") {
-        return res.status(400).json({
-          statusCode: 400,
-          success: false,
-          message: "Guardian already exists",
-          result: {},
-        });
-      }
-    }
-
-    // Create new guardian record
+    // ✅ CREATE NEW (Delete exists OR first time)
     const { otpValue, otpExpiry } = genrateOTP();
 
     const newGuardian = new Guardian({
@@ -363,14 +339,136 @@ export const signupGuardian = async (req, res) => {
     });
 
   } catch (error) {
+
+    // ✅ HANDLE DUPLICATE KEY (USER FRIENDLY)
+    if (error.code === 11000) {
+      return res.status(400).json({
+        statusCode: 400,
+        success: false,
+        message: "Mobile number already exists",
+        result: {},
+      });
+    }
+
     return res.status(500).json({
       statusCode: 500,
       success: false,
-      message: error.message,
+      message: "Something went wrong. Please try again.",
       result: {},
     });
   }
 };
+
+// export const signupGuardian = async (req, res) => {
+//   try {
+//     let { fullName, mobileNumber, email, relation } = req.body;
+
+//     fullName = fullName?.trim()?.toLowerCase();
+//     mobileNumber = mobileNumber?.trim();
+//     email = email?.trim()?.toLowerCase();
+
+//     if (!fullName) {
+//       return res.status(400).json({
+//         statusCode: 400,
+//         success: false,
+//         message: "Required fullName",
+//         result: {},
+//       });
+//     }
+
+//     if (!mobileNumber) {
+//       return res.status(400).json({
+//         statusCode: 400,
+//         success: false,
+//         message: "Required mobileNumber",
+//         result: {},
+//       });
+//     }
+
+//     if (!email) {
+//       return res.status(400).json({
+//         statusCode: 400,
+//         success: false,
+//         message: "Required email",
+//         result: {},
+//       });
+//     }
+
+//     // Check existing guardian
+//     const guardianExist = await Guardian.findOne({ mobileNumber: mobileNumber});
+
+//     // ⭐ FIX: If status = Delete → allow new account to be created
+//     if (guardianExist && guardianExist.status === "Delete") {
+//       // ignore old, continue to create new
+//     } 
+    
+//     else if (guardianExist) {
+//       if(guardianExist.status==="Blocked"){
+//         return res.status(400).json({
+//           statusCode: 400,
+//           success: false,
+//           message: "Guardian is blocked, Please contact admin ",
+//           result: {},
+//         });
+//       }
+//       // Pending → resend OTP
+//       if (guardianExist.status === "Pending") {
+//         const { otpValue, otpExpiry } = genrateOTP();
+//         guardianExist.otp = { otpValue, otpExpiry };
+//         await guardianExist.save();
+
+//         return res.status(200).json({
+//           statusCode: 200,
+//           success: true,
+//           message: "OTP resent successfully",
+//           result: {
+//             mobileNumber: guardianExist.mobileNumber,
+//             otpValue,
+//             otpExpiry,
+//           },
+//         });
+//       }
+
+//       if (guardianExist.status === "Active") {
+//         return res.status(400).json({
+//           statusCode: 400,
+//           success: false,
+//           message: "Guardian already exists",
+//           result: {},
+//         });
+//       }
+//     }
+
+//     // Create new guardian record
+//     const { otpValue, otpExpiry } = genrateOTP();
+
+//     const newGuardian = new Guardian({
+//       fullName,
+//       mobileNumber,
+//       email,
+//       relation,
+//       status: "Pending",
+//       otp: { otpValue, otpExpiry },
+//     });
+
+//     await newGuardian.save();
+
+//     return res.status(200).json({
+//       statusCode: 200,
+//       success: true,
+//       message: "OTP sent successfully",
+//       result: { mobileNumber, otpValue, otpExpiry },
+//     });
+
+//   } catch (error) {
+//     return res.status(500).json({
+//       statusCode: 500,
+//       success: false,
+//       message: error.message,
+//       result: {},
+//     });
+//   }
+// };
 
 
 
