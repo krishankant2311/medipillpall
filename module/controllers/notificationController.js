@@ -244,7 +244,6 @@ export const registerPlayerIdCaretaker = async (req, res) => {
   }
 };
 
-
 export const registerPlayerIdGuardian = async (req, res) => {
   try {
     const { playerId } = req.body;
@@ -494,8 +493,8 @@ export const sendNotificationToCaretaker = async (req, res) => {
     const token = req.token;
 
     if (!caretakerId || !title || !message) {
-      return res.status(400).json({
-        statusCode: 400,
+      return res.status(403).json({
+        statusCode: 403,
         success: false,
         message: "caregiverId, title & message are required",
         result: {},
@@ -523,8 +522,8 @@ export const sendNotificationToCaretaker = async (req, res) => {
     }
 
     if (!caretaker.playerId || !isValidUUID(caretaker.playerId.trim())) {
-      return res.status(400).json({
-        statusCode: 400,
+      return res.status(403).json({
+        statusCode: 403,
         success: false,
         message: "Caregiver does not have a valid playerId",
         result: {},
@@ -1162,7 +1161,7 @@ export const sendNotificationTospecificGuardian = async (req, res) => {
     // Validate required fields
     if (!guardianId || !title || !message) {
       return res.status(400).json({
-        statusCode: 400,
+        statusCode: 403,
         success: false,
         message: "guardianId, title & message are required",
         result: {},
@@ -1194,7 +1193,7 @@ export const sendNotificationTospecificGuardian = async (req, res) => {
     // Validate playerId
     if (!guardian.playerId || !isValidUUID(guardian.playerId.trim())) {
       return res.status(400).json({
-        statusCode: 400,
+        statusCode: 403,
         success: false,
         message: "Guardian does not have a valid playerId",
         result: {},
