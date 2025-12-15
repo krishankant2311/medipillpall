@@ -27,7 +27,7 @@ import Needs from "../../models/patientNeedsModel.js";
 
 export const addCaretaker = async (req, res) => {
   try {
-    let { fullName, mobileNumber, email, password } = req.body;
+    let { fullName, mobileNumber, email, password, gender } = req.body;
 
     fullName = fullName?.trim()?.toLowerCase();
     mobileNumber = mobileNumber?.trim();
@@ -108,6 +108,7 @@ export const addCaretaker = async (req, res) => {
       fullName,
       mobileNumber,
       email,
+      gender,
       password: enc_password,
       status: "Active",
     });
@@ -743,7 +744,7 @@ export const caretakerLogout = async (req, res) => {
 
 export const signupCaretaker = async (req, res) => {
   try {
-    let { fullName, mobileNumber, email } = req.body;
+    let { fullName, mobileNumber, email, gender } = req.body;
 
     fullName = fullName?.trim()?.toLowerCase();
     mobileNumber = mobileNumber?.trim();
@@ -818,6 +819,7 @@ export const signupCaretaker = async (req, res) => {
       fullName,
       mobileNumber,
       email,
+      gender,
       status: "Pending",
       otp: { otpValue, otpExpiry },
     });

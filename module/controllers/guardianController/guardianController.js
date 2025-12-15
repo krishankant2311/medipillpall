@@ -262,7 +262,7 @@ export const addGuardian = async (req, res) => {
 
 export const signupGuardian = async (req, res) => {
   try {
-    let { fullName, mobileNumber, email, relation } = req.body;
+    let { fullName, mobileNumber, email, relation ,gender } = req.body;
 
     fullName = fullName?.trim()?.toLowerCase();
     mobileNumber = mobileNumber?.trim();
@@ -325,6 +325,7 @@ export const signupGuardian = async (req, res) => {
       mobileNumber,
       email,
       relation,
+      gender,
       status: "Pending",
       otp: { otpValue, otpExpiry },
     });
