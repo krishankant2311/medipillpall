@@ -297,15 +297,22 @@ export const signupGuardian = async (req, res) => {
     }
 
     // Check existing guardian
-    const guardianExist = await Guardian.findOne({
-      $or: [{ mobileNumber }],
-    });
+    const guardianExist = await Guardian.findOne({ mobileNumber: mobileNumber});
 
     // ⭐ FIX: If status = Delete → allow new account to be created
     if (guardianExist && guardianExist.status === "Delete") {
       // ignore old, continue to create new
     } 
+    
     else if (guardianExist) {
+      if(guardianExist.status==="Blocked"){
+        return res.status(400).json({
+          statusCode: 400,
+          success: false,
+          message: "Guardian is blocked, Please contact admin ",
+          result: {},
+        });
+      }
       // Pending → resend OTP
       if (guardianExist.status === "Pending") {
         const { otpValue, otpExpiry } = genrateOTP();
@@ -364,6 +371,7 @@ export const signupGuardian = async (req, res) => {
     });
   }
 };
+
 
 
 
