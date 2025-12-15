@@ -3,6 +3,7 @@ import Admin from "../models/adminModel.js";
 // import Notification from "../models/Notification.js";
 import Caretaker from "../../module/models/caretakerModel/caretakerModel.js"
 import Guardian from "../../module/models/guardiansModel/guardianModel.js"
+import Patient from "../models/patientModel.js";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -87,7 +88,7 @@ export const getPatientNotifications = async (req, res) => {
 
 export const getCaretakerNotifications = async (req, res) => {
   try {
-    const token = req.token; // Caretaker token
+    const token = req.token; // Caregiver token
 
     if (!token || !token._id) {
       return res.status(401).json({
@@ -96,9 +97,28 @@ export const getCaretakerNotifications = async (req, res) => {
       });
     }
 
+    // 🔹 Get caregiver
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+
+    if (!caretaker) {
+      return res.status(404).json({
+        success: false,
+        message: "Caregiver not found",
+      });
+    }
+
+    const playerId = caretaker.playerId;
+
+    // 🔹 Fetch notifications based on playerId OR sentToAll
     const notifications = await Notification.find({
-      userId: token._id,
       userType: "Caregiver",
+      $or: [
+        { sentToAll: true },
+        { targetPlayerIds: { $in: [playerId] } }
+      ]
     }).sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -116,6 +136,7 @@ export const getCaretakerNotifications = async (req, res) => {
     });
   }
 };
+
 export const getGuardianNotifications = async (req, res) => {
   try {
     const token = req.token; // Guardian token
@@ -851,56 +872,88 @@ export const sendNotificationtoguardian = async (req, res) => {
 };
 
 
-const REST_KEY_PATIENT = "YOUR_PATIENT_REST_KEY_HERE";
+const APP_ID_PATIENT = process.env.ONESIGNAL_PATIENT_APP_ID
 
-const APP_ID_PATIENT = "YOUR_PATIENT_APP_ID_HERE";
-
-
+const REST_KEY_PATIENT = process.env.ONESIGNAL_PATIENT_REST_KEY
+ 
 export const sendNotificationToAllPatient = async (req, res) => {
+  console.log("appID:",APP_ID_PATIENT);
+  console.log("restKey:",REST_KEY_PATIENT);
   try {
     const { title, message, imageUrl } = req.body;
+ 
+    // ✅ Optional: Admin check (agar patient bhi admin se hi bhejna ho)
+    const admin = await Admin.findOne({ _id: req.token._id, status: "Active" });
+    if (!admin) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized or deleted admin",
+      });
+    }
 
-    // Send notification by tag filter
+    if (!title || !message) {
+      return res.status(400).json({
+        success: false,
+        message: "title and message are required",
+      });
+    }
+
+    // 🔔 OneSignal Payload (SAME AS CARETAKER)
     const payload = {
       app_id: APP_ID_PATIENT,
-      filters: [
-        { field: "tag", key: "userType", relation: "=", value: "Patient" }
-      ],
-      headings: { en: title || "Default title" },
-      contents: { en: message || "Default message" },
+
+      // 🔥 Send to ALL Patient users
+      included_segments: ["All"],
+
+      headings: { en: title },
+      contents: { en: message },
+
       big_picture: imageUrl || undefined,
-      ios_attachments: imageUrl ? { id: imageUrl } : undefined
+      ios_attachments: imageUrl ? { id: imageUrl } : undefined,
     };
 
+    // 🔥 Send notification
     const resp = await axios.post(ONE_SIGNAL_API, payload, {
       headers: {
         "Content-Type": "application/json;charset=utf-8",
         Authorization: `Basic ${REST_KEY_PATIENT}`,
       },
     });
+    console.log("ONESIGNAL RESPONSE:", resp.data);
 
-    // ================================
-    // 🔥 SAVE NOTIFICATION IN DATABASE
-    // ================================
+
+    // 💾 Save in DB (same pattern as Caretaker)
     await Notification.create({
       title,
       message,
-      imageUrl,
-      sendTo: "Patient",
-      createdBy: req.token._id,
-      userType: "Patient"
+      imageUrl: imageUrl || null,
+
+      userType: "Patient",
+      type: "General",
+      status: "Sent",
+      sentToAll: true,
+
+      onesignalResponse: {
+        status: "sent",
+        response: resp.data,
+      },
+
+      createdBy: req.token?._id || null,
     });
 
-    return res.json({
-      ok: true,
-      message: "Notification sent to Patient users & saved to database",
+    return res.status(200).json({
+      success: true,
+      message: "Notification sent to all Patients",
       result: resp.data,
     });
 
-  } catch (err) {
+  } catch (error) {
+    console.error("Patient notification error:", error?.response?.data || error.message);
+
     return res.status(500).json({
-      ok: false,
-      error: err?.response?.data || err.message,
+      success: false,
+      message: "Failed to send notification",
+      error: error?.response?.data || error.message,
     });
   }
 };

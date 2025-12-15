@@ -2,7 +2,7 @@ import express from "express";
 import {
   sendNotificationToUser,
   getPatientNotifications,
-  getCaretakerNotifications,
+  getCaretakerNotifications,sendNotificationToAllPatient,
   getGuardianNotifications,sendToAllPatients,
 sendToAllGuardians,sendToAllCaretakers,sendNotificationToCaretaker,
 sendNotificationtoguardian,sendNotificationToAllCaretaker,registerPlayerIdPatient,
@@ -29,14 +29,14 @@ router.get("/caretaker/get", verifyAccessToken, getCaretakerNotifications);
 router.get("/guardian/get", verifyAccessToken, getGuardianNotifications);
 
 // 🔥 Admin → Send Notification to all Patients
-router.post("/send-to-all-patients", sendToAllPatients);
+// router.post("/send-to-all-patients", sendToAllPatients);
 // 🔥 Admin → Send Notification to all Caretakers
 router.post("/send-to-all-caretakers", sendToAllCaretakers);
 // 🔥 Admin → Send Notification to all Guardians
 router.post("/send-to-all-guardians", sendToAllGuardians);
 
 router.post("/send-to-guardian",verifyAccessToken,upload.none(),sendNotificationtoguardian);
-
+router.post("/send-to-all-patients",verifyAccessToken,upload.none(),sendNotificationToAllPatient);
 router.post("/send-to-caretaker",verifyAccessToken,upload.none(),sendNotificationToAllCaretaker);
 
 router.post("/send-to-specific-caretaker",verifyAccessToken,upload.none(),sendNotificationToCaretaker)
