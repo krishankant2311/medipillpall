@@ -428,32 +428,42 @@ export const login = async (req, res) => {
 export const editPatient = async (req, res) => {
   try {
     const token = req.token;
-    const { fullName, age, mobileNumber, gender } = req.body;
+    const { fullName, age, mobileNumber, gender, certification } = req.body;
 
     const patient = await Patient.findOne({
       _id: token._id,
       status: "Active",
     });
+
     if (!patient) {
       return res.send({
         statusCode: 404,
         success: false,
-        message: "patient not found",
+        message: "Patient not found",
         result: {},
       });
     }
-    patient.fullName = fullName;
-    patient.mobileNumber = mobileNumber;
-    patient.age = age;
-    patient.gender = gender;
-    // patient.certification=certification;
-    patient.save();
+
+    if (fullName) patient.fullName = fullName;
+    if (mobileNumber) patient.mobileNumber = mobileNumber;
+    if (age) patient.age = age;
+    if (gender) patient.gender = gender;
+    if (certification) patient.certification = certification;
+
+    // 🔥 ONLY CHANGE HERE
+    if (req.file) {
+      patient.profilePhoto = `/upload/${req.file.filename}`;
+    }
+
+    await patient.save();
 
     return res.send({
       statusCode: 200,
       success: true,
-      message: "Patient details edit successfully",
-      result: {},
+      message: "Patient details edited successfully",
+      result: {
+        profilePhoto: patient.profilePhoto,
+      },
     });
   } catch (error) {
     return res.send({
@@ -464,6 +474,8 @@ export const editPatient = async (req, res) => {
     });
   }
 };
+
+
 
 export const logoutPatient = async (req, res) => {
   try {

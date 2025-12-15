@@ -23,7 +23,7 @@ router.post("/add-patient", upload.none(), addPatient);
 router.post("/login",upload.none(), login);
 
 // 🟢 Edit Patient Profile (Protected)
-router.post("/edit", verifyAccessToken,upload.none(), editPatient);
+router.post("/edit", verifyAccessToken,upload.single("profilePhoto"), editPatient);
 
 // 🟢 Logout Patient (Protected)
 router.post("/logout", verifyAccessToken, logoutPatient);
