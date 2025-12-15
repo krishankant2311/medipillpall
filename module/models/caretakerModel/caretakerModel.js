@@ -55,8 +55,8 @@ const caretakerSchema = new mongoose.Schema(
     },
     gender: {
       type: String,
-      enum: ["Male", "Female", "Transgender", "Other"], 
-      default: "Male",
+      enum: ["Male", "Female", "Transgender", "Not Specified"], 
+      default: "Not Specified",
     },
     age: { type: Number, default: null },
     // 👇 Token fields
