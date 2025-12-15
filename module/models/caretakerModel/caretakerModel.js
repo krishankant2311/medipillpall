@@ -55,7 +55,7 @@ const caretakerSchema = new mongoose.Schema(
     },
     gender: {
       type: String,
-      enum: ["Male", "Female", "Transgender", "Not Available"], 
+      enum: ["Male", "Female", "Transgender", "Not Available","Other"], 
       default: "Not Available",
     },
     age: { type: Number, default: null },
