@@ -78,8 +78,8 @@ const patientSchema = new mongoose.Schema(
     },
     gender: {
       type: String,
-      enum: ["Male", "Female", "Transgender", "Other"],
-      default: "Male",
+      enum: ["Male", "Female", "Transgender", "Other","Not Available"],
+      default: "Not Available",
     },
     filePath: {
       type: String,
