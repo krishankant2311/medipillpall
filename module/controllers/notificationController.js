@@ -147,10 +147,6 @@ export const getGuardianNotifications = async (req, res) => {
     });
   }
 };
-
-
-
-
 export const registerPlayerIdPatient = async (req, res) => {
   try {
     const { playerId } = req.body;
@@ -195,7 +191,6 @@ export const registerPlayerIdPatient = async (req, res) => {
     });
   }
 };
-
 export const registerPlayerIdCaretaker = async (req, res) => {
   try {
     const { playerId } = req.body;
@@ -243,7 +238,6 @@ export const registerPlayerIdCaretaker = async (req, res) => {
     });
   }
 };
-
 export const registerPlayerIdGuardian = async (req, res) => {
   try {
     const { playerId } = req.body;
@@ -291,7 +285,6 @@ export const registerPlayerIdGuardian = async (req, res) => {
 const isValidUUID = (id) =>
   typeof id === "string" &&
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
-
 
   export const sendNotificationToGuardian = async (req, res) => {
   try {
@@ -388,8 +381,6 @@ const isValidUUID = (id) =>
     });
   }
 };
-
-
 export const sendNotificationToPatient = async (req, res) => {
   try {
     const { patientId, title, message } = req.body;
@@ -486,7 +477,6 @@ export const sendNotificationToPatient = async (req, res) => {
     });
   }
 };
-
 export const sendNotificationToCaretaker = async (req, res) => {
   try {
     const { caretakerId, title, message } = req.body;
