@@ -98,7 +98,7 @@ export const getCaretakerNotifications = async (req, res) => {
 
     const notifications = await Notification.find({
       userId: token._id,
-      userType: "Caretaker",
+      userType: "Caregiver",
     }).sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -381,6 +381,8 @@ const isValidUUID = (id) =>
     });
   }
 };
+
+
 export const sendNotificationToPatient = async (req, res) => {
   try {
     const { patientId, title, message } = req.body;
@@ -477,6 +479,7 @@ export const sendNotificationToPatient = async (req, res) => {
     });
   }
 };
+
 export const sendNotificationToCaretaker = async (req, res) => {
   try {
     const { caretakerId, title, message } = req.body;
@@ -946,7 +949,7 @@ export const sendNotificationToAllCaretaker = async (req, res) => {
       title: title || "Default title",
       message: message || "Default message",
       imageUrl: imageUrl || null,
-      userType: "Caretaker",
+      userType: "Caregiver",
       type: "General",
       status: "Sent",
       sentToAll: true,
@@ -1007,7 +1010,7 @@ export const sendNotificationToAllApps = async (req, res) => {
       {
         appId: process.env.ONESIGNAL_CARETAKER_APP_ID,
         key: process.env.ONESIGNAL_CARETAKER_REST_KEY,
-        userType: "Caretaker"
+        userType: "Caregiver"
       }
     ];
 
