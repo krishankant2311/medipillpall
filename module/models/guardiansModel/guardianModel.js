@@ -36,7 +36,7 @@ const guardianSchema = new mongoose.Schema(
     },
     gender: {
       type: String,
-      enum: ["Male", "Female", "Transgender", "Other","Not Available"],
+      enum: ["Male", "Female", "Transgender", "Other","Not Available","Not Specified"],
       default: "Not Available",
     },
     age: { type: Number, default: null },
