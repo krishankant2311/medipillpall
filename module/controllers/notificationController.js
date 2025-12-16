@@ -88,7 +88,7 @@ export const getPatientNotifications = async (req, res) => {
 
 export const getCaretakerNotifications = async (req, res) => {
   try {
-    const token = req.token; // Caregiver token
+    const token = req.token;
 
     if (!token || !token._id) {
       return res.status(401).json({
@@ -97,7 +97,6 @@ export const getCaretakerNotifications = async (req, res) => {
       });
     }
 
-    // 🔹 Get caregiver
     const caretaker = await Caretaker.findOne({
       _id: token._id,
       status: "Active",
@@ -110,14 +109,16 @@ export const getCaretakerNotifications = async (req, res) => {
       });
     }
 
-    const playerId = caretaker.playerId;
-
-    // 🔹 Fetch notifications based on playerId OR sentToAll
     const notifications = await Notification.find({
-      userType: "Caregiver",
       $or: [
-        { sentToAll: true },
-        { targetPlayerIds: { $in: [playerId] } }
+        // 🔹 Direct caretaker notification
+        { caretakerId: caretaker._id },
+
+        // 🔹 Notifications sent to all caregivers
+        {
+          userType: { $in: ["Caregiver", "All"] },
+          // sentToAll: true,
+        }
       ]
     }).sort({ createdAt: -1 });
 
@@ -136,6 +137,7 @@ export const getCaretakerNotifications = async (req, res) => {
     });
   }
 };
+
 
 export const getGuardianNotifications = async (req, res) => {
   try {
