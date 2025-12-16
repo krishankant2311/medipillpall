@@ -932,10 +932,50 @@ export const sendNotificationToAllApps = async (req, res) => {
 
 
 
+// export const getAdminNotifications = async (req, res) => {
+//   try {
+//     const token = req.token;
+//     const admin = await Admin.findOne({ _id: req.token._id, status: "Active" });
+//     if (!admin) {
+//       return res.status(403).json({
+//         success: false,
+//         message: "Unauthorized admin",
+//       });
+//     }
+
+//     // Pagination
+//     let { page = 1, limit = 10 } = req.query;
+//     page = parseInt(page);
+//     limit = parseInt(limit);
+
+//     const notifications = await Notification.find()
+//       .sort({ createdAt: -1 }) // latest first
+//       .skip((page - 1) * limit)
+//       .limit(limit);
+
+//     const total = await Notification.countDocuments();
+
+//     return res.json({
+//       success: true,
+//       page,
+//       limit,
+//       total,
+//       notifications,
+//     });
+//   } catch (err) {
+//     return res.status(500).json({
+//       success: false,
+//       message: err.message,
+//     });
+//   }
+// };
+
 export const getAdminNotifications = async (req, res) => {
   try {
     const token = req.token;
-    const admin = await Admin.findOne({ _id: req.token._id, status: "Active" });
+
+    // ✅ Admin check
+    const admin = await Admin.findOne({ _id: token._id, status: "Active" });
     if (!admin) {
       return res.status(403).json({
         success: false,
@@ -943,17 +983,29 @@ export const getAdminNotifications = async (req, res) => {
       });
     }
 
-    // Pagination
-    let { page = 1, limit = 10 } = req.query;
+    // 🔢 Pagination + search
+    let { page = 1, limit = 10, search = "" } = req.query;
     page = parseInt(page);
     limit = parseInt(limit);
 
-    const notifications = await Notification.find()
-      .sort({ createdAt: -1 }) // latest first
+    // 🔍 Filter
+    const filter = {};
+
+    if (search && search.trim()) {
+      filter.$or = [
+        { title: { $regex: search.trim(), $options: "i" } },
+        { message: { $regex: search.trim(), $options: "i" } },
+        { userType: { $regex: search.trim(), $options: "i" } }, // ✅ userType search
+      ];
+    }
+
+    // 📦 Fetch data
+    const notifications = await Notification.find(filter)
+      .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit);
 
-    const total = await Notification.countDocuments();
+    const total = await Notification.countDocuments(filter);
 
     return res.json({
       success: true,
