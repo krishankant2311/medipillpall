@@ -23,6 +23,7 @@ export const getCaretakerNotifications = async (req, res) => {
     const notifications = await Notification.find({
       caretakerId: token._id,
       userType: "Caregiver",
+      status: { $ne: "Deleted" },
     }).sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -54,8 +55,9 @@ export const getGuardianNotifications = async (req, res) => {
     }
 
     const notifications = await Notification.find({
-      guardianId:token._id,
+      guardianId: token._id,
       userType: "Guardian",
+      status: { $ne: "Deleted" },
     }).sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -73,6 +75,36 @@ export const getGuardianNotifications = async (req, res) => {
     });
   }
 };
+
+export const getPatientNotifications = async (req, res) => {
+  try {
+    const token = req.token; // Patient token
+    if (!token || !token._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token",
+      });
+    }
+    const notifications = await Notification.find({ 
+      patientId: token._id,
+      userType: "Patient",
+      status: { $ne: "Deleted" },
+    }).sort({ createdAt: -1 });
+    return res.status(200).json({
+      success: true,
+      message: "Patient notifications fetched successfully",
+      result: notifications,
+    });
+  } catch (error) {
+    console.log("Error fetching patient notifications:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
 
 export const registerPlayerIdPatient = async (req, res) => {
   try {
@@ -213,7 +245,7 @@ const isValidUUID = (id) =>
   typeof id === "string" &&
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
 
- 
+
 export const sendNotificationToPatient = async (req, res) => {
   try {
     const { patientId, title, message } = req.body;
@@ -472,7 +504,7 @@ const APP_ID = process.env.ONESIGNAL_APP_ID;
 //     const { title, message, imageUrl } = req.body;
 
 //     let token = req.token;
-  
+
 // //  console.log("Token in sendNotificationtoguardian:", req.token   );
 //     // ✅ FIX: Prevent crash if token missing
 //     if (!token || !token._id) {
@@ -1290,7 +1322,7 @@ export const seenNotificationForCaretaker = async (req, res) => {
   try {
     const { notificationId } = req.body;
     const token = req.token;
-    
+
     if (!notificationId) {
       return res.status(403).json({
         statusCode: 403,
@@ -1316,6 +1348,107 @@ export const seenNotificationForCaretaker = async (req, res) => {
         message: "Notification not found",
         result: {},
       });
+    }
+    notification.seen = true;
+    await notification.save();
+    return res.status(200).json({
+      statusCode: 200,
+      success: true,
+      message: "Notification marked as seen",
+      result: {},
+    });
+  } catch (error) {
+    console.error("Seen Notification Error:", error.message);
+    return res.status(500).json({
+      statusCode: 500,
+      success: false,
+      message: "Error in seen notification API",
+      result: {},
+    });
+  }
+};
+
+export const seenNotificationForGuardian = async (req, res) => {
+  try {
+    const { notificationId } = req.body;
+    const token = req.token;
+
+    if (!notificationId) {
+      return res.status(403).json({
+        statusCode: 403,
+        success: false,
+        message: "notificationId is required",
+        result: {},
+      });
+    }
+    const guardian = await Guardian.findOne({ _id: token._id });
+    if (!guardian) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "Guardian not found",
+        result: {},
+      });
+    }
+    const notification = await Notification.findOne({ _id: notificationId, guardianId: guardian._id });
+    if (!notification) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "Notification not found",
+        result: {},
+      });
+    }
+    notification.seen = true;
+    await notification.save();
+    return res.status(200).json({
+      statusCode: 200,
+      success: true,
+      message: "Notification marked as seen",
+      result: {},
+    });
+  }
+  catch (error) {
+
+    console.error("Seen Notification Error:", error.message);
+    return res.status(500).json({
+      statusCode: 500,
+      success: false,
+      message: "Error in seen notification API",
+      result: {},
+    });
+  }
+};
+
+export const seenNotificationForPatient = async (req, res) => {
+  try {
+    const { notificationId } = req.body;
+    const token = req.token;
+    if (!notificationId) {
+      return res.status(403).json({
+        statusCode: 403,
+        success: false,
+        message: "notificationId is required",
+        result: {},
+      });
+    }
+    const patient = await Patient.findOne({ _id: token._id });
+    if (!patient) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found",
+        result: {},
+      });
+    }
+    const notification = await Notification.findOne({ _id: notificationId, patientId: patient._id });
+    if (!notification) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "Notification not found",
+        result: {},
+      });
     } 
     notification.seen = true;
     await notification.save();
@@ -1327,11 +1460,92 @@ export const seenNotificationForCaretaker = async (req, res) => {
     });
   } catch (error) {
     console.error("Seen Notification Error:", error.message);
-    return res.status(500).json({ 
+    return res.status(500).json({
       statusCode: 500,
       success: false,
       message: "Error in seen notification API",
       result: {},
     });
-  } 
+  }
+};
+
+export const deleteNotificationCaregiver = async (req, res) => {
+  try {
+    const { notificationId } = req.body;
+    const token = req.token;
+    const caretaker = await Caretaker.findOne({ _id: token._id });
+    if (!caretaker) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "Caregiver not found",
+        result: {},
+      });
+    }
+    const notification = await Notification.findOne({ _id:notificationId, caretakerId:caretaker._id });
+    if (!notification) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "Notification not found",
+        result: {},
+      });
+    }
+    notification.status = "Deleted";
+    await notification.save();
+    return res.status(200).json({
+      statusCode: 200,
+      success: true,
+      message: "Notification deleted successfully",
+      result: {},
+    });
+  } catch (error) {
+    console.error("Delete Notification Error:", error.message);
+    return res.status(500).json({
+      statusCode: 500,
+      success: false,
+      message: "Error in delete notification API",
+      result: {},
+    });
+  }
+};
+export const deleteNotificationGuardian = async (req, res) => {
+  try {
+    const { notificationId } = req.body;
+    const token = req.token;
+    const guardian = await Guardian.findOne({ _id: token._id });
+    if (!guardian) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "Guardian not found",
+        result: {},
+      });
+    }
+    const notification = await Notification.findOne({ _id: notificationId, guardianId: guardian._id });
+    if (!notification) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "Notification not found",
+        result: {},
+      });
+    }
+    notification.status = "Deleted";
+    await notification.save();
+    return res.status(200).json({
+      statusCode: 200,
+      success: true,
+      message: "Notification deleted successfully",
+      result: {},
+    });
+  } catch (error) {
+    console.error("Delete Notification Error:", error.message);
+    return res.status(500).json({
+      statusCode: 500,
+      success: false,
+      message: "Error in delete notification API",
+      result: {},
+    });
+  }
 };

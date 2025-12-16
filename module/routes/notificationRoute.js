@@ -1,10 +1,11 @@
 import express from "express";
 import {
-  getCaretakerNotifications,sendNotificationToAllPatient,
+  getCaretakerNotifications,sendNotificationToAllPatient,seenNotificationForGuardian,
   getGuardianNotifications,sendNotificationToCaretaker,seenNotificationForCaretaker,
 sendNotificationtoguardian,sendNotificationToAllCaretaker,registerPlayerIdPatient,
-registerPlayerIdCaretaker,registerPlayerIdGuardian,sendNotificationTospecificGuardian,
+registerPlayerIdCaretaker,registerPlayerIdGuardian,sendNotificationTospecificGuardian,seenNotificationForPatient,
 sendNotificationToAllApps,getAdminNotifications,getOneSignalcaretaker,getOneSignalguardian,sendNotificationToPatient,
+deleteNotificationCaregiver,deleteNotificationGuardian,
 } from "../controllers/notificationController.js";
 
 import { verifyAccessToken } from "../../helpers/jwt.js";
@@ -42,4 +43,10 @@ router.post("/registerPlayer-guardian",verifyAccessToken,upload.none(),registerP
 
 
 router.post("/seen-by-caretaker",verifyAccessToken,upload.none(),seenNotificationForCaretaker)
+router.post("/seen-by-guardian",verifyAccessToken,upload.none(),seenNotificationForGuardian)
+router.post("/seen-by-patient",verifyAccessToken,upload.none(),seenNotificationForPatient)
+
+
+router.post("/delete-by-caregiver",verifyAccessToken,upload.none(),deleteNotificationCaregiver)
+router.post("/delete-by-guardian",verifyAccessToken,upload.none(),deleteNotificationGuardian)
 export default router;

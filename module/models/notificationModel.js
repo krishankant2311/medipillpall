@@ -11,26 +11,30 @@ const notificationSchema = new mongoose.Schema(
     ],
 
     userType: {
-  type: String,
-  enum: ["Guardian", "Caregiver", "Patient", "All"],
-  required: true
-},
+      type: String,
+      enum: ["Guardian", "Caregiver", "Patient", "All"],
+      required: true
+    },
 
     guardianId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Guardian",
-        // default: null,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Guardian",
+      // default: null,
     },
-status: { type: String, enum: ["Sent", "Pending", "Failed"], default: "Failed" },
+    status: {
+      type: String,
+      enum: ["Sent", "Pending", "Failed", "Deleted"],
+      default: "Failed"
+    },
     caretakerId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Caretaker",
-        // default: null,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Caretaker",
+      // default: null,
     },
     patientId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Patient",
-        // default: null,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Patient",
+      // default: null,
     },
     type: { type: String, default: "General" },
     data: { type: Object, default: {} },
@@ -43,7 +47,7 @@ status: { type: String, enum: ["Sent", "Pending", "Failed"], default: "Failed" }
         default: null,
       }
     ],
-    isSeen:{
+    isSeen: {
       type: Boolean,
       default: false
     },
