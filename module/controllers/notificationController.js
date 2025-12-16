@@ -1349,7 +1349,7 @@ export const seenNotificationForCaretaker = async (req, res) => {
         result: {},
       });
     }
-    notification.seen = true;
+    notification.isSeen = true;
     await notification.save();
     return res.status(200).json({
       statusCode: 200,
@@ -1399,7 +1399,7 @@ export const seenNotificationForGuardian = async (req, res) => {
         result: {},
       });
     }
-    notification.seen = true;
+    notification.isSeen = true;
     await notification.save();
     return res.status(200).json({
       statusCode: 200,
@@ -1450,7 +1450,7 @@ export const seenNotificationForPatient = async (req, res) => {
         result: {},
       });
     } 
-    notification.seen = true;
+    notification.isSeen = true;
     await notification.save();
     return res.status(200).json({
       statusCode: 200,
