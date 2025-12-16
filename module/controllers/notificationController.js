@@ -141,7 +141,7 @@ export const getCaretakerNotifications = async (req, res) => {
 
 export const getGuardianNotifications = async (req, res) => {
   try {
-    const token = req.token; // Guardian token
+    const token = req.token;
 
     if (!token || !token._id) {
       return res.status(401).json({
@@ -150,9 +150,29 @@ export const getGuardianNotifications = async (req, res) => {
       });
     }
 
+    const guardian = await Guardian.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+
+    if (!guardian) {
+      return res.status(404).json({
+        success: false,
+        message: "Guardian not found",
+      });
+    }
+
     const notifications = await Notification.find({
-      userId: token._id,
-      userType: "Guardian",
+      $or: [
+        // 🔹 Direct guardian notification
+        { guardianId: guardian._id },
+
+        // 🔹 Notifications sent to all guardians
+        {
+          userType: { $in: ["Guardian", "All"] },
+          // sentToAll: true, // intentionally skipped like caretaker
+        }
+      ]
     }).sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -170,6 +190,7 @@ export const getGuardianNotifications = async (req, res) => {
     });
   }
 };
+
 export const registerPlayerIdPatient = async (req, res) => {
   try {
     const { playerId } = req.body;
