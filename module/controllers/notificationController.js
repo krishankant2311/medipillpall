@@ -9,8 +9,6 @@ dotenv.config();
 
 
 
-
-
 export const getCaretakerNotifications = async (req, res) => {
   try {
     const token = req.token; // Caregiver token
@@ -22,28 +20,9 @@ export const getCaretakerNotifications = async (req, res) => {
       });
     }
 
-    // 🔹 Get caregiver
-    const caretaker = await Caretaker.findOne({
-      _id: token._id,
-      status: "Active",
-    });
-
-    if (!caretaker) {
-      return res.status(404).json({
-        success: false,
-        message: "Caregiver not found",
-      });
-    }
-
-    const playerId = caretaker.playerId;
-
-    // 🔹 Fetch notifications based on playerId OR sentToAll
     const notifications = await Notification.find({
+      caretakerId: token._id,
       userType: "Caregiver",
-      $or: [
-        { sentToAll: true },
-        { targetPlayerIds: { $in: [playerId] } }
-      ]
     }).sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -62,6 +41,7 @@ export const getCaretakerNotifications = async (req, res) => {
   }
 };
 
+
 export const getGuardianNotifications = async (req, res) => {
   try {
     const token = req.token; // Guardian token
@@ -74,7 +54,7 @@ export const getGuardianNotifications = async (req, res) => {
     }
 
     const notifications = await Notification.find({
-      userId: token._id,
+      guardianId:token._id,
       userType: "Guardian",
     }).sort({ createdAt: -1 });
 
@@ -93,14 +73,15 @@ export const getGuardianNotifications = async (req, res) => {
     });
   }
 };
+
 export const registerPlayerIdPatient = async (req, res) => {
   try {
     const { playerId } = req.body;
     const token = req.token;
 
     if (!playerId) {
-      return res.status(400).send({
-        statusCode: 400,
+      return res.status(403).send({
+        statusCode: 403,
         success: false,
         message: "player id is required",
         result: {},
@@ -143,8 +124,8 @@ export const registerPlayerIdCaretaker = async (req, res) => {
     const token = req.token;
 
     if (!playerId) {
-      return res.status(400).send({
-        statusCode: 400,
+      return res.status(403).send({
+        statusCode: 403,
         success: false,
         message: "player id is required",
         result: {},
@@ -190,8 +171,8 @@ export const registerPlayerIdGuardian = async (req, res) => {
     const token = req.token;
 
     if (!playerId) {
-      return res.status(400).send({
-        statusCode: 400,
+      return res.status(403).send({
+        statusCode: 403,
         success: false,
         message: "player id is required",
         result: {},
@@ -240,8 +221,8 @@ export const sendNotificationToPatient = async (req, res) => {
 
     // 🔹 Required fields validation
     if (!patientId || !title || !message) {
-      return res.status(400).json({
-        statusCode: 400,
+      return res.status(403).json({
+        statusCode: 403,
         success: false,
         message: "patientId, title & message are required",
         result: {},
@@ -278,8 +259,8 @@ export const sendNotificationToPatient = async (req, res) => {
 
     // 🔹 Validate playerId
     if (!patient.playerId || !isValidUUID(patient.playerId.trim())) {
-      return res.status(400).json({
-        statusCode: 400,
+      return res.status(403).json({
+        statusCode: 403,
         success: false,
         message: "Patient does not have a valid playerId",
         result: {},
@@ -363,8 +344,8 @@ export const sendNotificationToCaretaker = async (req, res) => {
 
     // 🔹 Required fields validation
     if (!caretakerId || !title || !message) {
-      return res.status(400).json({
-        statusCode: 400,
+      return res.status(403).json({
+        statusCode: 403,
         success: false,
         message: "caretakerId, title & message are required",
         result: {},
@@ -401,8 +382,8 @@ export const sendNotificationToCaretaker = async (req, res) => {
 
     // 🔹 Validate playerId
     if (!caretaker.playerId || !isValidUUID(caretaker.playerId.trim())) {
-      return res.status(400).json({
-        statusCode: 400,
+      return res.status(403).json({
+        statusCode: 403,
         success: false,
         message: "Caregiver does not have a valid playerId",
         result: {},
@@ -645,8 +626,8 @@ export const sendNotificationToAllPatient = async (req, res) => {
 
     // 🔹 Validate required fields
     if (!title || !message) {
-      return res.status(400).json({
-        statusCode: 400,
+      return res.status(403).json({
+        statusCode: 403,
         success: false,
         message: "title and message are required",
         result: {},
@@ -1000,7 +981,7 @@ export const getOneSignalguardian = async (req, res) => {
 
 //     // Validate required fields
 //     if (!guardianId || !title || !message) {
-//       return res.status(400).json({
+//       return res.status(403).json({
 //         statusCode: 403,
 //         success: false,
 //         message: "guardianId, title & message are required",
@@ -1032,7 +1013,7 @@ export const getOneSignalguardian = async (req, res) => {
 
 //     // Validate playerId
 //     if (!guardian.playerId || !isValidUUID(guardian.playerId.trim())) {
-//       return res.status(400).json({
+//       return res.status(403).json({
 //         statusCode: 403,
 //         success: false,
 //         message: "Guardian does not have a valid playerId",
@@ -1109,8 +1090,8 @@ export const sendNotificationTospecificGuardian = async (req, res) => {
 
     // 🔹 Validate required fields
     if (!guardianId || !title || !message) {
-      return res.status(400).json({
-        statusCode: 400,
+      return res.status(403).json({
+        statusCode: 403,
         success: false,
         message: "guardianId, title & message are required",
         result: {},
@@ -1147,8 +1128,8 @@ export const sendNotificationTospecificGuardian = async (req, res) => {
 
     // 🔹 Validate playerId
     if (!guardian.playerId || !isValidUUID(guardian.playerId.trim())) {
-      return res.status(400).json({
-        statusCode: 400,
+      return res.status(403).json({
+        statusCode: 403,
         success: false,
         message: "Guardian does not have a valid playerId",
         result: {},
