@@ -1377,6 +1377,34 @@ if (patient.otp?.otpExpiry) {
   }
 };
 
+export const getpatient = async (req, res) => {
+  try {
+    const token = req.token;
+    const patient = await Patient.findOne({ _id: token._id, status: "Active" }).select("-password -refreshToken -otp -accessToken");
+    if (!patient) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Patient not found",
+        result: {},
+      });
+    }
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Patient fetched successfully",
+      result: patient,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " ERROR in get patient api",
+      result: {},
+    });
+  }
+};
+
 
 
 // export const getAllPatientsByAdmin = async (req, res) => {

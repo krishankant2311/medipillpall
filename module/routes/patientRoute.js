@@ -12,6 +12,7 @@ import { addPatient,
   resendPatientOTPforLogin,
   resendPatientOTPforSignup,
   deletePatientByAdmin,
+  getpatient,
   resendOTPbyNumber, } from "../controllers/patientController.js";  
 import { verifyAccessToken } from "../../helpers/jwt.js"; 
 import express from "express";
@@ -33,7 +34,7 @@ router.post("/delete", verifyAccessToken, deletePatient);
 
 router.get("/all-patientByAdmin", verifyAccessToken, getAllPatientsByAdmin);
 router.post("/send-otp", sendOTPbyNumber);
-
+router.get("/get-patient", verifyAccessToken, getpatient);
 // 🟢 Resend OTP by Number (30 sec wait)
 router.post("/resend-otp", resendOTPbyNumber);
 router.post("/login-admin",upload.none(), adminLogin);
