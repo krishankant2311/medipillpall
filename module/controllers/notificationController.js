@@ -806,7 +806,9 @@ export const sendNotificationToAllApps = async (req, res) => {
   try {
     const { title, message, imageUrl } = req.body;
     const token = req.token;
-    const admin = await Admin.findOne({ _id: req.token._id, status: "Active" });
+
+    // 🔐 Admin validation
+    const admin = await Admin.findOne({ _id: token._id, status: "Active" });
     if (!admin) {
       return res.status(403).json({
         success: false,
@@ -814,48 +816,62 @@ export const sendNotificationToAllApps = async (req, res) => {
       });
     }
 
-    // 1️⃣ Payload
-    const payload = {
+    if (!title || !message) {
+      return res.status(400).json({
+        success: false,
+        message: "title and message are required",
+      });
+    }
+
+    // 🔔 Base OneSignal Payload
+    const basePayload = {
       included_segments: ["All"],
       headings: { en: title },
       contents: { en: message },
       big_picture: imageUrl || undefined,
-      ios_attachments: imageUrl ? { id: imageUrl } : undefined
+      ios_attachments: imageUrl ? { id: imageUrl } : undefined,
     };
 
-    // 2️⃣ Prepare All Three Configs
+    // 📱 All Apps Config
     const apps = [
       {
+        userType: "Guardian",
         appId: process.env.ONESIGNAL_APP_ID,
-        key: process.env.ONESIGNAL_REST_KEY,
-        userType: "Guardian"
+        restKey: process.env.ONESIGNAL_REST_KEY,
       },
       {
+        userType: "Patient",
         appId: process.env.ONESIGNAL_PATIENT_APP_ID,
-        key: process.env.ONESIGNAL_PATIENT_REST_KEY,
-        userType: "Patient"
+        restKey: process.env.ONESIGNAL_PATIENT_REST_KEY,
       },
       {
+        userType: "Caregiver",
         appId: process.env.ONESIGNAL_CARETAKER_APP_ID,
-        key: process.env.ONESIGNAL_CARETAKER_REST_KEY,
-        userType: "Caregiver"
-      }
+        restKey: process.env.ONESIGNAL_CARETAKER_REST_KEY,
+      },
     ];
 
     let responses = [];
 
-    // 3️⃣ Loop Each App → Send Notification
-    for (let app of apps) {
-      const body = { ...payload, app_id: app.appId };
-
+    // 🚀 Send Notification to each app
+    for (const app of apps) {
       try {
+        if (!app.appId || !app.restKey) {
+          throw new Error("Missing OneSignal credentials");
+        }
+
+        const payload = {
+          ...basePayload,
+          app_id: app.appId,
+        };
+
         const resp = await axios.post(
           process.env.ONESIGNAL_API,
-          body,
+          payload,
           {
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Basic ${app.key}`,
+              Authorization: `Basic ${app.restKey}`,
             },
           }
         );
@@ -864,19 +880,29 @@ export const sendNotificationToAllApps = async (req, res) => {
           userType: app.userType,
           status: "sent",
           onesignalId: resp.data.id || null,
-          response: resp.data
+          response: resp.data,
         });
 
-      } catch (err) {
+      } catch (error) {
         responses.push({
           userType: app.userType,
           status: "failed",
-          error: err?.response?.data || err.message
+          error: error?.response?.data || error.message,
         });
       }
     }
 
-    // 4️⃣ SAVE NOTIFICATION IN DATABASE
+    // 🧠 Final Notification Status
+    let finalStatus = "Failed";
+    const sentCount = responses.filter(r => r.status === "sent").length;
+
+    if (sentCount === responses.length) {
+      finalStatus = "Sent";
+    } else if (sentCount > 0) {
+      finalStatus = "Partial";
+    }
+
+    // 💾 Save Notification in DB
     await Notification.create({
       title,
       message,
@@ -884,18 +910,21 @@ export const sendNotificationToAllApps = async (req, res) => {
       userType: "All",
       type: "General",
       sentToAll: true,
+      status: finalStatus,          // ✅ FIXED
       onesignalResponse: responses,
     });
 
-    return res.json({
+    return res.status(200).json({
       success: true,
-      message: "Notification sent to all three apps",
+      message: "Notification processed",
+      status: finalStatus,
       responses,
     });
 
   } catch (err) {
     return res.status(500).json({
       success: false,
+      message: "Failed to send notification",
       error: err.message,
     });
   }
