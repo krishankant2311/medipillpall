@@ -1285,3 +1285,53 @@ export const sendNotificationTospecificGuardian = async (req, res) => {
     });
   }
 };
+
+export const seenNotificationForCaretaker = async (req, res) => {
+  try {
+    const { notificationId } = req.body;
+    const token = req.token;
+    
+    if (!notificationId) {
+      return res.status(403).json({
+        statusCode: 403,
+        success: false,
+        message: "notificationId is required",
+        result: {},
+      });
+    }
+    const caretaker = await Caretaker.findOne({ _id: token._id });
+    if (!caretaker) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "Caregiver not found",
+        result: {},
+      });
+    }
+    const notification = await Notification.findOne({ _id: notificationId, caretakerId: caretaker._id });
+    if (!notification) {
+      return res.status(404).json({
+        statusCode: 404,
+        success: false,
+        message: "Notification not found",
+        result: {},
+      });
+    } 
+    notification.seen = true;
+    await notification.save();
+    return res.status(200).json({
+      statusCode: 200,
+      success: true,
+      message: "Notification marked as seen",
+      result: {},
+    });
+  } catch (error) {
+    console.error("Seen Notification Error:", error.message);
+    return res.status(500).json({ 
+      statusCode: 500,
+      success: false,
+      message: "Error in seen notification API",
+      result: {},
+    });
+  } 
+};

@@ -43,6 +43,10 @@ status: { type: String, enum: ["Sent", "Pending", "Failed"], default: "Failed" }
         default: null,
       }
     ],
+    isSeen:{
+      type: Boolean,
+      default: false
+    },
 
     sentToAll: { type: Boolean, default: false },
 

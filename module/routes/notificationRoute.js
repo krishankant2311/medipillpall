@@ -1,7 +1,7 @@
 import express from "express";
 import {
   getCaretakerNotifications,sendNotificationToAllPatient,
-  getGuardianNotifications,sendNotificationToCaretaker,
+  getGuardianNotifications,sendNotificationToCaretaker,seenNotificationForCaretaker,
 sendNotificationtoguardian,sendNotificationToAllCaretaker,registerPlayerIdPatient,
 registerPlayerIdCaretaker,registerPlayerIdGuardian,sendNotificationTospecificGuardian,
 sendNotificationToAllApps,getAdminNotifications,getOneSignalcaretaker,getOneSignalguardian,sendNotificationToPatient,
@@ -39,4 +39,7 @@ router.get("/onesignal-guardians", verifyAccessToken, getOneSignalguardian);
 router.post("/registerPlayer-patient",verifyAccessToken,upload.none(),registerPlayerIdPatient)
 router.post("/registerPlayer-caregiver",verifyAccessToken,upload.none(),registerPlayerIdCaretaker)
 router.post("/registerPlayer-guardian",verifyAccessToken,upload.none(),registerPlayerIdGuardian)
+
+
+router.post("/seen-by-caretaker",verifyAccessToken,upload.none(),seenNotificationForCaretaker)
 export default router;
