@@ -5,7 +5,7 @@ import {
 sendNotificationtoguardian,sendNotificationToAllCaretaker,registerPlayerIdPatient,
 registerPlayerIdCaretaker,registerPlayerIdGuardian,sendNotificationTospecificGuardian,seenNotificationForPatient,
 sendNotificationToAllApps,getAdminNotifications,getOneSignalcaretaker,getOneSignalguardian,sendNotificationToPatient,
-deleteNotificationCaregiver,deleteNotificationGuardian,
+deleteNotificationCaregiver,deleteNotificationGuardian,getPatientNotifications,
 } from "../controllers/notificationController.js";
 
 import { verifyAccessToken } from "../../helpers/jwt.js";
@@ -19,7 +19,7 @@ router.get("/caretaker/get", verifyAccessToken, getCaretakerNotifications);
 
 // 🔥 Guardian → Get his own notifications
 router.get("/guardian/get", verifyAccessToken, getGuardianNotifications);
-
+router.get("/patient/get", verifyAccessToken, getPatientNotifications);
 
 router.post("/send-to-guardian",verifyAccessToken,upload.none(),sendNotificationtoguardian);
 router.post("/send-to-all-patients",verifyAccessToken,upload.none(),sendNotificationToAllPatient);
