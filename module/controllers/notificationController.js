@@ -7,88 +7,13 @@ import Patient from "../models/patientModel.js";
 import dotenv from "dotenv";
 dotenv.config();
 
-export const sendNotificationToUser = async (req, res) => {
-  try {
-    const { userId, userType, title, message, data, type } = req.body;
 
-    // Required fields validation
-    if (!userId || !userType || !title || !message) {
-      return res.status(400).json({
-        success: false,
-        message: "userId, userType, title, and message are required",
-      });
-    }
 
-    // Allowed user types
-    const allowedTypes = ["Patient", "Caretaker", "Guardian"];
-    if (!allowedTypes.includes(userType)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid userType. Allowed: Patient, Caregiver, Guardian",
-      });
-    }
 
-    // Save notification to DB
-    const notification = await Notification.create({
-      userId,
-      userType,
-      title,
-      message,
-      data: data || {},
-      type: type || "General", // e.g. Task, Alert, Vital, Payment, etc.
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: "Notification saved successfully",
-      result: notification,
-    });
-
-  } catch (error) {
-    console.log("Error sending notification:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-      error: error.message,
-    });
-  }
-};
-
-export const getPatientNotifications = async (req, res) => {
-  try {
-    const token = req.token; // Patient token
-
-    if (!token || !token._id) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid token",
-      });
-    }
-
-    const notifications = await Notification.find({
-      userId: token._id,
-      userType: "Patient",
-    }).sort({ createdAt: -1 });
-
-    return res.status(200).json({
-      success: true,
-      message: "Patient notifications fetched successfully",
-      result: notifications,
-    });
-
-  } catch (error) {
-    console.log("Error fetching patient notifications:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-      error: error.message,
-    });
-  }
-};
 
 export const getCaretakerNotifications = async (req, res) => {
   try {
-    const token = req.token;
+    const token = req.token; // Caregiver token
 
     if (!token || !token._id) {
       return res.status(401).json({
@@ -97,6 +22,7 @@ export const getCaretakerNotifications = async (req, res) => {
       });
     }
 
+    // 🔹 Get caregiver
     const caretaker = await Caretaker.findOne({
       _id: token._id,
       status: "Active",
@@ -109,16 +35,14 @@ export const getCaretakerNotifications = async (req, res) => {
       });
     }
 
-    const notifications = await Notification.find({
-      $or: [
-        // 🔹 Direct caretaker notification
-        { caretakerId: caretaker._id },
+    const playerId = caretaker.playerId;
 
-        // 🔹 Notifications sent to all caregivers
-        {
-          userType: { $in: ["Caregiver", "All"] },
-          // sentToAll: true,
-        }
+    // 🔹 Fetch notifications based on playerId OR sentToAll
+    const notifications = await Notification.find({
+      userType: "Caregiver",
+      $or: [
+        { sentToAll: true },
+        { targetPlayerIds: { $in: [playerId] } }
       ]
     }).sort({ createdAt: -1 });
 
@@ -138,10 +62,9 @@ export const getCaretakerNotifications = async (req, res) => {
   }
 };
 
-
 export const getGuardianNotifications = async (req, res) => {
   try {
-    const token = req.token;
+    const token = req.token; // Guardian token
 
     if (!token || !token._id) {
       return res.status(401).json({
@@ -150,29 +73,9 @@ export const getGuardianNotifications = async (req, res) => {
       });
     }
 
-    const guardian = await Guardian.findOne({
-      _id: token._id,
-      status: "Active",
-    });
-
-    if (!guardian) {
-      return res.status(404).json({
-        success: false,
-        message: "Guardian not found",
-      });
-    }
-
     const notifications = await Notification.find({
-      $or: [
-        // 🔹 Direct guardian notification
-        { guardianId: guardian._id },
-
-        // 🔹 Notifications sent to all guardians
-        {
-          userType: { $in: ["Guardian", "All"] },
-          // sentToAll: true, // intentionally skipped like caretaker
-        }
-      ]
+      userId: token._id,
+      userType: "Guardian",
     }).sort({ createdAt: -1 });
 
     return res.status(200).json({
@@ -190,7 +93,6 @@ export const getGuardianNotifications = async (req, res) => {
     });
   }
 };
-
 export const registerPlayerIdPatient = async (req, res) => {
   try {
     const { playerId } = req.body;
@@ -330,108 +232,13 @@ const isValidUUID = (id) =>
   typeof id === "string" &&
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
 
-  export const sendNotificationToGuardian = async (req, res) => {
-  try {
-    const { guardianId, title, message } = req.body;
-    const token = req.token;
-
-    if (!guardianId || !title || !message) {
-      return res.status(400).json({
-        statusCode: 400,
-        success: false,
-        message: "guardianId, title & message are required",
-        result: {},
-      });
-    }
-
-    const admin = await Admin.findOne({ _id: token._id });
-    if (!admin || admin.status === "Delete") {
-      return res.status(403).json({
-        statusCode: 403,
-        success: false,
-        message: "Unauthorized or deleted admin",
-        result: {},
-      });
-    }
-
-    const guardian = await Guardian.findOne({ _id: guardianId });
-    if (!guardian) {
-      return res.status(404).json({
-        statusCode: 404,
-        success: false,
-        message: "Guardian not found",
-        result: {},
-      });
-    }
-
-    if (!guardian.playerId || !isValidUUID(guardian.playerId.trim())) {
-      return res.status(400).json({
-        statusCode: 400,
-        success: false,
-        message: "Guardian does not have a valid playerId",
-        result: {},
-      });
-    }
-
-    let imageUrl = "";
-    if (req.file) {
-      const sanitized = req.file.filename.replace(/\s+/g, "-");
-      imageUrl = `${req.protocol}://${req.get("host")}/public/${sanitized}`;
-    }
-
-    const notification = {
-      app_id: process.env.ONESIGNAL_APP_ID,
-      include_player_ids: [guardian.playerId.trim()],
-      headings: { en: title },
-      contents: { en: message },
-    };
-
-    if (imageUrl) {
-      notification.big_picture = imageUrl;
-      notification.ios_attachments = { id1: imageUrl };
-    }
-
-    const result = await axios.post(
-      "https://onesignal.com/api/v1/notifications",
-      notification,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Basic ${process.env.ONESIGNAL_API_KEY}`,
-        },
-      }
-    );
-
-    await Notification.create({
-      sentByAdmin: token._id,
-      guardianId,
-      title,
-      message,
-      image: imageUrl,
-    });
-
-    return res.status(200).json({
-      statusCode: 200,
-      success: true,
-      message: "Notification sent to guardian successfully",
-      result: result.data,
-    });
-  } catch (err) {
-    return res.status(500).json({
-      statusCode: 500,
-      success: false,
-      message: "Error sending notification",
-      result: err.response?.data || err.message,
-    });
-  }
-};
-
-
+ 
 export const sendNotificationToPatient = async (req, res) => {
   try {
     const { patientId, title, message } = req.body;
     const token = req.token;
 
+    // 🔹 Required fields validation
     if (!patientId || !title || !message) {
       return res.status(400).json({
         statusCode: 400,
@@ -441,8 +248,12 @@ export const sendNotificationToPatient = async (req, res) => {
       });
     }
 
-    const admin = await Admin.findOne({ _id: token._id });
-    if (!admin || admin.status === "Delete") {
+    // 🔹 Validate admin
+    const admin = await Admin.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+    if (!admin) {
       return res.status(403).json({
         statusCode: 403,
         success: false,
@@ -451,7 +262,11 @@ export const sendNotificationToPatient = async (req, res) => {
       });
     }
 
-    const patient = await Patient.findOne({ _id: patientId });
+    // 🔹 Fetch patient
+    const patient = await Patient.findOne({
+      _id: patientId,
+      status: "Active",
+    });
     if (!patient) {
       return res.status(404).json({
         statusCode: 404,
@@ -461,6 +276,7 @@ export const sendNotificationToPatient = async (req, res) => {
       });
     }
 
+    // 🔹 Validate playerId
     if (!patient.playerId || !isValidUUID(patient.playerId.trim())) {
       return res.status(400).json({
         statusCode: 400,
@@ -470,13 +286,17 @@ export const sendNotificationToPatient = async (req, res) => {
       });
     }
 
-    let imageUrl = "";
+    // 🔹 Image upload (optional)
+    let imageUrl = null;
     if (req.file) {
       const sanitized = req.file.filename.replace(/\s+/g, "-");
       imageUrl = `${req.protocol}://${req.get("host")}/public/${sanitized}`;
     }
 
-    const notification = {
+    // -------------------------------
+    // 🔔 OneSignal Payload
+    // -------------------------------
+    const payload = {
       app_id: process.env.ONESIGNAL_APP_ID,
       include_player_ids: [patient.playerId.trim()],
       headings: { en: title },
@@ -484,37 +304,48 @@ export const sendNotificationToPatient = async (req, res) => {
     };
 
     if (imageUrl) {
-      notification.big_picture = imageUrl;
-      notification.ios_attachments = { id1: imageUrl };
+      payload.big_picture = imageUrl;
+      payload.ios_attachments = { id1: imageUrl };
     }
 
-    const result = await axios.post(
+    // -------------------------------
+    // 🔔 Send Notification
+    // -------------------------------
+    const response = await axios.post(
       "https://onesignal.com/api/v1/notifications",
-      notification,
+      payload,
       {
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json;charset=utf-8",
           Authorization: `Basic ${process.env.ONESIGNAL_API_KEY}`,
         },
       }
     );
 
+    // -------------------------------
+    // 💾 Save Notification in DB (🔥 IMPORTANT FIX)
+    // -------------------------------
     await Notification.create({
       sentByAdmin: token._id,
-      patientId,
+      patientId: patient._id,
       title,
       message,
-      image: imageUrl,
+      imageUrl,
+      status: "Sent",
+      userType: "Patient",   // 🔥 REQUIRED
+      sentToAll: false,      // 🔥 REQUIRED
+      type: "General",
     });
 
     return res.status(200).json({
       statusCode: 200,
       success: true,
       message: "Notification sent to patient successfully",
-      result: result.data,
+      result: response.data,
     });
 
   } catch (err) {
+    console.error("sendNotificationToPatient error:", err);
     return res.status(500).json({
       statusCode: 500,
       success: false,
@@ -524,22 +355,28 @@ export const sendNotificationToPatient = async (req, res) => {
   }
 };
 
+
 export const sendNotificationToCaretaker = async (req, res) => {
   try {
     const { caretakerId, title, message } = req.body;
     const token = req.token;
 
+    // 🔹 Required fields validation
     if (!caretakerId || !title || !message) {
-      return res.status(403).json({
-        statusCode: 403,
+      return res.status(400).json({
+        statusCode: 400,
         success: false,
-        message: "caregiverId, title & message are required",
+        message: "caretakerId, title & message are required",
         result: {},
       });
     }
 
-    const admin = await Admin.findOne({ _id: token._id });
-    if (!admin || admin.status === "Delete") {
+    // 🔹 Validate admin
+    const admin = await Admin.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+    if (!admin) {
       return res.status(403).json({
         statusCode: 403,
         success: false,
@@ -548,7 +385,11 @@ export const sendNotificationToCaretaker = async (req, res) => {
       });
     }
 
-    const caretaker = await Caretaker.findOne({ _id: caretakerId });
+    // 🔹 Fetch caretaker
+    const caretaker = await Caretaker.findOne({
+      _id: caretakerId,
+      status: "Active",
+    });
     if (!caretaker) {
       return res.status(404).json({
         statusCode: 404,
@@ -558,23 +399,27 @@ export const sendNotificationToCaretaker = async (req, res) => {
       });
     }
 
+    // 🔹 Validate playerId
     if (!caretaker.playerId || !isValidUUID(caretaker.playerId.trim())) {
-      return res.status(403).json({
-        statusCode: 403,
+      return res.status(400).json({
+        statusCode: 400,
         success: false,
         message: "Caregiver does not have a valid playerId",
         result: {},
       });
     }
 
-    let imageUrl = "";
+    // 🔹 Image upload (optional)
+    let imageUrl = null;
     if (req.file) {
       const sanitized = req.file.filename.replace(/\s+/g, "-");
       imageUrl = `${req.protocol}://${req.get("host")}/public/${sanitized}`;
     }
 
-    // ⭐ Correct App ID for Caretaker app
-    const notification = {
+    // -------------------------------
+    // 🔔 OneSignal Payload
+    // -------------------------------
+    const payload = {
       app_id: process.env.ONESIGNAL_CARETAKER_APP_ID,
       include_player_ids: [caretaker.playerId.trim()],
       headings: { en: title },
@@ -582,40 +427,48 @@ export const sendNotificationToCaretaker = async (req, res) => {
     };
 
     if (imageUrl) {
-      notification.big_picture = imageUrl;
-      notification.ios_attachments = { id1: imageUrl };
+      payload.big_picture = imageUrl;
+      payload.ios_attachments = { id1: imageUrl };
     }
 
-    // ⭐ Using env API URL + correct caretaker rest key
-    const result = await axios.post(
+    // -------------------------------
+    // 🔔 Send Notification
+    // -------------------------------
+    const response = await axios.post(
       process.env.ONESIGNAL_API,
-      notification,
+      payload,
       {
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json;charset=utf-8",
           Authorization: `Basic ${process.env.ONESIGNAL_CARETAKER_REST_KEY}`,
         },
       }
     );
 
+    // -------------------------------
+    // 💾 Save Notification in DB (🔥 IMPORTANT FIX)
+    // -------------------------------
     await Notification.create({
       sentByAdmin: token._id,
-      caretakerId,
+      caretakerId: caretaker._id,
       title,
       message,
-      image: imageUrl,
-      status:"Sent"
-      
+      imageUrl,
+      status: "Sent",
+      userType: "Caregiver",   // 🔥 REQUIRED
+      sentToAll: false,        // 🔥 REQUIRED
+      type: "General",
     });
 
     return res.status(200).json({
       statusCode: 200,
       success: true,
       message: "Notification sent to caregiver successfully",
-      result: result.data,
+      result: response.data,
     });
 
   } catch (err) {
+    console.error("sendNotificationToCaretaker error:", err);
     return res.status(500).json({
       statusCode: 500,
       success: false,
@@ -624,140 +477,6 @@ export const sendNotificationToCaretaker = async (req, res) => {
     });
   }
 };
-
-
-
-export const sendToAllPatients = async (req, res) => {
-  try {
-    const { title, message, type, data } = req.body;
-
-    if (!title || !message) {
-      return res.status(400).json({
-        statusCode: 400,
-        success: false,
-        message: "Title & message required",
-        result: {},
-      });
-    }
-
-    const allPatients = await Patient.find({}, "_id");
-
-    const notifications = allPatients.map(p => ({
-      title,
-      message,
-      receiverType: "Patient",
-      receiverId: p._id,
-      type: type || "General",
-      data: data || {},
-    }));
-
-    await Notification.insertMany(notifications);
-
-    return res.status(200).json({
-      statusCode: 200,
-      success: true,
-      message: "Notification sent to all patients",
-      result: {},
-    });
-
-  } catch (error) {
-    return res.status(500).json({
-      statusCode: 500,
-      success: false,
-      message: error.message,
-      result: {},
-    });
-  }
-};
-
-
-export const sendToAllGuardians = async (req, res) => {
-  try {
-    const { title, message, type, data } = req.body;
-
-    if (!title || !message) {
-      return res.status(400).json({
-        statusCode: 400,
-        success: false,
-        message: "Title & message required",
-        result: {},
-      });
-    }
-
-    const allGuardians = await Guardian.find({}, "_id");
-
-    const notifications = allGuardians.map(g => ({
-      title,
-      message,
-      receiverType: "Guardian",
-      receiverId: g._id,
-      type: type || "General",
-      data: data || {},
-    }));
-
-    await Notification.insertMany(notifications);
-
-    return res.status(200).json({
-      statusCode: 200,
-      success: true,
-      message: "Notification sent to all guardians",
-      result: {},
-    });
-
-  } catch (error) {
-    return res.status(500).json({
-      statusCode: 500,
-      success: false,
-      message: error.message,
-      result: {},
-    });
-  }
-};
-
-
-export const sendToAllCaretakers = async (req, res) => {
-  try {
-    const { title, message, type, data } = req.body;
-
-    if (!title || !message) {
-      return res.status(400).json({
-        statusCode: 400,
-        success: false,
-        message: "Title & message required",
-        result: {},
-      });
-    }
-
-    const allCaretakers = await Caretaker.find({}, "_id");
-
-    const notifications = allCaretakers.map(c => ({
-      title,
-      message,
-      receiverType: "Caretaker",
-      receiverId: c._id,
-      type: type || "General",
-      data: data || {},
-    }));
-
-    await Notification.insertMany(notifications);
-
-    return res.status(200).json({
-      statusCode: 200,
-      success: true,
-      message: "Notification sent to all caregivers",
-      result: {},
-    });
-
-  } catch (error) {
-    return res.status(500).json({
-      statusCode: 500,
-      success: false,
-      message: error.message,
-      result: {},
-    });
-  }
-};
-
 
 import axios from "axios";
 import status from "statuses";
@@ -867,16 +586,22 @@ export const sendNotificationtoguardian = async (req, res) => {
 
     // -------------------------------------------
     // 🟢 SAVE NOTIFICATION INTO DATABASE
+    // (❗ NOTHING REMOVED — ONLY ADDED)
     // -------------------------------------------
-
     await Notification.create({
       title,
       message,
       imageUrl,
+
       sentTo: "Guardian",
       createdBy: admin._id,
       userType: "Guardian",
       status: "Sent",
+
+      // ✅ ADDED (as discussed)
+      sentToAll: true,          // 🔥 ALL guardians
+      type: "General",          // 🔥 standard
+      onesignalResponse: resp.data, // 🔥 optional but useful
     });
 
     return res.json({
@@ -895,91 +620,112 @@ export const sendNotificationtoguardian = async (req, res) => {
 };
 
 
+
 const APP_ID_PATIENT = process.env.ONESIGNAL_PATIENT_APP_ID
 
 const REST_KEY_PATIENT = process.env.ONESIGNAL_PATIENT_REST_KEY
- 
 export const sendNotificationToAllPatient = async (req, res) => {
-  console.log("appID:",APP_ID_PATIENT);
-  console.log("restKey:",REST_KEY_PATIENT);
   try {
-    const { title, message, imageUrl } = req.body;
- 
-    // ✅ Optional: Admin check (agar patient bhi admin se hi bhejna ho)
-    const admin = await Admin.findOne({ _id: req.token._id, status: "Active" });
+    const { title, message } = req.body;
+    const token = req.token;
+
+    // 🔹 Validate admin
+    const admin = await Admin.findOne({
+      _id: token._id,
+      status: "Active",
+    });
     if (!admin) {
       return res.status(403).json({
+        statusCode: 403,
         success: false,
         message: "Unauthorized or deleted admin",
+        result: {},
       });
     }
 
+    // 🔹 Validate required fields
     if (!title || !message) {
       return res.status(400).json({
+        statusCode: 400,
         success: false,
         message: "title and message are required",
+        result: {},
       });
     }
 
-    // 🔔 OneSignal Payload (SAME AS CARETAKER)
+    // 🔹 Image upload (optional)
+    let imageUrl = null;
+    if (req.file) {
+      const sanitized = req.file.filename.replace(/\s+/g, "-");
+      imageUrl = `${req.protocol}://${req.get("host")}/public/${sanitized}`;
+    }
+
+    // -------------------------------
+    // 🔔 OneSignal Payload
+    // -------------------------------
     const payload = {
-      app_id: APP_ID_PATIENT,
-
-      // 🔥 Send to ALL Patient users
-      included_segments: ["All"],
-
+      app_id: process.env.ONESIGNAL_PATIENT_APP_ID,
+      included_segments: ["All"], // 🔥 ALL Patients
       headings: { en: title },
       contents: { en: message },
-
-      big_picture: imageUrl || undefined,
-      ios_attachments: imageUrl ? { id: imageUrl } : undefined,
     };
 
-    // 🔥 Send notification
-    const resp = await axios.post(ONE_SIGNAL_API, payload, {
-      headers: {
-        "Content-Type": "application/json;charset=utf-8",
-        Authorization: `Basic ${REST_KEY_PATIENT}`,
-      },
-    });
-    console.log("ONESIGNAL RESPONSE:", resp.data);
+    if (imageUrl) {
+      payload.big_picture = imageUrl;
+      payload.ios_attachments = { id1: imageUrl };
+    }
 
+    // -------------------------------
+    // 🔔 Send Notification
+    // -------------------------------
+    const response = await axios.post(
+      process.env.ONESIGNAL_API,
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/json;charset=utf-8",
+          Authorization: `Basic ${process.env.ONESIGNAL_PATIENT_REST_KEY}`,
+        },
+      }
+    );
 
-    // 💾 Save in DB (same pattern as Caretaker)
+    // -------------------------------
+    // 💾 Save Notification in DB (🔥 STANDARD FORMAT)
+    // -------------------------------
     await Notification.create({
+      sentByAdmin: token._id,
       title,
       message,
-      imageUrl: imageUrl || null,
-
-      userType: "Patient",
-      type: "General",
+      imageUrl,
       status: "Sent",
-      sentToAll: true,
-
-      onesignalResponse: {
-        status: "sent",
-        response: resp.data,
-      },
-
-      createdBy: req.token?._id || null,
+      userType: "Patient",   // 🔥 SAME STANDARD
+      sentToAll: true,       // 🔥 ALL patients
+      type: "General",
+      onesignalResponse: response.data,
     });
 
     return res.status(200).json({
+      statusCode: 200,
       success: true,
-      message: "Notification sent to all Patients",
-      result: resp.data,
+      message: "Notification sent to all patients successfully",
+      result: response.data,
     });
 
   } catch (error) {
-    console.error("Patient notification error:", error?.response?.data || error.message);
+    console.error(
+      "sendNotificationToAllPatient error:",
+      error?.response?.data || error.message
+    );
 
     return res.status(500).json({
+      statusCode: 500,
       success: false,
       message: "Failed to send notification",
-      error: error?.response?.data || error.message,
+      result: error?.response?.data || error.message,
     });
   }
 };
+
 
 
 const APP_ID_CARETAKER = process.env.ONESIGNAL_CARETAKER_APP_ID;
@@ -988,67 +734,92 @@ const REST_KEY_CARETAKER = process.env.ONESIGNAL_CARETAKER_REST_KEY;
 
 export const sendNotificationToAllCaretaker = async (req, res) => {
   try {
-    const { title, message, imageUrl } = req.body;
+    const { title, message } = req.body;
+    const token = req.token;
 
-    // ✅ Check if admin is valid
-    const admin = await Admin.findOne({ _id: req.token._id, status: "Active" });
+    // 🔹 Validate admin
+    const admin = await Admin.findOne({
+      _id: token._id,
+      status: "Active",
+    });
     if (!admin) {
       return res.status(403).json({
-        ok: false,
-        error: "Unauthorized or deleted admin",
+        statusCode: 403,
+        success: false,
+        message: "Unauthorized or deleted admin",
+        result: {},
       });
     }
 
+    // 🔹 Image upload (optional)
+    let imageUrl = null;
+    if (req.file) {
+      const sanitized = req.file.filename.replace(/\s+/g, "-");
+      imageUrl = `${req.protocol}://${req.get("host")}/public/${sanitized}`;
+    }
+
+    // -------------------------------
+    // 🔔 OneSignal Payload
+    // -------------------------------
     const payload = {
-      app_id: APP_ID_CARETAKER,
-
-      // 🔥 Send to all users (Caregiver devices)
-      included_segments: ["All"],
-
+      app_id: process.env.ONESIGNAL_CARETAKER_APP_ID,
+      included_segments: ["All"], // 🔥 ALL Caretakers
       headings: { en: title || "Default title" },
       contents: { en: message || "Default message" },
-
-      big_picture: imageUrl || undefined,
-      ios_attachments: imageUrl ? { id: imageUrl } : undefined
     };
 
-    // 🔥 Send Notification
-    const resp = await axios.post(ONE_SIGNAL_API, payload, {
-      headers: {
-        "Content-Type": "application/json;charset=utf-8",
-        Authorization: `Basic ${REST_KEY_CARETAKER}`,  // Caretaker key
-      },
-    });
+    if (imageUrl) {
+      payload.big_picture = imageUrl;
+      payload.ios_attachments = { id1: imageUrl };
+    }
 
-    // ✅ Save notification to DB
+    // -------------------------------
+    // 🔔 Send Notification
+    // -------------------------------
+    const response = await axios.post(
+      process.env.ONESIGNAL_API,
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/json;charset=utf-8",
+          Authorization: `Basic ${process.env.ONESIGNAL_CARETAKER_REST_KEY}`,
+        },
+      }
+    );
+
+    // -------------------------------
+    // 💾 Save Notification in DB (🔥 STANDARD FORMAT)
+    // -------------------------------
     await Notification.create({
+      sentByAdmin: token._id,
       title: title || "Default title",
       message: message || "Default message",
-      imageUrl: imageUrl || null,
-      userType: "Caregiver",
-      type: "General",
+      imageUrl,
       status: "Sent",
-      sentToAll: true,
-      onesignalResponse: {
-        status: "sent",
-        response: resp.data
-      }
+      userType: "Caregiver",   // 🔥 SAME STANDARD
+      sentToAll: true,         // 🔥 ALL caregivers
+      type: "General",
+      onesignalResponse: response.data,
     });
 
-    return res.json({
-      success: true,
-      message: "Notification sent to all Caregiver",
+    return res.status(200).json({
       statusCode: 200,
-      result: resp.data,
+      success: true,
+      message: "Notification sent to all caregivers successfully",
+      result: response.data,
     });
 
   } catch (err) {
+    console.error("sendNotificationToAllCaretaker error:", err);
     return res.status(500).json({
-      ok: false,
-      error: err?.response?.data || err.message,
+      statusCode: 500,
+      success: false,
+      message: "Error sending notification",
+      result: err?.response?.data || err.message,
     });
   }
 };
+
 
 export const sendNotificationToAllApps = async (req, res) => {
   try {
@@ -1223,22 +994,134 @@ export const getOneSignalguardian = async (req, res) => {
 };
 
 
+// export const sendNotificationTospecificGuardian = async (req, res) => {
+//   try {
+//     const { guardianId, title, message } = req.body;
+
+//     // Validate required fields
+//     if (!guardianId || !title || !message) {
+//       return res.status(400).json({
+//         statusCode: 403,
+//         success: false,
+//         message: "guardianId, title & message are required",
+//         result: {},
+//       });
+//     }
+
+//     // Validate admin
+//     const admin = await Admin.findOne({ _id: req.token._id, status: "Active" });
+//     if (!admin) {
+//       return res.status(403).json({
+//         statusCode: 403,
+//         success: false,
+//         message: "Unauthorized or deleted admin",
+//         result: {},
+//       });
+//     }
+
+//     // Fetch guardian
+//     const guardian = await Guardian.findOne({ _id: guardianId });
+//     if (!guardian) {
+//       return res.status(404).json({
+//         statusCode: 404,
+//         success: false,
+//         message: "Guardian not found",
+//         result: {},
+//       });
+//     }
+
+//     // Validate playerId
+//     if (!guardian.playerId || !isValidUUID(guardian.playerId.trim())) {
+//       return res.status(400).json({
+//         statusCode: 403,
+//         success: false,
+//         message: "Guardian does not have a valid playerId",
+//         result: {},
+//       });
+//     }
+
+//     let imageUrl = "";
+//     if (req.file) {
+//       const sanitized = req.file.filename.replace(/\s+/g, "-");
+//       imageUrl = `${req.protocol}://${req.get("host")}/public/${sanitized}`;
+//     }
+
+//     // -------------------------------
+//     // OneSignal Payload
+//     // -------------------------------
+//     const payload = {
+//       app_id: process.env.ONESIGNAL_APP_ID,   // Guardian App ID
+//       include_player_ids: [guardian.playerId.trim()],
+//       headings: { en: title },
+//       contents: { en: message },
+//     };
+
+//     if (imageUrl) {
+//       payload.big_picture = imageUrl;
+//       payload.ios_attachments = { id1: imageUrl };
+//     }
+
+//     // -------------------------------
+//     // Send Notification
+//     // -------------------------------
+//     const response = await axios.post(
+//       process.env.ONESIGNAL_API,
+//       payload,
+//       {
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Basic ${process.env.ONESIGNAL_REST_KEY}`, // Guardian REST Key
+//         },
+//       }
+//     );
+
+//     // -------------------------------
+//     // Save to DB
+//     // -------------------------------
+//     await Notification.create({
+//       sentByAdmin: req.token._id,
+//       guardianId,
+//       title,
+//       message,
+//       image: imageUrl,
+//     });
+
+//     return res.status(200).json({
+//       statusCode: 200,
+//       success: true,
+//       message: "Notification sent to guardian successfully",
+//       result: response.data,
+//     });
+
+//   } catch (err) {
+//     return res.status(500).json({
+//       statusCode: 500,
+//       success: false,
+//       message: "Error sending notification",
+//       result: err.response?.data || err.message,
+//     });
+//   }
+// };
+
 export const sendNotificationTospecificGuardian = async (req, res) => {
   try {
     const { guardianId, title, message } = req.body;
 
-    // Validate required fields
+    // 🔹 Validate required fields
     if (!guardianId || !title || !message) {
       return res.status(400).json({
-        statusCode: 403,
+        statusCode: 400,
         success: false,
         message: "guardianId, title & message are required",
         result: {},
       });
     }
 
-    // Validate admin
-    const admin = await Admin.findOne({ _id: req.token._id, status: "Active" });
+    // 🔹 Validate admin
+    const admin = await Admin.findOne({
+      _id: req.token._id,
+      status: "Active",
+    });
     if (!admin) {
       return res.status(403).json({
         statusCode: 403,
@@ -1248,8 +1131,11 @@ export const sendNotificationTospecificGuardian = async (req, res) => {
       });
     }
 
-    // Fetch guardian
-    const guardian = await Guardian.findOne({ _id: guardianId });
+    // 🔹 Fetch guardian
+    const guardian = await Guardian.findOne({
+      _id: guardianId,
+      status: "Active",
+    });
     if (!guardian) {
       return res.status(404).json({
         statusCode: 404,
@@ -1259,27 +1145,28 @@ export const sendNotificationTospecificGuardian = async (req, res) => {
       });
     }
 
-    // Validate playerId
+    // 🔹 Validate playerId
     if (!guardian.playerId || !isValidUUID(guardian.playerId.trim())) {
       return res.status(400).json({
-        statusCode: 403,
+        statusCode: 400,
         success: false,
         message: "Guardian does not have a valid playerId",
         result: {},
       });
     }
 
-    let imageUrl = "";
+    // 🔹 Image upload (optional)
+    let imageUrl = null;
     if (req.file) {
       const sanitized = req.file.filename.replace(/\s+/g, "-");
       imageUrl = `${req.protocol}://${req.get("host")}/public/${sanitized}`;
     }
 
     // -------------------------------
-    // OneSignal Payload
+    // 🔔 OneSignal Payload
     // -------------------------------
     const payload = {
-      app_id: process.env.ONESIGNAL_APP_ID,   // Guardian App ID
+      app_id: process.env.ONESIGNAL_APP_ID, // Guardian App ID
       include_player_ids: [guardian.playerId.trim()],
       headings: { en: title },
       contents: { en: message },
@@ -1291,28 +1178,32 @@ export const sendNotificationTospecificGuardian = async (req, res) => {
     }
 
     // -------------------------------
-    // Send Notification
+    // 🔔 Send Notification
     // -------------------------------
     const response = await axios.post(
       process.env.ONESIGNAL_API,
       payload,
       {
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Basic ${process.env.ONESIGNAL_REST_KEY}`, // Guardian REST Key
+          "Content-Type": "application/json;charset=utf-8",
+          Authorization: `Basic ${process.env.ONESIGNAL_REST_KEY}`,
         },
       }
     );
 
     // -------------------------------
-    // Save to DB
+    // 💾 Save Notification in DB (🔥 IMPORTANT FIX)
     // -------------------------------
     await Notification.create({
       sentByAdmin: req.token._id,
-      guardianId,
+      guardianId: guardian._id,
       title,
       message,
-      image: imageUrl,
+      imageUrl,
+      status: "Sent",
+      userType: "Guardian",   // 🔥 REQUIRED
+      sentToAll: false,       // 🔥 REQUIRED
+      type: "General",
     });
 
     return res.status(200).json({
@@ -1323,6 +1214,7 @@ export const sendNotificationTospecificGuardian = async (req, res) => {
     });
 
   } catch (err) {
+    console.error("sendNotificationTospecificGuardian error:", err);
     return res.status(500).json({
       statusCode: 500,
       success: false,

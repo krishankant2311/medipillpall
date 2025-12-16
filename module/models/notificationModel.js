@@ -11,10 +11,10 @@ const notificationSchema = new mongoose.Schema(
     ],
 
     userType: {
-      type: String,
-      enum: ["Guardian", "Patient", "Caregiver", "All"],
-      default: "All",
-    },
+  type: String,
+  enum: ["Guardian", "Caregiver", "Patient", "All"],
+  required: true
+},
 
     guardianId: {
         type: mongoose.Schema.Types.ObjectId,
