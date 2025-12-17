@@ -428,7 +428,7 @@ export const login = async (req, res) => {
 export const editPatient = async (req, res) => {
   try {
     const token = req.token;
-    const { fullName, age, mobileNumber, gender, certification } = req.body;
+    const { fullName, age, mobileNumber, gender, certification,email } = req.body;
 
     const patient = await Patient.findOne({
       _id: token._id,
@@ -449,6 +449,7 @@ export const editPatient = async (req, res) => {
     if (age) patient.age = age;
     if (gender) patient.gender = gender;
     if (certification) patient.certification = certification;
+    if (email) patient.email = email;
 
     // 🔥 ONLY CHANGE HERE
     if (req.file) {
