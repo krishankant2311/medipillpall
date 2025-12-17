@@ -23,6 +23,10 @@ const patientSchema = new mongoose.Schema(
       type: Number,
       default: "",
     },
+    email: { 
+      type: String,
+      default: "",
+    },
     mobileNumber: {
       type: String,
       default: "",
