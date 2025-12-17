@@ -310,7 +310,7 @@ export const sendNotificationToPatient = async (req, res) => {
     // 🔔 OneSignal Payload
     // -------------------------------
     const payload = {
-      app_id: process.env.ONESIGNAL_APP_ID,
+      app_id: process.env.ONESIGNAL_PATIENT_APP_ID,
       include_player_ids: [patient.playerId.trim()],
       headings: { en: title },
       contents: { en: message },
@@ -330,7 +330,7 @@ export const sendNotificationToPatient = async (req, res) => {
       {
         headers: {
           "Content-Type": "application/json;charset=utf-8",
-          Authorization: `Basic ${process.env.ONESIGNAL_API_KEY}`,
+          Authorization: `Basic ${process.env.ONESIGNAL_PATIENT_REST_KEY}`,
         },
       }
     );
