@@ -24,7 +24,7 @@ import MealsAndDiet from "../../models/mealAndDietModel.js";
 import Activity from "../../models/patientActivityModel.js";
 import Appointment from "../../models/patientAppointmentModel.js";
 import Needs from "../../models/patientNeedsModel.js";
-
+import Task from "../../models/patientTaskModel.js";
 export const addCaretaker = async (req, res) => {
   try {
     let { fullName, mobileNumber, email, password, gender } = req.body;
@@ -6523,3 +6523,117 @@ export const editMealRemark = async (req, res) => {
     });
   }
 };
+
+
+// controllers/caretakerDashboard.controller.js
+
+export const getCaretakerDashboard = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token (middleware se)
+
+    // 🔐 Validate caretaker
+    const caretaker = await Caretaker.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+
+    if (!caretaker) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized caretaker",
+      });
+    }
+
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    // ===============================
+    // 1️⃣ Patients
+    // ===============================
+    const patients = await Patient.find({
+      caretakerId: caretaker._id,
+      status: "Active",
+    }).select("fullName age");
+
+    const totalPatients = patients.length;
+
+    // ===============================
+    // 2️⃣ Tasks
+    // ===============================
+    const tasksToday = await Task.find({
+      caretakerId: caretaker._id,
+      date: { $gte: todayStart, $lte: todayEnd },
+    });
+
+    const completedTasks = tasksToday.filter(
+      (t) => t.status === "Completed"
+    ).length;
+
+    const pendingTasks = tasksToday.filter(
+      (t) => t.status === "Pending"
+    ).length;
+
+    // ===============================
+    // 3️⃣ My Patients Card Data
+    // ===============================
+    const myPatients = await Promise.all(
+      patients.map(async (patient) => {
+        const medicationsCount = await Medication.countDocuments({
+          patientId: patient._id,
+        });
+
+        const patientTasks = await Task.find({
+          patientId: patient._id,
+        });
+
+        const completed = patientTasks.filter(
+          (t) => t.status === "Completed"
+        ).length;
+
+        return {
+          patientId: patient._id,
+          name: patient.fullName,
+          age: patient.age,
+          lastVisit: "2 Hrs Ago", // optional (agar visit model ho to dynamic)
+          medications: medicationsCount,
+          tasks: `${completed}/${patientTasks.length}`,
+        };
+      })
+    );
+
+    // ===============================
+    // 4️⃣ Daily Care Routine
+    // ===============================
+    // const dailyRoutine = await DailyRoutine.find({
+    //   caretakerId: caretaker._id,
+    //   date: { $gte: todayStart, $lte: todayEnd },
+    // }).select("title time status patientName");
+
+    // ===============================
+    // ✅ Final Response
+    // ===============================
+    return res.status(200).json({
+      success: true,
+      message: "Caretaker dashboard fetched successfully",
+      result: {
+        overview: {
+          totalPatients,
+          tasksDueToday: tasksToday.length,
+          pendingTasks,
+          completedTasks,
+        },
+        myPatients,
+        // dailyCareRoutine: dailyRoutine,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message + " | ERROR in caretaker dashboard",
+    });
+  }
+};
+

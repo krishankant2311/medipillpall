@@ -59,6 +59,7 @@ import { addCaretaker,
   editAppointmentRemark,
   addMealRemark,
   editMealRemark,
+  getCaretakerDashboard,
   getAllCareNotesByCaretaker,deleteCaretakerByAdmin,getAllDailyCare,
   addReminderByCaretaker,editCaretakerProfile,getMedicalHistoryByCaretaker,
   getTermsAndConditionsByCaretaker,getPrivacyPolicyByCaretaker,getFaqByCaretaker,
@@ -133,7 +134,7 @@ router.get("/medications-by-caretaker/:patientId", verifyAccessToken, getMedicat
 router.get("/discontinued-medications-by-caretaker/:patientId", verifyAccessToken, getDiscontinuedMedicationsByCaretakerForPatient);
 // ✅ Get All Medication Reminders by Caretaker for Patient
 router.get("/medication-reminders-by-caretaker/:patientId", verifyAccessToken, getAllMedicationRemindersByCaretakerForPatient);
-
+router.get("/caretaker-dashboard", verifyAccessToken, getCaretakerDashboard);
 // -------------------- GET BLOOD PRESSURE BY CARETAKER --------------------  
 router.get("/patient-blood-pressure/:patientId", verifyAccessToken, getPatientBloodPressureByCaretaker);
 // -------------------- GET BLOOD SUGAR BY CARETAKER --------------------
