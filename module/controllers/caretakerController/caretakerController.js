@@ -1709,7 +1709,7 @@ export const getPatientByCaretaker = async (req, res) => {
       status: "Active",
     })
       .select(
-        "_id fullName age gender mobileNumber email profilePhoto condition department createdAt updatedAt"
+        "_id fullName age gender mobileNumber email profilePhoto condition department createdAt updatedAt diseaseCondition"
       )
       .lean();
 
