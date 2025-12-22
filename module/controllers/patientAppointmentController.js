@@ -101,3 +101,33 @@ export const editAppointmentByPatient = async (req, res) => {
     });
   }
 };
+
+export const getAllAppointmentsByPatient = async (req, res) => {
+  try {
+    const token = req.token; // patient token
+    // ✔ Validate patient
+
+    const patient = await Patient.findOne({ _id: token._id, status: "Active" });
+    if (!patient) {
+      return res.status(401).json({
+        success: false,
+        message: "Patient not found or inactive",
+      });
+    }
+    // ✔ Fetch appointments
+    const appointments = await Appointment.find({ patientId: patient._id, status: { $ne: "Deleted" } }).sort({ date: -1, time: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "Appointments fetched successfully",
+      data: appointments,
+    });
+  }
+  catch (error) {
+    return res.status(500).json({
+      success: false,
+      message:
+        "ERROR IN get all appointments by patient api : " + error.message,
+    });
+  }
+};
