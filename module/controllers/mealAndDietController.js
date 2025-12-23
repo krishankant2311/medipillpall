@@ -847,3 +847,107 @@ export const updateStatusByCaregiver = async (req, res) => {
 };
 
 
+export const editMealAndDietByPatient = async (req, res) => {
+  try {
+    const token = req.token;
+    const { mealId } = req.params;
+    const {
+      remarks,
+      time,
+      type,
+      mealType,
+      scheduleTime,
+      foodType,
+      portionSize,
+      specialDietFollowed,
+      planName,
+      startDate,
+      endDate,
+      calories,
+      instructions,
+      dailyMeals
+    } = req.body;
+
+    // 🧩 Validate Patient
+    const patient = await Patient.findOne({
+      _id: token._id,
+      status: "Active"
+    });
+    if (!patient) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid patient"
+      });
+    }
+    // 🧩 Find Existing Meal/Diet Record
+    const existing = await MealAndDiet.findOne({
+      _id: mealId,
+      patientId: patient._id
+    });
+    if (!existing) {
+      return res.status(404).json({
+        success: false,
+        message: "Meal/Diet record not found"
+      });
+    }
+    // 🌐 Base URL
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    // 🖼️ Multiple new meal photos (if uploaded)
+    let mealPhotos = existing.mealPhoto;
+    if (req.files && req.files.length > 0) {
+      mealPhotos = req.files.map((file) => `${baseUrl}/uploads/${file.filename}`);
+    }
+    // 📄 Single diet doc (if uploaded)
+    let attachedDoc = existing.attachedDoc;
+    if (req.file && type === "Diet") {
+      attachedDoc = `${baseUrl}/uploads/dietDocs/${req.file.filename}`;
+    }
+    // 🧩 dailyMeals parse if string
+    let dailyMealsData = existing.dailyMeals;
+    if (dailyMeals) {
+      dailyMealsData =
+        typeof dailyMeals === "string"
+          ? JSON.parse(dailyMeals)
+          : dailyMeals;
+    }
+    if(mealPhotos.length > 10 && type === "Meal"){
+      return res.status(400).json({
+        success: false,
+        message: "You can upload a maximum of 10 meal photos"
+      });
+    }
+    // 🧩 Update data
+    existing.type = type ?? existing.type;
+    existing.mealType = mealType ?? existing.mealType;
+    existing.scheduleTime = scheduleTime ?? existing.scheduleTime;
+    existing.foodType = foodType ?? existing.foodType;
+    existing.portionSize = portionSize ?? existing.portionSize;
+    existing.specialDietFollowed = specialDietFollowed ?? existing.specialDietFollowed;
+    existing.remarks = remarks ?? existing.remarks;
+    existing.planName = planName ?? existing.planName;
+    existing.startDate = startDate ?? existing.startDate;
+    existing.endDate = endDate ?? existing.endDate;
+    existing.instructions = instructions ?? existing.instructions;
+    existing.dailyMeals = dailyMealsData;
+    existing.calories = calories ?? existing.calories;
+    existing.mealPhoto = type === "Meal" ? mealPhotos : existing.mealPhoto;
+    existing.attachedDoc = attachedDoc;
+    existing.time = time || existing.time;
+    await existing.save();
+    return res.json({
+      success: true,
+      message: `${existing.type} updated successfully`,
+      result: existing
+    });
+  }
+  catch (error) {
+    console.error("Edit Meal/Diet Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }   
+};
+
+
+

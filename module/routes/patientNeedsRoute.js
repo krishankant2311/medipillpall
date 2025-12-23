@@ -9,6 +9,6 @@ const router = express.Router();
 router.post("/add-needs",verifyAccessToken,upload.none(),addNeedsByPatient);
 
 //  Edit Needs (Patient Only)
-router.put("/edit-needs/:needsId",verifyAccessToken,editNeedsByPatient);
+router.post("/edit-needs/:needsId",verifyAccessToken,editNeedsByPatient);
 
 export default router;

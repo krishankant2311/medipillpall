@@ -1,5 +1,5 @@
 import express from "express";
-import { addMealAndDiet,getAllMealAndDiet,addMealAndDietByPatient,
+import { addMealAndDiet,getAllMealAndDiet,addMealAndDietByPatient,editMealAndDietByPatient,
     editMealAndDietByCaretaker, deleteMealAndDiet,addRemarksByCaretaker,updateStatusByCaregiver } from "../controllers/mealAndDietController.js";
 import {verifyAccessToken} from "../../helpers/jwt.js";
 import upload from "../../config/multer.js"; // 🔹 yahi tera existing multer import hoga
@@ -16,7 +16,7 @@ router.post("/deleteMealAndDiet/:id", verifyAccessToken, deleteMealAndDiet);
 router.post("/editMealAndDietByCaretaker/:mealId", verifyAccessToken,upload.array("mealPhoto", 10), editMealAndDietByCaretaker);
 // 🥗 Route: Add Meal / Diet by Patient
 router.post("/addMealAndDietByPatient", verifyAccessToken,upload.array("mealPhoto", 10), addMealAndDietByPatient);
-
+router.post("/editMealAndDietByPatient/:mealId", verifyAccessToken,upload.array("mealPhoto", 10), editMealAndDietByPatient);
 // 🥗 Route: Add Remarks by Caretaker
 router.post("/addRemarksByCaretaker/:mealandDietId",upload.none(), verifyAccessToken, addRemarksByCaretaker);
 router.post("/updatestatus/:mealandDietId",upload.none(), verifyAccessToken, updateStatusByCaregiver);
