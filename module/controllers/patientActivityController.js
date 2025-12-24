@@ -251,3 +251,44 @@ export const deleteActivity = async (req, res) => {
     });
   }
 };
+
+export const getActivityDetailsByPatient = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let token = req.token;
+    const patient = await Patient.findOne({ _id: token._id, status: "Active" });
+
+    if (!patient) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid patient token",
+        result: {},
+      });
+    }
+    const activity = await Activity.findOne({ _id: id, patientId: patient._id })
+      // .populate("patientId fullName email")
+      // .populate("caretakerId");
+    if (!activity) {
+      return res.send({
+        statusCode: 404,  
+        success: false,
+        message: "Activity not found",
+        result: {},
+      });
+    }
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Activity details fetched successfully",
+      result: activity,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message,
+      result: {},
+    });
+  }
+};

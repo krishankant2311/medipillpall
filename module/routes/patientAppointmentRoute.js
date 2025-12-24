@@ -2,7 +2,7 @@ import express from "express";
 import {
   addAppointmentByPatient,
   editAppointmentByPatient,
-  getAllAppointmentsByPatient,
+  getAllAppointmentsByPatient,getAppointmentDetailsByPatient,
 } from "../controllers/patientAppointmentController.js";
 
 import { verifyAccessToken } from "../../helpers/jwt.js";
@@ -23,5 +23,7 @@ router.post("/edit-appointment/:appointmentId", verifyAccessToken,upload.none(),
 // 🔵 Get All Appointments (Patient)
 // -----------------------------------------
 router.get("/all-appointments", verifyAccessToken, getAllAppointmentsByPatient);
+
+router.get("/getAppointmentDetailsByPatient/:id", verifyAccessToken, getAppointmentDetailsByPatient);
 
 export default router;

@@ -7,6 +7,10 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "../../helpers/jwt.js";
+import Medication from "../models/medicationModel.js";
+import Mealanddiet from "../models/mealAndDietModel.js";
+import Activity from "../models/patientActivityModel.js";
+import Caretaker from "../models/caretakerModel/caretakerModel.js";
 
 
 export const addPatient = async (req, res) => {
@@ -1518,6 +1522,132 @@ export const deletePatientByAdmin = async (req, res) => {
       statusCode: 500,
       success: false,
       message: error.message,
+    });
+  }
+};
+
+
+export const getPatientDashboard = async (req, res) => {
+  try {
+    const token = req.token;
+
+    // 🔐 Validate patient
+    const patient = await Patient.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+
+    if (!patient) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized patient",
+      });
+    }
+
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    // ===============================
+    // 1️⃣ Progress Cards
+    // ===============================
+    const totalMedications = await Medication.countDocuments({
+      patientId: patient._id,
+    });
+
+    const takenMedications = await Medication.countDocuments({
+      patientId: patient._id,
+      status: "Taken",
+    });
+
+    const totalMeals = await Mealanddiet.countDocuments({
+      patientId: patient._id,
+      type: "Meal",
+      date: { $gte: todayStart, $lte: todayEnd },
+    });
+
+    const completedMeals = await Mealanddiet.countDocuments({
+      patientId: patient._id,
+      type: "Meal",
+      status: "Completed",
+      date: { $gte: todayStart, $lte: todayEnd },
+    });
+
+    const totalHealthChecks = await Activity.countDocuments({
+      patientId: patient._id,
+      type: "HealthCheck",
+      date: { $gte: todayStart, $lte: todayEnd },
+    });
+
+    const completedHealthChecks = await Activity.countDocuments({
+      patientId: patient._id,
+      type: "HealthCheck",
+      status: "Completed",
+      date: { $gte: todayStart, $lte: todayEnd },
+    });
+
+    // ===============================
+    // 2️⃣ Upcoming Medications
+    // ===============================
+    const upcomingMedications = await Medication.find({
+      patientId: patient._id,
+      status: "Pending",
+    })
+      .sort({ time: 1 })
+      .limit(3)
+      .select("name dosage time");
+
+    // ===============================
+    // 3️⃣ Today’s Schedule
+    // ===============================
+    // const todaySchedule = await Schedule.find({
+    //   patientId: patient._id,
+    //   date: { $gte: todayStart, $lte: todayEnd },
+    // }).select("title time status");
+
+    // ===============================
+    // 4️⃣ Caregiver Daily Routine
+    // ===============================
+    const caregiver = await Caretaker.findOne({
+      _id: patient.caregiverId,
+      status: "Active",
+    }).select("fullName dutyStart dutyEnd");
+
+    // const caregiverRoutine = await DailyRoutine.find({
+    //   caregiverId: patient.caregiverId,
+    //   date: { $gte: todayStart, $lte: todayEnd },
+    // }).select("title time status");
+
+    // ===============================
+    // ✅ Final Response
+    // ===============================
+    return res.status(200).json({
+      success: true,
+      message: "Patient dashboard fetched successfully",
+      result: {
+        progress: {
+          medication: `${takenMedications}/${totalMedications}`,
+          meals: `${completedMeals}/${totalMeals}`,
+          healthCheck: `${completedHealthChecks}/${totalHealthChecks}`,
+        },
+        upcomingMedications,
+        // todaysSchedule: todaySchedule,
+        caregiver: caregiver
+          ? {
+              name: caregiver.fullName,
+              dutyTime: `${caregiver.dutyStart} - ${caregiver.dutyEnd}`,
+              status: "Active",
+            }
+          : null,
+        // caregiverDailyRoutine: caregiverRoutine,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message + " | ERROR in patient dashboard",
     });
   }
 };

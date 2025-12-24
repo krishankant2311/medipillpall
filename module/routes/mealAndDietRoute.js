@@ -1,5 +1,5 @@
 import express from "express";
-import { addMealAndDiet,getAllMealAndDiet,addMealAndDietByPatient,editMealAndDietByPatient,
+import { addMealAndDiet,getAllMealAndDiet,addMealAndDietByPatient,editMealAndDietByPatient,getMealAndDietDetailsbypatient,
     editMealAndDietByCaretaker, deleteMealAndDiet,addRemarksByCaretaker,updateStatusByCaregiver } from "../controllers/mealAndDietController.js";
 import {verifyAccessToken} from "../../helpers/jwt.js";
 import upload from "../../config/multer.js"; // 🔹 yahi tera existing multer import hoga
@@ -21,6 +21,5 @@ router.post("/editMealAndDietByPatient/:mealId", verifyAccessToken,upload.array(
 router.post("/addRemarksByCaretaker/:mealandDietId",upload.none(), verifyAccessToken, addRemarksByCaretaker);
 router.post("/updatestatus/:mealandDietId",upload.none(), verifyAccessToken, updateStatusByCaregiver);
 
-
-
+router.get("/getMealAndDietDetailsbypatient/:id", verifyAccessToken, getMealAndDietDetailsbypatient);
 export default router;

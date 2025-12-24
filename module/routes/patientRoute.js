@@ -13,6 +13,7 @@ import { addPatient,
   resendPatientOTPforSignup,
   deletePatientByAdmin,
   getpatient,
+  getPatientDashboard,
   resendOTPbyNumber, } from "../controllers/patientController.js";  
 import { verifyAccessToken } from "../../helpers/jwt.js"; 
 import express from "express";
@@ -51,4 +52,6 @@ router.post("/resend-otp-login", upload.none(), resendPatientOTPforLogin);
 router.post("/resend-otp-signup", upload.none(), resendPatientOTPforSignup);
 router.post("/delete-patient-byadmin/:patientId", verifyAccessToken, deletePatientByAdmin);
 
+
+router.get("/patient-dashboard", verifyAccessToken, getPatientDashboard);
 export default router;

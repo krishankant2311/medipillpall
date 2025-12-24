@@ -949,5 +949,89 @@ export const editMealAndDietByPatient = async (req, res) => {
   }   
 };
 
+export const getMealAndDietDetailsbypatient = async (req, res) => {
+  try {
+    const token = req.token; // caretaker token
+    const { id } = req.params; // Meal/Diet record ID
+    // 🧩 Validate Caretaker
+    const patient = await Patient.findOne({
+      _id: token._id,
+      status: "Active"
+    });
+    if (!patient) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid patient"
+      });
+    }
+    // 🌐 Base URL (for exact file path)
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    // 🧩 Find Meal/Diet Record
+    const item = await MealAndDiet.findOne({  
+      _id: id,
+      patientId: patient._id
+    }).populate("caretakerId", "fullName contactNumber");
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: "Meal/Diet record not found"
+      });
+    }
+    // 🧩 File URLs fix karo (array-safe version  )
+    let mealPhotos = [];
+    // ✅ handle multiple meal photos safely
+    if (Array.isArray(item.mealPhoto)) {
+      mealPhotos = item.mealPhoto.map((photo) =>
+        photo.startsWith("http") ? photo : `${baseUrl}${photo}`
+      );
+    } else if (typeof item.mealPhoto === "string" && item.mealPhoto) {
+      mealPhotos = [item.mealPhoto.startsWith("http") ? item.mealPhoto : `${baseUrl}${item.mealPhoto}`];
+    }   
+    // ✅ handle attachedDoc safely
+    const attachedDoc =
+      item.attachedDoc && typeof item.attachedDoc === "string"  
+        ? item.attachedDoc.startsWith("http")
+          ? item.attachedDoc
+          : `${baseUrl}${item.attachedDoc}`
+        : ""; 
+    const result = {
+      _id: item._id,
+      caretakerId: item.caretakerId,
+      patientId: item.patientId,
+      type: item.type,
+      mealType: item.mealType,
+      scheduleTime: item.scheduleTime,  
+      foodType: item.foodType,
+      portionSize: item.portionSize,
+      specialDietFollowed: item.specialDietFollowed,
+      remarks: item.remarks,
+      planName: item.planName,
+      startDate: item.startDate,
+      endDate: item.endDate,
+      instructions: item.instructions,
+      dailyMeals: item.dailyMeals,
+      mealPhoto: mealPhotos, // always array
+      attachedDoc,
+      taskStatus:item.taskStatus,
+      calories: item.calories,
+      status: item.status,
+      createdAt: item.createdAt
+    };
+    return res.status(200).json({
+      success: true,
+      message: "Meal and Diet record fetched successfully",
+      result: result
+    });
+  }
+  catch (error) {
+    console.error("Get Meal/Diet Details Error:", error);
+    return res.status(500).json({ 
+      success: false,
+      message: error.message
+    });
+  }
+}
+
+
 
 

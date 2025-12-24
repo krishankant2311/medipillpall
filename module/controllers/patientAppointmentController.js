@@ -131,3 +131,39 @@ export const getAllAppointmentsByPatient = async (req, res) => {
     });
   }
 };
+
+
+export const getAppointmentDetailsByPatient = async (req, res) => {
+  try {
+    const token = req.token;
+    const { id } = req.params;
+    // ✔ Validate patient
+    const patient = await Patient.findOne({ _id: token._id, status: "Active" });
+    if (!patient) {
+      return res.status(401).json({
+        success: false,
+        message: "Patient not found or inactive",
+      });
+    }
+    // ✔ Fetch appointment details
+    const appointment = await Appointment.findOne({ _id: id, patientId: patient._id, status: { $ne: "Deleted" } });
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        message: "Appointment not found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Appointment details fetched successfully",
+      data: appointment,
+    });
+  }
+  catch (error) {
+    return res.status(500).json({
+      success: false,
+      message:
+        "ERROR IN get appointment details by patient api : " + error.message,
+    });
+  }
+};

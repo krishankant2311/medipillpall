@@ -5,6 +5,7 @@ import {
   getActivities,
   getAllActivities,
   deleteActivity,
+  getActivityDetailsByPatient,
 } from "../controllers/patientActivityController.js";
 import { verifyAccessToken } from "../../helpers/jwt.js";
 import upload from "../../config/multer.js";
@@ -25,5 +26,7 @@ router.get("/all", verifyAccessToken, getAllActivities);
 
 // ✅ Delete an activity (soft delete)
 router.post("/delete/:activityId", verifyAccessToken,upload.none(), deleteActivity);
+
+router.get("/getActivityDetailsByPatient/:id", verifyAccessToken, getActivityDetailsByPatient);
 
 export default router;
