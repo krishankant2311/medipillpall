@@ -362,3 +362,43 @@ export const getAllFAQByPatient = async (req, res) => {
     });
   }
 };
+
+export const getFAQDetailsByPatient = async (req, res) => {
+  try {
+    let token = req.token;
+    let {faqId} = req.params
+    const patient = await Patient.findOne({ _id: token._id, status: "Active" });
+    if (!patient) {
+      return res.send({
+        statusCode: 403,
+        success: false,
+        message: "Unauthorized or inactive patient",
+        result: {},
+      });
+    }
+    const faq = await FAQ.findOne({ _id:faqId, status: "Active" });
+
+    if (!faq) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "FAQ not found",
+        result: {},
+      });
+    }
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "FAQ details fetched successfully",
+      result: faq,
+    });
+  }
+  catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message + " Error in getFAQDetailsByPatient",
+      result: {},
+    });
+  } 
+};

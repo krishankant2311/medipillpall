@@ -4,6 +4,7 @@ import {
   editReminder,
   getReminders,
   deleteReminder,
+  getMedicalReportByIdbypatient,
 } from "../controllers/reminderController.js";
 import { verifyAccessToken } from "../../helpers/jwt.js"; // token check middleware
 import upload from "../../config/multer.js";
@@ -20,5 +21,7 @@ router.get("/list", verifyAccessToken, getReminders);
 
 // ❌ Delete Reminder
 router.post("/delete/:id", verifyAccessToken, deleteReminder);
+
+router.get("/getMedicalReportByIdbypatient/:reminderId", verifyAccessToken, getMedicalReportByIdbypatient);
 
 export default router;

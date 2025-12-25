@@ -238,8 +238,33 @@ export const getTutorialByPatient = async (req, res) => {
         result: {},
       })
     }
+  if (patient.status !== "Pending") {
+    return res.send({
+      statusCode: 403,
+      success: false,
+      message: "Access denied: Patient status is not active",
+      result: {},
+    })
+  }
 
-    const tutorial = await Tutorial.findOne({ _id: id, status: "Active" })
+  if (patient.status !== "Delete") {
+    return res.send({
+      statusCode: 403,
+      success: false,
+      message: "Access denied: Patient status is not active",
+      result: {},
+    })
+  }
+  if (patient.status !== "Blocked") {
+    return res.send({
+      statusCode: 403,
+      success: false,
+      message: "Access denied: Patient status is not active",
+      result: {},
+    })
+  }
+
+    const tutorial = await Tutorial.findOne({ _id:id,status: "Active" })
 
     if (!tutorial) {
       return res.send({

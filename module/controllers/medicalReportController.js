@@ -108,8 +108,8 @@ export const uploadMedicalReport = async (req, res) => {
         file.mimetype === "application/pdf"
           ? "PDF"
           : file.mimetype === "image/png"
-          ? "PNG"
-          : "JPG";
+            ? "PNG"
+            : "JPG";
 
       // ✅ Save Report Document
       const report = new MedicalReport({
@@ -148,7 +148,7 @@ export const getMedicalReports = async (req, res) => {
     limit = parseInt(limit);
 
     // check patient
-    const patient = await Patient.findOne({ _id:token._id, status:"Active" });
+    const patient = await Patient.findOne({ _id: token._id, status: "Active" });
     if (!patient) {
       return res.send({
         statusCode: 401,
@@ -188,3 +188,171 @@ export const getMedicalReports = async (req, res) => {
     });
   }
 };
+
+export const softdeleteMedicalReport = async (req, res) => {
+  try {
+    let token = req.token;
+    const { reportId } = req.params;
+    // check patient
+    const patient = await Patient.findOne({ _id: token._id, status: "Active" });
+    if (!patient) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid patient token",
+        result: {},
+      });
+    }
+    // check report
+    const report = await MedicalReport.findOne({ _id: reportId, patient_id: patient._id });
+    if (!report) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Medical report not found",
+        result: {},
+      });
+    }
+    if (report.status === "Deleted") {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Medical report already deleted",
+        result: {},
+      });
+    }
+    report.status = "Deleted";
+    await report.save();
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Medical report deleted successfully",
+      result: {},
+    });
+  }
+  catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message,
+      result: {},
+    });
+  }
+};
+
+/** ➤ Download Medical Report File
+ */
+export const downloadMedicalReport = async (req, res) => {
+  try {
+    const token = req.token;
+    const { reportId } = req.params;
+    // Validate Patient
+    const patient = await Patient.findOne({ _id: token._id, status: "Active" });
+    if (!patient) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid or inactive patient",
+        result: {},
+      });
+    }
+    // Validate Report
+    const report = await MedicalReport.findOne({ _id: reportId, patient_id: patient._id });
+    if (!report) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Medical report not found",
+        result: {},
+      });
+    }
+    if (report.status === "Deleted") {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Medical report has been deleted",
+        result: {},
+      });
+    }
+    // Get file path
+    const filePath = path.join(
+      process.cwd(),
+      "uploads",
+      path.basename(report.fileUrl)
+    );
+    // Check if file exists
+    if
+      (!fs.existsSync(filePath)) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "File not found on server",
+        result: {},
+      });
+    }
+    // Send file for download
+    return res.download(filePath, (err) => {
+      if (err) {
+        console.error("Error in downloading file:", err);
+        return res.send({
+          statusCode: 500,
+          success: false,
+          message: "Error in downloading file",
+          result: {},
+        });
+      }
+    });
+  }
+  catch (error) {
+    console.error("Error in downloadMedicalReport:", error);
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message,
+      result: {},
+    });
+  }
+};
+
+export const getMedicalReportByIdbypatient = async (req, res) => {
+  try {
+    const token = req.token;
+    const { reportId } = req.params;
+    // ✔ Validate patient
+    const patient = await Patient.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+    if (!patient) {
+      return res.status(401).json({
+        success: false,
+        message: "Patient not found or inactive",
+      });
+    }
+    // ✔ Get medical report by ID
+    const report = await MedicalReport.findOne({
+      _id: reportId,
+      patient_id: patient._id,
+      status: { $ne: "Deleted" },
+    });
+    if (!report) {
+      return res.status(404).json({
+        success: false,
+        message: "Medical report not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Medical report fetched successfully",
+      data: report,
+    });
+  }
+  catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "ERROR IN get medical report by ID by patient api : " + error.message,
+    });
+  }
+};
+

@@ -203,3 +203,44 @@ export const deletePrescription = async (req, res) => {
     });
   }
 };
+
+export const getprescriptionByIdbypatient = async (req, res) => {
+  try {
+    const token = req.token;
+    const { prescriptionId } = req.params;
+    // ✔ Validate patient
+    const patient = await Patient.findOne({
+      _id: token._id,
+      status: "Active",
+    });
+    if (!patient) {
+      return res.status(401).json({
+        success: false,
+        message: "Patient not found or inactive",
+      });
+    }
+    // ✔ Get prescription by ID
+    const prescription = await Prescription.findOne({
+      _id: prescriptionId,
+      patientId: patient._id,
+      status: "Active",
+    });
+    if (!prescription) {
+      return res.status(404).json({
+        success: false,
+        message: "Prescription not found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Prescription fetched successfully",
+      data: prescription,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "ERROR IN get prescription by ID by patient api : " + error.message,
+    });
+  }
+};  
+

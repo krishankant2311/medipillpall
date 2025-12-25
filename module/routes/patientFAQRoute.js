@@ -2,7 +2,7 @@
 
 import express from "express";
 import { verifyAccessToken } from "../../helpers/jwt.js";
-import { createFAQ, editFAQ, getFAQ, deleteFAQ, getAllFAQ, getAllFAQByPatient } from "../controllers/patientFAQController.js";
+import { createFAQ, editFAQ, getFAQ, deleteFAQ, getAllFAQ, getAllFAQByPatient,getFAQDetailsByPatient } from "../controllers/patientFAQController.js";
 import upload from "../../config/multer.js";
 const router = express.Router();
 
@@ -13,5 +13,5 @@ router.get("/get/:id", verifyAccessToken, getFAQ);
 router.post("/delete/:faqId", verifyAccessToken,upload.none(), deleteFAQ);
 router.get("/all", verifyAccessToken,upload.none(), getAllFAQ);
 router.get("/all/patient", verifyAccessToken, getAllFAQByPatient);
-
+router.get("/get-details/:faqId", verifyAccessToken, getFAQDetailsByPatient);
 export default router;

@@ -4,6 +4,7 @@ import {
   editPersonalHistory,
   getPersonalHistory,
   deletePersonalHistory,
+  getPersonalHistoryByIdbypatient,
 } from "../controllers/patientPersonalHistoryController.js";
 import { verifyAccessToken } from "../../helpers/jwt.js";
 import upload from "../../config/multer.js";
@@ -15,6 +16,7 @@ router.post("/edit-history/:historyId", verifyAccessToken,upload.none(), editPer
 
 router.get("/get-personal-history", verifyAccessToken, getPersonalHistory);
 
+router.get("/get-personal-history-by-patient/:patientId", verifyAccessToken, getPersonalHistoryByIdbypatient);
 
 router.post("/delete-history/:historyId", verifyAccessToken,upload.none(), deletePersonalHistory);
 

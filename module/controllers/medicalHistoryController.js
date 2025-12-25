@@ -274,3 +274,65 @@ export const getMedicalHistory = async (req, res) => {
     });
   }
 };
+
+export const deleteMedicalHistory = async (req, res) => {
+  try {
+    const token = req.token;
+    let { historyId } = req.params;
+
+    if (!historyId) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "historyId is required",
+        result: {},
+      });
+    }
+    const patient = await Patient.findOne({ _id: token._id, status: "Active" });
+    if (!patient) {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Patient not found",
+        result: {},
+      });
+    }
+    const history = await MedicalHistory.findOne({ _id: historyId, patientId: patient._id });
+    if (!history) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Medical history not found or unauthorized",
+        result: {},
+      });
+    }
+    if (history.status === "Deleted") {
+      return res.send({
+        statusCode: 400,
+        success: false,
+        message: "Medical history already deleted",
+        result: {},
+      });
+    }
+    history.status = "Deleted";
+    await history.save();
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Medical history deleted successfully",
+      result: history,
+    });
+  }
+  catch (error) {
+    console.error("Error in deleteMedicalHistory:", error);
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message,
+      result: {},
+    });
+  } 
+};  
+
+
+    

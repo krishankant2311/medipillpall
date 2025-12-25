@@ -261,3 +261,43 @@ export const deletePersonalHistory = async (req, res) => {
     });
   }
 };
+
+
+export const getPersonalHistoryByIdbypatient = async (req, res) => {
+  try {
+    let token = req.token;
+    const { historyId } = req.params;
+    const patient = await Patient.findOne({ _id: token._id, status: "Active" });
+    if (!patient) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid patient token",
+        result: {},
+      });
+    }
+    const history = await PersonalHistory.findOne({ _id: historyId, patient_id: patient._id, status: "Active" });
+    if (!history) {
+      return res.send({ 
+        statusCode: 404,
+        success: false,
+        message: "Personal History not found",
+        result: {},
+      });
+    }
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Personal History fetched successfully",
+      result: history,
+    });
+  }
+  catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message,
+      result: {},
+    });
+  }
+};

@@ -191,3 +191,43 @@ export const deleteReminder = async (req, res) => {
     });
   }
 };
+
+export const getMedicalReportByIdbypatient = async (req, res) => {
+  try {
+    const token = req.token;
+    const { prescriptionId } = req.params;
+    // Validate Patient
+    const patient = await Patient.findOne({ _id: token._id, status: "Active" });
+    if (!patient) {
+      return res.send({
+        statusCode: 401,
+        success: false,
+        message: "Invalid or inactive patient",
+        result: {},
+      });
+    }
+
+    const prescription = await Prescription.findOne({ _id: prescriptionId, patientId: patient._id });
+    if (!prescription) {
+      return res.send({
+        statusCode: 404,
+        success: false,
+        message: "Prescription not found",
+        result: {},
+      });
+    }
+    return res.send({
+      statusCode: 200,
+      success: true,
+      message: "Prescription fetched successfully",
+      result: prescription,
+    });
+  } catch (error) {
+    return res.send({
+      statusCode: 500,
+      success: false,
+      message: error.message,
+      result: {},
+    });
+  }
+};

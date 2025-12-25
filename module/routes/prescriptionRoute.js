@@ -4,6 +4,7 @@ import {
   editPrescription,
   getPrescriptions,
   deletePrescription,
+  getprescriptionByIdbypatient,
 } from "../controllers/prescriptionController.js";
 
 import upload from "../../config/multer.js";
@@ -23,5 +24,7 @@ router.get("/get/:patientId", verifyAccessToken, getPrescriptions);
 
 // Soft delete prescription by ID
 router.post("/delete/:id", verifyAccessToken,upload.none(), deletePrescription);
+
+router.get("/getprescriptionByIdbypatient/:prescriptionId", verifyAccessToken, getprescriptionByIdbypatient);
 
 export default router;

@@ -509,7 +509,7 @@ export const addPatientHeartRate = async (req, res) => {
 export const getPatientBloodPressure = async (req, res) => {
   try {
     const token = req.token;
-console.log("Token ID:", token._id);
+// console.log("Token ID:", token._id);
 
     // 🔹 Validate patient
     const patient = await Patient.findOne({
@@ -1091,3 +1091,197 @@ export const editPatientBodyWeight = async (req, res) => {
   }
 };
 
+export const getPatientBloodPressuredetailsbypatient = async (req, res) => {
+  try {
+    const { recordId } = req.params;
+    const token = req.token;
+
+    // Validate token
+    if (!token || !token._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token",
+      });
+    }
+    // Fetch the specific blood pressure record by ID
+    const record = await PatientRecord.findOne({
+      _id: recordId,
+      patient_id: token._id,
+    }).select("bloodPressure createdAt");
+    if (!record || !record.bloodPressure) {
+      return res.json({
+        success: true,
+        message: "No blood pressure record found for the given ID",
+        result: {},
+      });
+    }
+    return res.json({
+      success: true,
+      message: "Blood Pressure record fetched successfully",
+      result: record.bloodPressure,
+    });
+  }
+  catch (err) {
+    console.error("Error in getPatientBloodPressuredetailsbypatient:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
+export const getPatientBloodSugardetailsbypatient = async (req, res) => {
+  try {
+    const { recordId } = req.params;
+    const token = req.token;
+    // Validate token
+    if (!token || !token._id) {
+      return res.status(401).json({ 
+        success: false,
+        message: "Invalid token" 
+      });
+    }
+    // Fetch the specific blood sugar record by ID
+    const record = await PatientRecord.findOne({
+      _id: recordId,
+      patient_id: token._id,
+    }).select("bloodSugar createdAt");
+    if (!record || !record.bloodSugar) {
+      return res.json({
+        success: true,
+        message: "No blood sugar record found for the given ID",
+        result: {},
+      });
+    }
+    return res.json({
+      success: true,
+      message: "Blood Sugar record fetched successfully",
+      result: record.bloodSugar,
+    });
+  }
+  catch (err) {
+    console.error("Error in getPatientBloodSugardetailsbypatient:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+export const getPatientBodyTempdetailsbypatient = async (req, res) => {
+  try {
+    const { recordId } = req.params;
+    const token = req.token;
+    // Validate token
+    if (!token || !token._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token",
+      });
+    }
+    // Fetch the specific body temperature record by ID
+    const record = await PatientRecord.findOne({
+      _id: recordId,
+      patient_id: token._id,
+    }).select("bodyTemp createdAt");
+    if (!record || !record.bodyTemp) {
+      return res.json({
+        success: true,
+        message: "No body temperature record found for the given ID",
+        result: {},
+      });
+    }
+    return res.json({
+      success: true,
+      message: "Body Temperature record fetched successfully",
+      result: record.bodyTemp,
+    });
+  }
+  catch (err) {
+    console.error("Error in getPatientBodyTempdetailsbypatient:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+export const getPatientBodyWeightdetailsbypatient = async (req, res) => {
+  try { 
+    const { recordId } = req.params;
+    const token = req.token;
+    // Validate token
+    if (!token || !token._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token",
+      });
+    }
+    // Fetch the specific body weight record by ID
+    const record = await PatientRecord.findOne({
+      _id: recordId,
+      patient_id: token._id,  
+    }).select("bodyWeight createdAt");
+    if (!record || !record.bodyWeight) {
+      return res.json({
+        success: true,
+        message: "No body weight record found for the given ID",
+        result: {},
+      });
+    }
+    return res.json({
+      success: true,
+      message: "Body Weight record fetched successfully",
+      result: record.bodyWeight,
+    });
+  }
+  catch (err) {
+    console.error("Error in getPatientBodyWeightdetailsbypatient:", err);
+    return res.status(500).json({ 
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+export const getPatientHeartRatedetailsbypatient = async (req, res) => {
+  try {
+    const { recordId } = req.params;
+    const token = req.token;
+    // Validate token 
+    if (!token || !token._id) {
+      return res.status(401).json({
+        success: false, 
+        message: "Invalid token",
+      });
+    }
+    // Fetch the specific heart rate record by ID
+    const record = await PatientRecord.findOne({
+      _id: recordId,
+      patient_id: token._id,
+    }).select("heartRate createdAt");
+    if (!record || !record.heartRate) {
+      return res.json({
+        success: true,
+        message: "No heart rate record found for the given ID",
+        result: {},
+      });
+    }
+    return res.json({
+      success: true,
+      message: "Heart Rate record fetched successfully",
+      result: record.heartRate,
+    });
+  }
+  catch (err) {
+    console.error("Error in getPatientHeartRatedetailsbypatient:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+};
+
+    

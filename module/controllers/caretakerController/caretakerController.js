@@ -267,12 +267,12 @@ export const getAllCaretakersByAdmin = async (req, res) => {
       .populate({
         path: "patients",
         match: { status: "Active" },
-        select: "fullName age diseaseCondition status gender mobileNumber createdAt",
+        select: "fullName age diseaseCondition status gender  mobileNumber createdAt",
       })
       .populate({
         path: "guardianId",
         match: { status: "Active" },
-        select: "fullName email mobileNumber status createdAt",
+        select: "fullName email mobileNumber gender age status createdAt",
       });
 
     // --- Count ---
