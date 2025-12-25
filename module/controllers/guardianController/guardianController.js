@@ -591,12 +591,12 @@ export const getAllGuardiansByAdmin = async (req, res) => {
       .populate({
         path: "patients",
         match: { status: "Active" },
-        select: "fullName age diseaseCondition gender mobileNumber createdAt",
+        select: "fullName age diseaseCondition status gender mobileNumber createdAt",
       })
       .populate({
         path: "caretakers",
         match: { status: "Active" },
-        select: "fullName email mobileNumber gender age createdAt",
+        select: "fullName email mobileNumber status gender age createdAt",
       });
 
     // --- Count ---

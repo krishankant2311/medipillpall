@@ -990,12 +990,12 @@ export const getAllPatientsByAdmin = async (req, res) => {
       .populate({
         path: "guardianId",
         match: { status: { $nin: ["Pending", "Delete"] } },
-        select: "fullName gender email mobileNumber status createdAt",
+        select: "fullName gender email status mobileNumber status createdAt",
       })
       .populate({
         path: "caretakerId",
         match: { status: { $nin: ["Pending", "Delete"] } },
-        select: "fullName gender email mobileNumber status createdAt",
+        select: "fullName gender email status mobileNumber status createdAt",
       })
       .skip(skip)
       .limit(limit)
