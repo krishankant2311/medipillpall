@@ -944,8 +944,8 @@ export const getAllPatientsByAdmin = async (req, res) => {
     const token = req.token;
     let { page = 1, limit = 10, search = "", statusFilter = "All" } = req.query;
 
-    page = Number.parseInt(page);
-    limit = Number.parseInt(limit);
+    page = Number(page);
+    limit = Number(limit);
     const skip = (page - 1) * limit;
 
     // --- Step 1: Validate Admin ---
@@ -959,59 +959,56 @@ export const getAllPatientsByAdmin = async (req, res) => {
       });
     }
 
-    // --- Step 2: Build Filters ---
-    const searchRegex = new RegExp(search.trim(), "i");
+    // --- Step 2: Safe Regex (Fix for + & special characters) ---
+    const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const searchRegex = new RegExp(escapeRegex(search.trim()), "i");
 
-    // --- Status Filter (MATCH OTHER APIS) ---
+    // --- Step 3: Status Filter ---
     let statusQuery = {};
-    if (statusFilter === "Active") {
-      statusQuery.status = "Active";
-    } else if (statusFilter === "Blocked") {
-      statusQuery.status = "Blocked";
-    } else {
-      // ALL (exclude Pending + Delete)
-      statusQuery.status = { $nin: ["Pending", "Delete"] };
-    }
+    if (statusFilter === "Active") statusQuery.status = "Active";
+    else if (statusFilter === "Blocked") statusQuery.status = "Blocked";
+    else statusQuery.status = { $nin: ["Pending", "Delete"] }; // default
 
-    // --- Search Filter ---
-    let searchFilter = { ...statusQuery };
+    // --- Step 4: Search Filter ---
+    const searchFilter = search.trim()
+      ? {
+          ...statusQuery,
+          $or: [
+            { fullName: { $regex: searchRegex } },
+            { mobileNumber: { $regex: searchRegex } }, // +91 supported
+            { gender: { $regex: searchRegex } },
+          ],
+        }
+      : { ...statusQuery };
 
-    if (search.trim()) {
-      searchFilter.$or = [
-        { fullName: { $regex: searchRegex } },
-        { mobileNumber: { $regex: searchRegex } },
-        { gender: { $regex: searchRegex } },
-      ];
-    }
-
-    // --- Step 3: Fetch Patients ---
+    // --- Step 5: Fetch Patients ---
     const patients = await Patient.find(searchFilter)
       .select("-password -refreshToken -otp -accessToken")
       .populate({
         path: "guardianId",
         match: { status: { $nin: ["Pending", "Delete"] } },
-        select: "fullName gender email status mobileNumber status createdAt",
+        select: "fullName gender email mobileNumber status createdAt",
       })
       .populate({
         path: "caretakerId",
         match: { status: { $nin: ["Pending", "Delete"] } },
-        select: "fullName gender email status mobileNumber status createdAt",
+        select: "fullName gender email mobileNumber status createdAt",
       })
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 });
 
-    // --- Step 4: Total Count ---
+    // --- Step 6: Count ---
     const totalPatients = await Patient.countDocuments(searchFilter);
 
-    // --- Step 5: Add Counts ---
+    // --- Step 7: Add Counts ---
     const patientsWithCounts = patients.map((p) => ({
       ...p.toObject(),
       totalGuardian: p.guardianId ? 1 : 0,
       totalCaretaker: p.caretakerId ? 1 : 0,
     }));
 
-    // --- Step 6: Response ---
+    // --- Step 8: Response ---
     return res.send({
       statusCode: 200,
       success: true,
@@ -1023,6 +1020,7 @@ export const getAllPatientsByAdmin = async (req, res) => {
         totalRecord: totalPatients,
       },
     });
+
   } catch (error) {
     return res.status(500).send({
       statusCode: 500,
@@ -1032,6 +1030,7 @@ export const getAllPatientsByAdmin = async (req, res) => {
     });
   }
 };
+
 
 
 // export const getAllPatientsByAdmin = async (req, res) => {
