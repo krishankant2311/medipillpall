@@ -212,14 +212,13 @@ export const addCaretaker = async (req, res) => {
 //   }
 // };
 
-
 export const getAllCaretakersByAdmin = async (req, res) => {
   try {
     const token = req.token;
     let { page = 1, limit = 10, search = "", statusFilter = "All" } = req.query;
 
-    page = Number.parseInt(page);
-    limit = Number.parseInt(limit);
+    page = Number(page);
+    limit = Number(limit);
     const skip = (page - 1) * limit;
 
     // --- Validate Admin ---
@@ -233,8 +232,10 @@ export const getAllCaretakersByAdmin = async (req, res) => {
       });
     }
 
-    // --- Search Regex ---
-    const searchRegex = new RegExp(search.trim(), "i");
+    // -------- SAFE SEARCH REGEX (Fix for +, special chars) --------
+    const escapeRegex = (text) =>
+      text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const searchRegex = new RegExp(escapeRegex(search.trim()), "i");
 
     // --- Status Filter ---
     let statusCondition = {};
@@ -249,25 +250,27 @@ export const getAllCaretakersByAdmin = async (req, res) => {
     // --- Final search ---
     const searchFilter = search.trim()
       ? {
-        ...statusCondition,
-        $or: [
-          { fullName: { $regex: searchRegex } },
-          { email: { $regex: searchRegex } },
-          { mobileNumber: { $regex: searchRegex } },
-          {gender: { $regex: searchRegex } },
-        ],
-      }
+          ...statusCondition,
+          $or: [
+            { fullName: { $regex: searchRegex } },
+            { email: { $regex: searchRegex } },
+            { mobileNumber: { $regex: searchRegex } }, // +91 or + search supported
+            { gender: { $regex: searchRegex } },
+          ],
+        }
       : { ...statusCondition };
 
     // --- Fetch Caretakers ---
-    const caretakers = await Caretaker.find(searchFilter).select("-password -refreshToken -otp -accessToken")
+    const caretakers = await Caretaker.find(searchFilter)
+      .select("-password -refreshToken -otp -accessToken")
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 })
       .populate({
         path: "patients",
         match: { status: "Active" },
-        select: "fullName age diseaseCondition status gender  mobileNumber createdAt",
+        select:
+          "fullName age diseaseCondition status gender mobileNumber createdAt",
       })
       .populate({
         path: "guardianId",
@@ -306,6 +309,7 @@ export const getAllCaretakersByAdmin = async (req, res) => {
     });
   }
 };
+
 
 
 
