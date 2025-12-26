@@ -530,13 +530,14 @@ export const signupGuardian = async (req, res) => {
 // };
 
 
+
 export const getAllGuardiansByAdmin = async (req, res) => {
   try {
     const token = req.token;
     let { page = 1, limit = 10, search = "", statusFilter = "All" } = req.query;
 
-    page = Number.parseInt(page);
-    limit = Number.parseInt(limit);
+    page = Number(page);
+    limit = Number(limit);
     const skip = (page - 1) * limit;
 
     // --- Validate Admin ---
@@ -550,12 +551,13 @@ export const getAllGuardiansByAdmin = async (req, res) => {
       });
     }
 
-    // --- Search Regex ---
-    const searchRegex = new RegExp(search.trim(), "i");
+    // ---------- SAFE SEARCH REGEX (Fix for +, special chars) ----------
+    const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const searchRegex = new RegExp(escapeRegex(search.trim()), "i");
 
-    // ---------------------------
-    //   STATUS BASED FILTER
-    // ---------------------------
+    // --------------------------
+    // STATUS FILTER HANDLING
+    // --------------------------
     let statusCondition = {};
 
     if (statusFilter === "Active") {
@@ -567,22 +569,22 @@ export const getAllGuardiansByAdmin = async (req, res) => {
       statusCondition = { status: { $nin: ["Pending", "Delete"] } };
     }
 
-    // ---------------------------
-    //   FINAL SEARCH FILTER
-    // ---------------------------
+    // --------------------------
+    // FINAL SEARCH FILTER
+    // --------------------------
     const searchFilter = search.trim()
       ? {
-        ...statusCondition,
-        $or: [
-          { fullName: { $regex: searchRegex } },
-          { email: { $regex: searchRegex } },
-          { mobileNumber: { $regex: searchRegex } },
-          {gender: { $regex: searchRegex } },
-        ],
-      }
+          ...statusCondition,
+          $or: [
+            { fullName: { $regex: searchRegex } },
+            { email: { $regex: searchRegex } },
+            { mobileNumber: { $regex: searchRegex } }, // +91 search fixed
+            { gender: { $regex: searchRegex } },
+          ],
+        }
       : { ...statusCondition };
 
-    // --- Fetch Guardians ---
+    // -------- FETCH GUARDIANS + POPULATE --------
     const guardians = await Guardian.find(searchFilter)
       .select("-password -otp -accessToken -refreshToken")
       .skip(skip)
@@ -591,24 +593,27 @@ export const getAllGuardiansByAdmin = async (req, res) => {
       .populate({
         path: "patients",
         match: { status: "Active" },
-        select: "fullName age diseaseCondition status gender mobileNumber createdAt",
+        select:
+          "fullName age diseaseCondition status gender mobileNumber createdAt",
       })
       .populate({
         path: "caretakers",
         match: { status: "Active" },
-        select: "fullName email mobileNumber status gender age createdAt",
+        select:
+          "fullName email mobileNumber status gender age createdAt",
       });
 
-    // --- Count ---
+    // ---------- COUNT RESULT ----------
     const totalGuardians = await Guardian.countDocuments(searchFilter);
 
-    // --- Add counts ---
+    // ---------- ADD TOTAL COUNTS ----------
     const guardiansWithCounts = guardians.map((guardian) => ({
       ...guardian.toObject(),
       totalPatients: guardian.patients?.length || 0,
       totalCaretakers: guardian.caretakers?.length || 0,
     }));
 
+    // ---------- FINAL RESPONSE ----------
     return res.send({
       statusCode: 200,
       success: true,
@@ -629,6 +634,7 @@ export const getAllGuardiansByAdmin = async (req, res) => {
     });
   }
 };
+
 
 
 //working fine

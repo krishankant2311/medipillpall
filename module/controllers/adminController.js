@@ -2149,8 +2149,6 @@ export const getAllCaretakersByAdminforSearch = async (req, res) => {
   }
 };
 
-
-
 export const getAllGuardiansByAdminforSearch = async (req, res) => {
   try {
     const token = req.token;
