@@ -311,8 +311,6 @@ export const getAllCaretakersByAdmin = async (req, res) => {
 };
 
 
-
-
 //working fine
 // export const getAllCaretakersByAdmin = async (req, res) => {
 //   try {
@@ -1348,7 +1346,7 @@ export const getAllPatientsOfCaretaker = async (req, res) => {
     }
 
     // 🧩 Step 3: Fetch patients with selected details
-    const patients = await Patient.find(filter)
+    const patients = await (await Patient.find(filter)).sort({createdAt:-1})
       .select(
         "_id fullName age gender mobileNumber email profilePhoto status diseaseCondition"
       )
