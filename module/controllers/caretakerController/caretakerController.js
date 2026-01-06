@@ -3292,7 +3292,7 @@ export const addPatientBloodSugarByCaretaker = async (req, res) => {
     return res.send({
       statusCode: 200,
       success: true,
-      message: "Blood Sugar added/updated successfully",
+      message: "Blood Sugar added successfully",
       result: record,
     });
   } catch (err) {
